@@ -1,0 +1,375 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Heron Assets Trustees — Digital Asset Stewardship & High-Yield Mandates</title>
+  <meta name="description" content="Heron Assets Trustees combines digital asset research, disciplined investment plans, and programmatic yield disbursement.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+</head>
+<body>
+  <div class="loader">
+    <div class="loader-core">
+      <div class="loader-mark"><div class="loader-ring"></div></div>
+      <div class="loader-label">Heron / entering market intelligence</div>
+    </div>
+  </div>
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+
+  <header class="topbar">
+    <nav class="nav">
+      <a class="brand" href="index.html">HERON / ASSETS TRUSTEES</a>
+      <div class="navlinks">
+        <a class="active" href="index.html">Home</a>
+        <a href="strategies.html">Strategies</a>
+        <a href="pricing.html">Investment Plans</a>
+        <a href="company.html">Company</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="navcta">
+        <a class="btn btn-outline" href="http://localhost:5173" target="_blank" rel="noopener">Client Access ↗</a>
+        <a class="btn btn-gold" href="pricing.html">View Plans ↗</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section with Three.js Canvas -->
+    <section class="hero">
+      <canvas id="viz"></canvas>
+      <div class="hero-grid"></div>
+      <div class="hero-photo">
+        <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80" alt="Professionals collaborating in a modern office">
+      </div>
+      <div class="hero-stamp">
+        <span>Disciplined<br>Digital<br>Capital</span>
+      </div>
+      <div class="container hero-copy">
+        <div>
+          <div class="eyebrow reveal">Heron Assets Trustees / 01 — stewardship</div>
+          <h1 class="hero-title reveal delay-1">Strategy for a market that never <em>sleeps.</em></h1>
+          <div class="hero-bottom reveal delay-2">
+            <a class="btn btn-gold" href="pricing.html">Explore Investment Plans ↗</a>
+            <span class="scroll-note">Scroll to enter</span>
+          </div>
+        </div>
+        <p class="hero-deck reveal delay-3">
+          Heron approaches digital assets as an evolving capital market: research-led, risk-aware, and built on audited programmatic return contracts across 24h, 48h, 72h, and 96h maturity cycles.
+        </p>
+      </div>
+    </section>
+
+    <!-- Philosophy -->
+    <section class="section">
+      <div class="container manifesto">
+        <div class="eyebrow reveal">02 / philosophy</div>
+        <p class="reveal delay-1">We do not chase the market. We build frameworks that help clients <span>grow and preserve capital.</span></p>
+      </div>
+    </section>
+
+    <!-- Metrics -->
+    <section class="section">
+      <div class="container">
+        <div class="metrics reveal">
+          <div class="metric">
+            <strong>01</strong>
+            <span>Research before allocation</span>
+          </div>
+          <div class="metric">
+            <strong>02</strong>
+            <span>Automated Escrow timelocks</span>
+          </div>
+          <div class="metric">
+            <strong>03</strong>
+            <span>Up to 30% referral network</span>
+          </div>
+          <div class="metric">
+            <strong>04</strong>
+            <span>Continuous liquidity release</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Strategy Rail -->
+    <section class="section section-dark">
+      <div class="container strategy-rail">
+        <div class="strategy-art reveal" data-tilt></div>
+        <div class="strategy-copy reveal delay-1">
+          <div>
+            <div class="eyebrow">03 / investment architecture</div>
+            <div class="big">A portfolio should have a point of view.</div>
+            <p class="body">Our approach connects market intelligence, algorithmic execution, exposure limits, and automated yield settlement into one unified financial standard.</p>
+          </div>
+          <div>
+            <a class="linkline" href="pricing.html"><span>Amateur Mandate (24h • 4.5%)</span><span>↗</span></a>
+            <a class="linkline" href="pricing.html"><span>Standard Mandate (48h • 9.5%)</span><span>↗</span></a>
+            <a class="linkline" href="pricing.html"><span>Premium Mandate (72h • 15.5%)</span><span>↗</span></a>
+            <a class="linkline" href="pricing.html"><span>Retirement Reserve (96h • 22.5%)</span><span>↗</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Investment Plans Section -->
+    <section class="section" id="plans" style="background:#090c0b;color:#fff;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);">
+      <div class="container">
+        <div class="market-head reveal">
+          <div>
+            <div class="eyebrow">04 / programmatic capital tiers</div>
+            <h2 class="display">Engineered returns. Defined horizons.</h2>
+          </div>
+          <div>
+            <a class="btn btn-gold" href="pricing.html#simulator">Open Profit Simulator ↗</a>
+          </div>
+        </div>
+
+        <div class="price-grid-4">
+          <!-- Amateur Plan -->
+          <article class="plan-card reveal" style="background:#131715;color:#fff;border:1px solid rgba(255,255,255,.08)">
+            <div class="plan-header">
+              <span class="plan-duration-badge" style="color:var(--gold);">24 Hours Cycle</span>
+              <div class="eyebrow">Tier 01</div>
+              <h3 class="plan-name">Amateur Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;color:rgba(255,255,255,.6);">Accessible entry tier with guaranteed 24h liquidity release.</p>
+            </div>
+            <div class="plan-rate-display" style="border-color:rgba(255,255,255,.1);">
+              <div class="plan-rate-number">4.5%</div>
+              <div class="plan-rate-sub" style="color:rgba(255,255,255,.5);">Net yield after 24 hours</div>
+            </div>
+            <div class="plan-range-box" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08);">
+              <div class="plan-range-row"><span class="plan-range-label" style="color:rgba(255,255,255,.45);">Min Deposit:</span><span class="plan-range-val">$100</span></div>
+              <div class="plan-range-row"><span class="plan-range-label" style="color:rgba(255,255,255,.45);">Max Deposit:</span><span class="plan-range-val">$1,999</span></div>
+            </div>
+            <div class="plan-ref-card" style="background:rgba(214,168,79,.1);border-color:rgba(214,168,79,.22);">
+              <span class="plan-ref-title" style="color:rgba(255,255,255,.6);">Referral Bonus</span>
+              <span class="plan-ref-value" style="color:var(--gold);">8% Instant</span>
+            </div>
+            <ul class="plan-specs" style="border-color:rgba(255,255,255,.08);">
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">24h automated settlement</li>
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Full principal + profit return</li>
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Instant wallet release</li>
+            </ul>
+            <a class="btn btn-outline plan-cta-btn" href="pricing.html#simulator">Calculate Return ↗</a>
+          </article>
+
+          <!-- Standard Plan -->
+          <article class="plan-card reveal delay-1" style="background:#131715;color:#fff;border:1px solid rgba(255,255,255,.08)">
+            <div class="plan-header">
+              <span class="plan-duration-badge" style="color:var(--gold);">48 Hours Cycle</span>
+              <div class="eyebrow">Tier 02</div>
+              <h3 class="plan-name">Standard Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;color:rgba(255,255,255,.6);">Balanced multi-day accumulation with priority allocation.</p>
+            </div>
+            <div class="plan-rate-display" style="border-color:rgba(255,255,255,.1);">
+              <div class="plan-rate-number">9.5%</div>
+              <div class="plan-rate-sub" style="color:rgba(255,255,255,.5);">Net yield after 48 hours</div>
+            </div>
+            <div class="plan-range-box" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08);">
+              <div class="plan-range-row"><span class="plan-range-label" style="color:rgba(255,255,255,.45);">Min Deposit:</span><span class="plan-range-val">$2,000</span></div>
+              <div class="plan-range-row"><span class="plan-range-label" style="color:rgba(255,255,255,.45);">Max Deposit:</span><span class="plan-range-val">$5,999</span></div>
+            </div>
+            <div class="plan-ref-card" style="background:rgba(214,168,79,.1);border-color:rgba(214,168,79,.22);">
+              <span class="plan-ref-title" style="color:rgba(255,255,255,.6);">Referral Bonus</span>
+              <span class="plan-ref-value" style="color:var(--gold);">16% Instant</span>
+            </div>
+            <ul class="plan-specs" style="border-color:rgba(255,255,255,.08);">
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">48h priority liquidity queue</li>
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Dual-sig security verification</li>
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Instant wallet release</li>
+            </ul>
+            <a class="btn btn-outline plan-cta-btn" href="pricing.html#simulator">Calculate Return ↗</a>
+          </article>
+
+          <!-- Premium Plan (Featured) -->
+          <article class="plan-card featured reveal delay-2">
+            <div class="plan-corner-tag">Most Popular</div>
+            <div class="plan-header">
+              <span class="plan-duration-badge">72 Hours Cycle</span>
+              <div class="eyebrow" style="color:var(--gold);">Tier 03 / High Yield</div>
+              <h3 class="plan-name">Premium Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;color:rgba(255,255,255,.65);">Institutional velocity for serious private capital allocation.</p>
+            </div>
+            <div class="plan-rate-display">
+              <div class="plan-rate-number" style="color:var(--gold);">15.5%</div>
+              <div class="plan-rate-sub">Net yield after 72 hours</div>
+            </div>
+            <div class="plan-range-box">
+              <div class="plan-range-row"><span class="plan-range-label">Min Deposit:</span><span class="plan-range-val">$6,000</span></div>
+              <div class="plan-range-row"><span class="plan-range-label">Max Deposit:</span><span class="plan-range-val">$10,999</span></div>
+            </div>
+            <div class="plan-ref-card" style="background:rgba(214,168,79,.14);">
+              <span class="plan-ref-title">Referral Bonus</span>
+              <span class="plan-ref-value">24% Instant</span>
+            </div>
+            <ul class="plan-specs">
+              <li>VIP dedicated risk officer</li>
+              <li>Direct OTC zero-slippage routing</li>
+              <li>Multi-sig escrow release</li>
+            </ul>
+            <a class="btn btn-gold plan-cta-btn" href="pricing.html#simulator">Calculate Return ↗</a>
+          </article>
+
+          <!-- Retirement Plan -->
+          <article class="plan-card reveal delay-3" style="background:#131715;color:#fff;border:1px solid rgba(255,255,255,.08)">
+            <div class="plan-header">
+              <span class="plan-duration-badge" style="color:var(--gold);">96 Hours Cycle</span>
+              <div class="eyebrow">Tier 04</div>
+              <h3 class="plan-name">Retirement Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;color:rgba(255,255,255,.6);">Sovereign long-horizon reserve with maximum compounding.</p>
+            </div>
+            <div class="plan-rate-display" style="border-color:rgba(255,255,255,.1);">
+              <div class="plan-rate-number">22.5%</div>
+              <div class="plan-rate-sub" style="color:rgba(255,255,255,.5);">Net yield after 96 hours</div>
+            </div>
+            <div class="plan-range-box" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08);">
+              <div class="plan-range-row"><span class="plan-range-label" style="color:rgba(255,255,255,.45);">Min Deposit:</span><span class="plan-range-val">$11,000</span></div>
+              <div class="plan-range-row"><span class="plan-range-label" style="color:rgba(255,255,255,.45);">Max Deposit:</span><span class="plan-range-val">Unlimited</span></div>
+            </div>
+            <div class="plan-ref-card" style="background:rgba(214,168,79,.1);border-color:rgba(214,168,79,.22);">
+              <span class="plan-ref-title" style="color:rgba(255,255,255,.6);">Referral Bonus</span>
+              <span class="plan-ref-value" style="color:var(--gold);">30% Instant</span>
+            </div>
+            <ul class="plan-specs" style="border-color:rgba(255,255,255,.08);">
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Uncapped investment capacity</li>
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Maximum 30% affiliate reward</li>
+              <li style="color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.08);">Sovereign cold vault custody</li>
+            </ul>
+            <a class="btn btn-outline plan-cta-btn" href="pricing.html#simulator">Calculate Return ↗</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Market Pulse (Live Binance API) -->
+    <section class="section market" id="market">
+      <div class="container">
+        <div class="market-head reveal">
+          <div>
+            <div class="eyebrow">05 / market pulse</div>
+            <h2 class="display">The numbers, without the noise.</h2>
+          </div>
+          <div class="market-note">Public Binance live ticker feed</div>
+        </div>
+        <div class="market-grid reveal delay-1">
+          <div class="market-panel">
+            <div data-market></div>
+          </div>
+          <div class="market-panel">
+            <div class="eyebrow">Live context</div>
+            <h3 style="font:500 44px/1 'Instrument Serif',serif;margin:18px 0">Markets move. Frameworks remain.</h3>
+            <p class="body">Track major digital assets beside Heron's disciplined approach to allocation, monitoring, and automated yield execution.</p>
+            <a class="btn btn-gold" href="pricing.html" style="display:inline-block;margin-top:20px">View Investment Tiers ↗</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Market Intelligence (TradingView) -->
+    <section class="section section-dark">
+      <div class="container">
+        <div class="market-head reveal">
+          <div>
+            <div class="eyebrow">06 / market intelligence</div>
+            <h2 class="display">Read the market in context.</h2>
+          </div>
+          <div class="market-note">TradingView • Real-Time Technical Analytics</div>
+        </div>
+        <div class="market-panel reveal delay-1" style="margin-top:34px;padding:8px;min-height:540px">
+          <iframe src="https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=en&symbol=BINANCE%3ABTCUSDT&interval=60&timezone=Etc%2FUTC&theme=dark&style=1&withdateranges=true&hide_side_toolbar=false&allow_symbol_change=true&save_image=false&calendar=false&studies=%5B%5D" style="width:100%;height:520px;border:0" loading="lazy" title="TradingView BTCUSDT chart"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- News & Perspectives -->
+    <section class="section">
+      <div class="container news-grid">
+        <article class="story reveal">
+          <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1400&q=80" alt="Executive team working around a table">
+          <div class="story-content">
+            <div class="eyebrow">Perspective / 01</div>
+            <h3 class="display" style="font-size:56px">Clarity is an edge.</h3>
+          </div>
+        </article>
+        <div class="story-small">
+          <article class="story-card reveal delay-1" data-tilt>
+            <div class="eyebrow">Perspective / 02</div>
+            <h3>Risk is a process, not a headline.</h3>
+            <p>Good stewardship is visible in the decisions made before a position becomes a problem.</p>
+          </article>
+          <article class="story-card reveal delay-2" data-tilt>
+            <div class="eyebrow">Perspective / 03</div>
+            <h3>Digital assets need institutional discipline.</h3>
+            <p>We pair a modern market with old-fashioned standards: diligence, documentation, and mathematical accountability.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <div class="footer-brand">HERON</div>
+          <p class="body" style="max-width:430px;color:rgba(255,255,255,.5)">
+            Digital asset stewardship shaped by research, disciplined strategy and transparent client communication.
+          </p>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <a href="company.html">Our company</a>
+          <a href="company.html#leadership">Leadership</a>
+          <a href="strategies.html">Strategies</a>
+          <a href="pricing.html">Investment Plans</a>
+          <a href="contact.html">Contact</a>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <a href="index.html#market">Market pulse</a>
+          <a href="strategies.html#process">Investment process</a>
+          <a href="http://localhost:5173" target="_blank" rel="noopener">Client Access ↗</a>
+          <a href="http://localhost:5173" target="_blank" rel="noopener">Client Access ↗</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Risk disclosure</a>
+          <a href="#">Regulatory information</a>
+        </div>
+      </div>
+      <div class="footer-mobile-cta">
+        <button class="btn btn-gold" type="button" data-app aria-haspopup="dialog">Download our Mobile App <span aria-hidden="true">↗</span></button>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Heron Assets Trustees</span>
+        <span>Digital assets involve risk. Information is for general purposes.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="app-dialog" class="app-dialog" hidden aria-hidden="true">
+    <div class="app-dialog-card" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title">
+      <div class="eyebrow">Heron mobile</div>
+      <h2 id="app-dialog-title" class="display app-dialog-title">Heron, wherever you are.</h2>
+      <p class="body">The Heron mobile experience is being prepared for secure portfolio visibility and market intelligence.</p>
+      <div class="app-dialog-actions">
+        <button class="btn btn-dark" disabled>App Store — coming soon</button>
+        <button class="btn btn-gold" disabled>Google Play — coming soon</button>
+        <button class="btn btn-outline" type="button" data-close-app aria-label="Close mobile app dialog">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+

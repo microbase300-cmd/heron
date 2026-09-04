@@ -1,0 +1,464 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Heron Assets Trustees — Investment Plans & Capital Mandates</title>
+  <meta name="description" content="Explore disciplined digital asset investment tiers with programmatic returns, transparent maturity cycles, and institutional-grade custody.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+  <div class="loader">
+    <div class="loader-core">
+      <div class="loader-mark"><div class="loader-ring"></div></div>
+      <div class="loader-label">Heron / synchronizing mandate rates</div>
+    </div>
+  </div>
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+
+  <header class="topbar">
+    <nav class="nav">
+      <a class="brand" href="index.html">HERON / ASSETS TRUSTEES</a>
+      <div class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="strategies.html">Strategies</a>
+        <a class="active" href="pricing.html">Investment Plans</a>
+        <a href="company.html">Company</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="navcta">
+        <a class="btn btn-outline" href="http://localhost:5173" target="_blank" rel="noopener">Client Access ↗</a>
+        <a class="btn btn-gold" href="#simulator">Simulate Yield</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Header -->
+    <section class="page-head pricing-head">
+      <div class="container">
+        <div class="eyebrow reveal">01 / capital mandates & investment architecture</div>
+        <h1 class="page-title reveal delay-1">Disciplined plans.<br><em>Programmatic returns.</em></h1>
+        <p class="page-intro reveal delay-2">
+          Heron structures capital deployment across 4 defined liquidity horizons. Each tier operates under strict automated smart escrow disbursement, guaranteed yield parameters, and tiered affiliate referral rewards.
+        </p>
+      </div>
+    </section>
+
+    <!-- Plans Section -->
+    <section class="section pricing-section">
+      <div class="container">
+        <div class="pricing-intro reveal">
+          <div>
+            <div class="eyebrow">02 / capital allocation tiers</div>
+            <h2 class="display">Engineered yields.<br>Defined horizons.</h2>
+          </div>
+          <p class="body">
+            Choose your investment mandate below. Capital and profits are held in institutional cryptographic escrow and automatically disbursed upon maturity directly to your connected wallet.
+          </p>
+        </div>
+
+        <div class="price-grid-4">
+          <!-- Amateur Plan -->
+          <article class="plan-card reveal" data-plan="amateur">
+            <div class="plan-header">
+              <span class="plan-duration-badge">24 Hours Cycle</span>
+              <div class="eyebrow">Tier 01 / Foundational</div>
+              <h3 class="plan-name">Amateur Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;">Designed for new participants and exploratory capital allocations.</p>
+            </div>
+
+            <div class="plan-rate-display">
+              <div class="plan-rate-number">4.5%</div>
+              <div class="plan-rate-sub">Guaranteed yield after 24 hours</div>
+            </div>
+
+            <div class="plan-range-box">
+              <div class="plan-range-row">
+                <span class="plan-range-label">Minimum</span>
+                <span class="plan-range-val">$100</span>
+              </div>
+              <div class="plan-range-row">
+                <span class="plan-range-label">Maximum</span>
+                <span class="plan-range-val">$1,999</span>
+              </div>
+            </div>
+
+            <div class="plan-ref-card">
+              <span class="plan-ref-title">Referral Bonus</span>
+              <span class="plan-ref-value">8% Instant</span>
+            </div>
+
+            <ul class="plan-specs">
+              <li>24h liquidity cycle duration</li>
+              <li>Automated capital + yield release</li>
+              <li>Real-time portfolio tracking</li>
+              <li>24/7 dedicated ledger support</li>
+              <li>Instant wallet withdrawals</li>
+            </ul>
+
+            <a class="btn btn-outline plan-cta-btn" href="#simulator" data-select-plan="amateur">Calculate Return ↗</a>
+          </article>
+
+          <!-- Standard Plan -->
+          <article class="plan-card reveal delay-1" data-plan="standard">
+            <div class="plan-header">
+              <span class="plan-duration-badge">48 Hours Cycle</span>
+              <div class="eyebrow">Tier 02 / Accelerated</div>
+              <h3 class="plan-name">Standard Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;">Balanced accumulation strategy with expanded yield multipliers.</p>
+            </div>
+
+            <div class="plan-rate-display">
+              <div class="plan-rate-number">9.5%</div>
+              <div class="plan-rate-sub">Guaranteed yield after 48 hours</div>
+            </div>
+
+            <div class="plan-range-box">
+              <div class="plan-range-row">
+                <span class="plan-range-label">Minimum</span>
+                <span class="plan-range-val">$2,000</span>
+              </div>
+              <div class="plan-range-row">
+                <span class="plan-range-label">Maximum</span>
+                <span class="plan-range-val">$5,999</span>
+              </div>
+            </div>
+
+            <div class="plan-ref-card">
+              <span class="plan-ref-title">Referral Bonus</span>
+              <span class="plan-ref-value">16% Instant</span>
+            </div>
+
+            <ul class="plan-specs">
+              <li>48h liquidity cycle duration</li>
+              <li>Priority liquidity pool routing</li>
+              <li>Daily ledger verification audit</li>
+              <li>Dual-signature security protocol</li>
+              <li>Instant automated disbursement</li>
+            </ul>
+
+            <a class="btn btn-outline plan-cta-btn" href="#simulator" data-select-plan="standard">Calculate Return ↗</a>
+          </article>
+
+          <!-- Premium Plan (Featured) -->
+          <article class="plan-card featured reveal delay-2" data-plan="premium">
+            <div class="plan-corner-tag">Most Popular</div>
+            <div class="plan-header">
+              <span class="plan-duration-badge">72 Hours Cycle</span>
+              <div class="eyebrow" style="color:var(--gold);">Tier 03 / Preferred High-Yield</div>
+              <h3 class="plan-name">Premium Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;color:rgba(255,255,255,.65);">Institutional-scale velocity for experienced digital asset investors.</p>
+            </div>
+
+            <div class="plan-rate-display">
+              <div class="plan-rate-number" style="color:var(--gold);">15.5%</div>
+              <div class="plan-rate-sub">Guaranteed yield after 72 hours</div>
+            </div>
+
+            <div class="plan-range-box">
+              <div class="plan-range-row">
+                <span class="plan-range-label">Minimum</span>
+                <span class="plan-range-val">$6,000</span>
+              </div>
+              <div class="plan-range-row">
+                <span class="plan-range-label">Maximum</span>
+                <span class="plan-range-val">$10,999</span>
+              </div>
+            </div>
+
+            <div class="plan-ref-card" style="background:rgba(214,168,79,.14);">
+              <span class="plan-ref-title">Referral Bonus</span>
+              <span class="plan-ref-value">24% Instant</span>
+            </div>
+
+            <ul class="plan-specs">
+              <li>72h liquidity cycle duration</li>
+              <li>VIP Risk Mitigation Officer</li>
+              <li>Zero-slippage OTC direct routing</li>
+              <li>Automated multi-sig escrow release</li>
+              <li>Priority withdrawal dispatch</li>
+            </ul>
+
+            <a class="btn btn-gold plan-cta-btn" href="#simulator" data-select-plan="premium">Calculate Return ↗</a>
+          </article>
+
+          <!-- Retirement Plan -->
+          <article class="plan-card reveal delay-3" data-plan="retirement">
+            <div class="plan-header">
+              <span class="plan-duration-badge">96 Hours Cycle</span>
+              <div class="eyebrow">Tier 04 / Sovereign Reserve</div>
+              <h3 class="plan-name">Retirement Plan</h3>
+              <p class="body" style="font-size:13px;margin:0;">Maximum compounding power with sovereign treasury allocation.</p>
+            </div>
+
+            <div class="plan-rate-display">
+              <div class="plan-rate-number">22.5%</div>
+              <div class="plan-rate-sub">Guaranteed yield after 96 hours</div>
+            </div>
+
+            <div class="plan-range-box">
+              <div class="plan-range-row">
+                <span class="plan-range-label">Minimum</span>
+                <span class="plan-range-val">$11,000</span>
+              </div>
+              <div class="plan-range-row">
+                <span class="plan-range-label">Maximum</span>
+                <span class="plan-range-val">Unlimited</span>
+              </div>
+            </div>
+
+            <div class="plan-ref-card">
+              <span class="plan-ref-title">Referral Bonus</span>
+              <span class="plan-ref-value">30% Instant</span>
+            </div>
+
+            <ul class="plan-specs">
+              <li>96h institutional liquidity cycle</li>
+              <li>Maximum 30% affiliate revenue</li>
+              <li>Sovereign cold vault custody</li>
+              <li>Dedicated Private Mandate Director</li>
+              <li>Uncapped capital allocation capacity</li>
+            </ul>
+
+            <a class="btn btn-outline plan-cta-btn" href="#simulator" data-select-plan="retirement">Calculate Return ↗</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Profit & Yield Simulator Engine -->
+    <section class="calc-section" id="simulator">
+      <div class="container">
+        <div class="market-head reveal">
+          <div>
+            <div class="eyebrow">03 / interactive projection engine</div>
+            <h2 class="display">Simulate your yield in real time.</h2>
+          </div>
+          <div class="market-note">Automated Smart Contract Simulation</div>
+        </div>
+
+        <div class="calc-shell reveal delay-1">
+          <!-- Left: Controls -->
+          <div class="calc-controls">
+            <div>
+              <div class="eyebrow">Deposit Amount</div>
+              <div class="calc-input-wrap">
+                <span class="calc-currency-symbol">$</span>
+                <input type="number" id="calc-amount-input" class="calc-input-field" value="3500" min="100" max="100000" step="50">
+              </div>
+
+              <input type="range" id="calc-amount-slider" class="calc-slider" min="100" max="50000" step="50" value="3500">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:.08em;">
+                <span>$100 (Min)</span>
+                <span>$10,000</span>
+                <span>$50,000+</span>
+              </div>
+
+              <div class="eyebrow" style="margin-top:28px;">Quick Selection</div>
+              <div class="calc-presets">
+                <button type="button" class="calc-preset-btn" data-val="500">$500 (Amateur)</button>
+                <button type="button" class="calc-preset-btn active" data-val="3500">$3,500 (Standard)</button>
+                <button type="button" class="calc-preset-btn" data-val="8000">$8,000 (Premium)</button>
+                <button type="button" class="calc-preset-btn" data-val="15000">$15,000 (Retirement)</button>
+                <button type="button" class="calc-preset-btn" data-val="30000">$30,000 (VIP)</button>
+              </div>
+            </div>
+
+            <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;">
+              Disbursements occur automatically via smart escrow. No lockup penalty; full principal plus profit is credited upon timer completion.
+            </div>
+          </div>
+
+          <!-- Right: Calculated Results -->
+          <div class="calc-results">
+            <div>
+              <div class="calc-plan-detected">
+                <div>
+                  <div class="eyebrow">Matched Mandate Tier</div>
+                  <h3 id="res-plan-name" style="font:500 28px/1.2 'Instrument Serif',serif;margin:4px 0 0;">Standard Plan</h3>
+                </div>
+                <span id="res-plan-badge" class="calc-tier-badge">48 Hours • 9.5%</span>
+              </div>
+
+              <div class="calc-metrics-grid">
+                <div class="calc-metric-item">
+                  <div class="calc-metric-label">Initial Capital</div>
+                  <div id="res-principal" class="calc-metric-val">$3,500.00</div>
+                </div>
+
+                <div class="calc-metric-item">
+                  <div class="calc-metric-label">Guaranteed Net Profit</div>
+                  <div id="res-profit" class="calc-metric-val green">+$332.50</div>
+                </div>
+
+                <div class="calc-metric-item">
+                  <div class="calc-metric-label">Total Payout at Maturity</div>
+                  <div id="res-total" class="calc-metric-val gold">$3,832.50</div>
+                </div>
+
+                <div class="calc-metric-item">
+                  <div class="calc-metric-label">Referral Reward Potential</div>
+                  <div id="res-referral" class="calc-metric-val" style="color:var(--gold-deep);">$560.00 (16%)</div>
+                </div>
+              </div>
+
+              <div class="calc-disbursement-note">
+                <strong>Disbursement Schedule:</strong> Capital matures exactly <span id="res-duration-text" style="color:var(--gold);">48 hours</span> post-confirmation. Timelock releases automatically to your designated crypto address.
+              </div>
+            </div>
+
+            <a id="calc-invest-btn" class="btn btn-gold" href="contact.html?plan=standard&amount=3500" style="text-align:center;display:block;">Open Mandate with $3,500 ↗</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Referral Architecture -->
+    <section class="section section-dark">
+      <div class="container fee-architecture">
+        <div class="fee-copy reveal">
+          <div class="eyebrow">04 / affiliate & partner architecture</div>
+          <h2 class="display">Compounding partner<br><span>revenue sharing.</span></h2>
+          <p class="body">
+            Heron operates an institutional referral network. Share your mandate invite link with private clients, hedge funds, or peers to unlock instant, direct-to-wallet commission payouts across all 4 tiers.
+          </p>
+        </div>
+
+        <div class="fee-lines reveal delay-1">
+          <div>
+            <span>Amateur Tier Referral (Tier 1)</span>
+            <strong>8% Instant Commission</strong>
+          </div>
+          <div>
+            <span>Standard Tier Referral (Tier 2)</span>
+            <strong>16% Instant Commission</strong>
+          </div>
+          <div>
+            <span>Premium Tier Referral (Tier 3)</span>
+            <strong>24% Instant Commission</strong>
+          </div>
+          <div>
+            <span>Retirement Tier Referral (Tier 4)</span>
+            <strong>30% Instant Commission</strong>
+          </div>
+          <div>
+            <span>Disbursement Method</span>
+            <strong>Automated / Zero Threshold</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security & Institutional Governance -->
+    <section class="section">
+      <div class="container">
+        <div class="market-head reveal">
+          <div>
+            <div class="eyebrow">05 / institutional protocol</div>
+            <h2 class="display">How Heron protects client capital.</h2>
+          </div>
+          <div class="market-note">Multi-Party Computation (MPC) Custody</div>
+        </div>
+
+        <div class="metrics reveal delay-1" style="margin-top:36px;">
+          <div class="metric">
+            <strong>01</strong>
+            <span>Cryptographic Cold Custody</span>
+          </div>
+          <div class="metric">
+            <strong>02</strong>
+            <span>Smart Timelock Escrow</span>
+          </div>
+          <div class="metric">
+            <strong>03</strong>
+            <span>Zero Unaudited Exposure</span>
+          </div>
+          <div class="metric">
+            <strong>04</strong>
+            <span>Automated Payout Pipeline</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Legal note -->
+    <section class="section" style="padding-top:0;">
+      <div class="container pricing-note reveal">
+        <div class="eyebrow">06 / transparent disclosures</div>
+        <h2 class="display">Stewardship without compromise.</h2>
+        <p class="body">
+          Digital asset markets operate continuously. All mandates are subject to our cryptographic smart contract rules, transparent allocation disclosures, and multi-tier fraud prevention checks prior to release.
+        </p>
+        <a class="linkline" href="contact.html">
+          <span>Speak directly with a Mandate Officer</span>
+          <span>↗</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <div class="footer-brand">HERON</div>
+          <p class="body" style="max-width:430px;color:rgba(255,255,255,.5)">
+            Digital asset stewardship shaped by research, disciplined strategy and transparent client communication.
+          </p>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <a href="company.html">Our company</a>
+          <a href="strategies.html">Strategies</a>
+          <a href="pricing.html">Investment Plans</a>
+          <a href="contact.html">Contact</a>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <a href="index.html#market">Market pulse</a>
+          <a href="strategies.html#process">Investment process</a>
+          <a href="#simulator">Yield Simulator</a>
+          <a href="http://localhost:5173" target="_blank" rel="noopener">Client Access ↗</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Risk disclosure</a>
+          <a href="#">Regulatory information</a>
+        </div>
+      </div>
+      <div class="footer-mobile-cta">
+        <button class="btn btn-gold" type="button" data-app aria-haspopup="dialog">Download our Mobile App <span aria-hidden="true">↗</span></button>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Heron Assets Trustees</span>
+        <span>Digital assets involve risk. Information is for general purposes.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="app-dialog" class="app-dialog" hidden aria-hidden="true">
+    <div class="app-dialog-card" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title">
+      <div class="eyebrow">Heron mobile</div>
+      <h2 id="app-dialog-title" class="display app-dialog-title">Heron, wherever you are.</h2>
+      <p class="body">The Heron mobile experience is being prepared for secure portfolio visibility and market intelligence.</p>
+      <div class="app-dialog-actions">
+        <button class="btn btn-dark" disabled>App Store — coming soon</button>
+        <button class="btn btn-gold" disabled>Google Play — coming soon</button>
+        <button class="btn btn-outline" type="button" data-close-app aria-label="Close mobile app dialog">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+
