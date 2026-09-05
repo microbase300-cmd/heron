@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from './services/api';
 import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData } from './types';
 import { TickerBar } from './components/TickerBar';
@@ -12,6 +12,7 @@ import { LedgerView } from './components/LedgerView';
 import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AuthModal } from './components/AuthModal';
+import { LayoutDashboard, Timer, TrendingUp, ArrowDownLeft, Menu } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Initial load
   useEffect(() => {
@@ -90,26 +92,29 @@ export const App: React.FC = () => {
       {/* Top Binance Live Ticker Tape */}
       <TickerBar />
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Navigation */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Responsive Sidebar Navigation (Desktop + Mobile Drawer) */}
         <Sidebar
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
           user={user}
           onLogout={handleLogout}
           onOpenDeposit={() => setIsDepositOpen(true)}
+          isMobileOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden w-full">
           <Navbar
             currentTab={currentTab}
             user={user}
             onOpenDeposit={() => setIsDepositOpen(true)}
             onOpenInvest={() => setCurrentTab('invest')}
+            onOpenMobileNav={() => setIsMobileSidebarOpen(true)}
           />
 
-          <main className="flex-1 overflow-y-auto p-8 lg:p-10 no-scrollbar">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 no-scrollbar">
             <div className="max-w-7xl mx-auto">
               {currentTab === 'overview' && (
                 <OverviewView
@@ -142,7 +147,7 @@ export const App: React.FC = () => {
               )}
 
               {currentTab === 'deposit' && (
-                <div className="p-8 rounded-2xl glass-card text-center space-y-4 max-w-md mx-auto my-12">
+                <div className="p-6 sm:p-8 rounded-2xl glass-card text-center space-y-4 max-w-md mx-auto my-6 sm:my-12">
                   <h3 className="text-xl font-serif font-bold text-white">Multi-Asset Deposit Hub</h3>
                   <p className="text-xs text-white/50">Deposit BTC, ETH, USDT (TRC-20/ERC-20), or SOL to fund your account.</p>
                   <button
@@ -155,7 +160,7 @@ export const App: React.FC = () => {
               )}
 
               {currentTab === 'withdraw' && (
-                <div className="p-8 rounded-2xl glass-card text-center space-y-4 max-w-md mx-auto my-12">
+                <div className="p-6 sm:p-8 rounded-2xl glass-card text-center space-y-4 max-w-md mx-auto my-6 sm:my-12">
                   <h3 className="text-xl font-serif font-bold text-white">Automated Withdrawal Terminal</h3>
                   <p className="text-xs text-white/50">Request instantaneous automated disbursement to your personal cold or hot wallet.</p>
                   <button
@@ -178,6 +183,55 @@ export const App: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#080b09]/95 backdrop-blur-xl border-t border-white/[0.08] flex items-center justify-around px-2 z-40">
+        <button
+          onClick={() => setCurrentTab('overview')}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
+            currentTab === 'overview' ? 'text-gold' : 'text-white/50 hover:text-white'
+          }`}
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          <span className="text-[10px] font-medium tracking-tight">Overview</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('mandates')}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
+            currentTab === 'mandates' ? 'text-gold' : 'text-white/50 hover:text-white'
+          }`}
+        >
+          <Timer className="w-4 h-4" />
+          <span className="text-[10px] font-medium tracking-tight">Mandates</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('invest')}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
+            currentTab === 'invest' ? 'text-gold' : 'text-white/50 hover:text-white'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span className="text-[10px] font-medium tracking-tight">Invest</span>
+        </button>
+
+        <button
+          onClick={() => setIsDepositOpen(true)}
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-white/50 hover:text-white transition-all"
+        >
+          <ArrowDownLeft className="w-4 h-4 text-gold" />
+          <span className="text-[10px] font-medium tracking-tight">Deposit</span>
+        </button>
+
+        <button
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-white/50 hover:text-white transition-all"
+        >
+          <Menu className="w-4 h-4" />
+          <span className="text-[10px] font-medium tracking-tight">Menu</span>
+        </button>
+      </nav>
 
       {/* Modals */}
       <DepositModal

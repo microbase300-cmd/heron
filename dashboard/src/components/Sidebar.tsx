@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { 
   LayoutDashboard, 
   Timer, 
@@ -7,10 +7,10 @@ import {
   ArrowUpRight, 
   Users, 
   ReceiptText, 
-  ExternalLink,
-  LogOut,
-  ShieldCheck,
-  ChevronRight
+  ExternalLink, 
+  LogOut, 
+  X,
+  ChevronRight 
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -20,6 +20,8 @@ interface SidebarProps {
   user: User | null;
   onLogout: () => void;
   onOpenDeposit: () => void;
+  isMobileOpen?: boolean;
+  onClose?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -27,7 +29,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setCurrentTab,
   user,
   onLogout,
-  onOpenDeposit
+  onOpenDeposit,
+  isMobileOpen = false,
+  onClose
 }) => {
   const navItems = [
     { id: 'overview', label: 'Portfolio Overview', icon: LayoutDashboard },
@@ -39,12 +43,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'ledger', label: 'Audit Ledger', icon: ReceiptText },
   ];
 
-  return (
-    <aside className="w-64 bg-[#080b09] border-r border-white/[0.08] flex flex-col justify-between shrink-0 h-full select-none z-20">
+  const handleTabClick = (tabId: string) => {
+    setCurrentTab(tabId);
+    if (onClose) onClose();
+  };
+
+  const content = (
+    <div className="flex flex-col justify-between h-full select-none">
       <div>
         {/* Brand Header */}
-        <div className="p-6 border-b border-white/[0.08]">
-          <a href="/" className="flex items-center gap-3">
+        <div className="p-5 md:p-6 border-b border-white/[0.08] flex items-center justify-between">
+          <a href="http://localhost:3000" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg border border-gold/40 bg-gold/10 flex items-center justify-center text-gold font-serif text-lg font-bold shadow-lg shadow-gold/10">
               H
             </div>
@@ -53,11 +62,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="text-[10px] tracking-widest uppercase text-gold font-mono">Institutional Web3</div>
             </div>
           </a>
+
+          {/* Close button for mobile */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] md:hidden transition-all"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* User Balance Quick Widget */}
         {user && (
-          <div className="px-5 py-4 mx-4 my-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-gold/20 transition-all">
+          <div className="px-4 py-3.5 mx-3 my-3 md:mx-4 md:my-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-gold/20 transition-all">
             <div className="flex items-center justify-between text-[11px] text-white/50 uppercase font-mono mb-1">
               <span>Available Liquidity</span>
               <span className="w-2 h-2 rounded-full bg-emerald-glow animate-pulse"></span>
@@ -67,7 +87,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="mt-2.5 flex items-center gap-2">
               <button 
-                onClick={onOpenDeposit}
+                onClick={() => {
+                  onOpenDeposit();
+                  if (onClose) onClose();
+                }}
                 className="w-full py-1.5 px-3 rounded-lg bg-gold hover:bg-gold-light text-[#0b0d0d] text-xs font-semibold tracking-wide transition-all shadow-md shadow-gold/20 flex items-center justify-center gap-1.5"
               >
                 <ArrowDownLeft className="w-3.5 h-3.5" />
@@ -85,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <button
                 key={item.id}
-                onClick={() => setCurrentTab(item.id)}
+                onClick={() => handleTabClick(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                   active 
                     ? 'bg-gold/15 text-gold border border-gold/30 shadow-md shadow-gold/5' 
@@ -112,10 +135,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Footer Area */}
-      <div className="p-4 border-t border-white/[0.08] space-y-3">
+      <div className="p-4 border-t border-white/[0.08] space-y-2.5">
         <a 
-          href="/" 
-          className="flex items-center justify-between p-2.5 rounded-xl text-xs text-white/50 hover:text-gold hover:bg-white/[0.03] transition-all group"
+          href="http://localhost:3000" 
+          className="flex items-center justify-between p-2 rounded-xl text-xs text-white/50 hover:text-gold hover:bg-white/[0.03] transition-all group"
         >
           <div className="flex items-center gap-2.5">
             <ExternalLink className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
@@ -140,6 +163,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <aside className="hidden md:flex w-64 bg-[#080b09] border-r border-white/[0.08] flex-col justify-between shrink-0 h-full z-20">
+        {content}
+      </aside>
+
+      {/* Mobile Slide-Over Drawer */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          {/* Drawer container */}
+          <aside className="relative w-4/5 max-w-xs bg-[#080b09] border-r border-gold/20 h-full flex flex-col z-50 shadow-2xl animate-in slide-in-from-left duration-200">
+            {content}
+          </aside>
+        </div>
+      )}
+    </>
   );
 };

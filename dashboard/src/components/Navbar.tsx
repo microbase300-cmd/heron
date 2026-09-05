@@ -1,12 +1,15 @@
 import React from 'react';
-import { ShieldCheck, Plus, ArrowDownLeft, Lock } from 'lucide-react';
+import { Plus, ArrowDownLeft, Menu } from 'lucide-react';
 import { User } from '../types';
+import { NotificationCenter } from './NotificationCenter';
 
 interface NavbarProps {
   currentTab: string;
   user: User | null;
   onOpenDeposit: () => void;
   onOpenInvest: () => void;
+  onOpenMobileNav?: () => void;
+  onRefreshData?: () => void;
 }
 
 const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
@@ -23,37 +26,55 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   user,
   onOpenDeposit,
-  onOpenInvest
+  onOpenInvest,
+  onOpenMobileNav,
+  onRefreshData
 }) => {
   const meta = TAB_TITLES[currentTab] || TAB_TITLES.overview;
 
   return (
-    <header className="h-20 border-b border-white/[0.08] bg-[#070908]/80 backdrop-blur-xl px-8 flex items-center justify-between shrink-0 sticky top-0 z-10">
-      <div style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
-        <h1 className="text-xl font-serif font-bold text-white tracking-tight flex items-center gap-3" style={{ WebkitFontSmoothing: 'antialiased', textRendering: 'geometricPrecision' }}>
-          {meta.title}
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-950/60 text-emerald-glow border border-emerald-500/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-glow animate-pulse"></span>
-            Escrow Verified
-          </span>
-        </h1>
-        <p className="text-xs text-white/50">{meta.subtitle}</p>
+    <header className="h-16 md:h-20 border-b border-white/[0.08] bg-[#070908]/80 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-10">
+      <div className="flex items-center gap-3" style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
+        {/* Mobile Hamburger Menu Toggle */}
+        {onOpenMobileNav && (
+          <button
+            onClick={onOpenMobileNav}
+            className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white md:hidden transition-all"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-5 h-5 text-gold" />
+          </button>
+        )}
+
+        <div>
+          <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-white tracking-tight flex items-center gap-2 md:gap-3">
+            <span>{meta.title}</span>
+            <span className="hidden xs:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-medium bg-emerald-950/60 text-emerald-glow border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-glow animate-pulse"></span>
+              Verified
+            </span>
+          </h1>
+          <p className="hidden sm:block text-xs text-white/50">{meta.subtitle}</p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Real-time Notification Center */}
+        <NotificationCenter onNotificationRead={onRefreshData} />
+
         <button
           onClick={onOpenDeposit}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] hover:border-gold/30 text-xs font-semibold text-white transition-all shadow-sm"
+          className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] hover:border-gold/30 text-[11px] sm:text-xs font-semibold text-white transition-all shadow-sm"
         >
-          <ArrowDownLeft className="w-4 h-4 text-gold" />
-          <span>Add Liquidity</span>
+          <ArrowDownLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+          <span className="hidden xs:inline">Add</span> Liquidity
         </button>
 
         <button
           onClick={onOpenInvest}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] text-xs font-bold tracking-wide transition-all shadow-lg shadow-gold/20"
+          className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] text-[11px] sm:text-xs font-bold tracking-wide transition-all shadow-lg shadow-gold/20"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>New Mandate</span>
         </button>
       </div>

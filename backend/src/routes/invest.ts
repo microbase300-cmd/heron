@@ -1,4 +1,4 @@
-﻿import { Router, Response } from 'express';
+import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db, PLANS } from '../services/db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
@@ -8,7 +8,8 @@ const router = Router();
 
 // Public plans list
 router.get('/plans', (_req, res: Response) => {
-  return res.json({ plans: Object.values(PLANS) });
+  const currentPlans = db.getPlanConfigs();
+  return res.json({ plans: Object.values(currentPlans) });
 });
 
 // User's active & completed investments
@@ -47,7 +48,8 @@ router.post('/create', requireAuth, (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Please enter a valid investment amount.' });
     }
 
-    const plan = PLANS[planId as PlanId];
+    const currentPlans = db.getPlanConfigs();
+    const plan = currentPlans[planId as PlanId];
     if (!plan) {
       return res.status(400).json({ error: 'Invalid investment plan selected.' });
     }

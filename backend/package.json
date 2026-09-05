@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "hexon-backend",
   "version": "1.0.0",
   "description": "Heron Institutional Crypto Platform Backend API",
@@ -9,11 +9,13 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@types/pg": "^8.23.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.6.1",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

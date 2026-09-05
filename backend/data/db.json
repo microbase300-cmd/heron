@@ -1,6 +1,18 @@
 {
   "users": [
     {
+      "id": "usr_admin_001",
+      "email": "admin@heronassets.com",
+      "name": "Chief Risk Officer",
+      "passwordHash": "$2a$10$w8gGkTras5i8sYZFLBfZBuxH6sTefEvq75M3fhh3S6LVmpDEhhgni",
+      "role": "admin",
+      "balance": 0,
+      "referralCode": "HERON-ADMIN",
+      "referredBy": null,
+      "status": "active",
+      "createdAt": "2026-09-05T01:11:41.826Z"
+    },
+    {
       "id": "usr_demo_882194",
       "email": "investor@heronassets.com",
       "name": "Alexander Sterling",
@@ -8,7 +20,9 @@
       "balance": 14511.25,
       "referralCode": "HERON-8821",
       "referredBy": null,
-      "createdAt": "2026-08-29T17:18:13.156Z"
+      "createdAt": "2026-08-29T17:18:13.156Z",
+      "role": "user",
+      "status": "active"
     },
     {
       "id": "usr_downline_49201",
@@ -18,7 +32,9 @@
       "balance": 3200,
       "referralCode": "CLARA-9921",
       "referredBy": "HERON-8821",
-      "createdAt": "2026-08-31T17:18:13.156Z"
+      "createdAt": "2026-08-31T17:18:13.156Z",
+      "role": "user",
+      "status": "active"
     },
     {
       "id": "usr_d9120325-7839-4607-8cc4-ebda84749ef2",
@@ -28,7 +44,9 @@
       "balance": 1000,
       "referralCode": "HERON-9270",
       "referredBy": null,
-      "createdAt": "2026-09-03T17:30:29.126Z"
+      "createdAt": "2026-09-03T17:30:29.126Z",
+      "role": "user",
+      "status": "active"
     },
     {
       "id": "usr_f14b4038-7532-4b34-962a-c2c978953f7d",
@@ -38,7 +56,101 @@
       "balance": 1000,
       "referralCode": "HERON-6436",
       "referredBy": null,
-      "createdAt": "2026-09-03T17:32:55.790Z"
+      "createdAt": "2026-09-03T17:32:55.790Z",
+      "role": "user",
+      "status": "active"
+    },
+    {
+      "id": "usr_demo_vance",
+      "email": "alex.vance@vanceholdings.com",
+      "name": "Alexander Vance",
+      "passwordHash": "$2a$10$ocMSmylYDV60zjJ5iQiBj.0QaDS85exUeBB8e.OqohOMbJ7q0L6Jm",
+      "role": "user",
+      "balance": 45000,
+      "referralCode": "HERON-VANCE",
+      "referredBy": null,
+      "status": "active",
+      "createdAt": "2026-09-05T01:11:41.826Z"
+    },
+    {
+      "id": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
+      "email": "microbase300@gmail.com",
+      "name": "obinna",
+      "passwordHash": "$2a$10$rq42DSvkoBHWDrUrEKXrkO//9XLobiAVs1pp.HpJevPA/5VpUYpku",
+      "role": "user",
+      "balance": 3500,
+      "referralCode": "HERON-1842",
+      "referredBy": null,
+      "status": "active",
+      "createdAt": "2026-09-05T01:46:40.359Z"
+    },
+    {
+      "id": "usr_2b892fa5-dafb-4965-804f-a0276dd94488",
+      "email": "joseph@gmail.com",
+      "name": "Joseph",
+      "passwordHash": "$2a$10$3dSgt7dfHo2JUEjGg.kRA.TFWcbcBiNbfbvn/R.Aq.FHciRscND.u",
+      "role": "user",
+      "balance": 1000,
+      "referralCode": "HERON-8599",
+      "referredBy": null,
+      "status": "active",
+      "createdAt": "2026-09-05T03:47:58.970Z"
+    },
+    {
+      "id": "usr_0cda17de-def3-477d-a0a8-06c984532277",
+      "email": "test_user_175647225@heroncapital.com",
+      "name": "Mobile Test User",
+      "passwordHash": "$2a$10$BLAPuNzsX.71yHQoBLlnfODMQ7eplaOVnL9spqB7h21Es/FN6bcWK",
+      "role": "user",
+      "balance": 1000,
+      "referralCode": "HERON-4542",
+      "referredBy": null,
+      "status": "active",
+      "createdAt": "2026-09-05T04:10:57.553Z"
+    }
+  ],
+  "refreshTokens": [
+    {
+      "id": "rft_39197682-dc81-4c4c-a32e-f51158a80a88",
+      "userId": "usr_admin_001",
+      "tokenHash": "b294fae3bf7039d1997a883769a53d6540955b0143479fc4f664974e6e99bced",
+      "expiresAt": "2026-09-12T01:17:07.095Z",
+      "createdAt": "2026-09-05T01:17:07.095Z"
+    },
+    {
+      "id": "rft_f44cb3a4-0591-4e7f-8b31-6b8ee0bdf3fe",
+      "userId": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
+      "tokenHash": "d564bb93c3bed1605201661589597ff019f3e8464303fa279565675ea4f4a98d",
+      "expiresAt": "2026-09-12T01:46:40.367Z",
+      "createdAt": "2026-09-05T01:46:40.372Z"
+    },
+    {
+      "id": "rft_9c219d43-b0bf-47b2-9fc0-8d9b24a5afc9",
+      "userId": "usr_admin_001",
+      "tokenHash": "46db1ec6d292a64e99ccab7c10e2b299ad914f4eeca4d73395cc49261a5fc706",
+      "expiresAt": "2026-09-12T02:01:51.588Z",
+      "createdAt": "2026-09-05T02:01:51.588Z"
+    },
+    {
+      "id": "rft_5b75e9b0-cede-4d94-9891-af15183e8e14",
+      "userId": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
+      "tokenHash": "83c46be914f0cefa24d27d77b7f5f97050a6dd92ca2dd80ea27a1c5e2adabb9b",
+      "expiresAt": "2026-09-12T02:10:02.445Z",
+      "createdAt": "2026-09-05T02:10:02.445Z"
+    },
+    {
+      "id": "rft_c813535a-0118-4b90-af28-2ab403d4cbd1",
+      "userId": "usr_2b892fa5-dafb-4965-804f-a0276dd94488",
+      "tokenHash": "e3a2cd912be4e3047d76cf4d13c58004b38566ffef1de52dbcefb2e8e8f4b242",
+      "expiresAt": "2026-09-12T03:47:59.023Z",
+      "createdAt": "2026-09-05T03:47:59.024Z"
+    },
+    {
+      "id": "rft_3ea67098-cefa-4607-a7fa-0d5ffbfdd2e5",
+      "userId": "usr_0cda17de-def3-477d-a0a8-06c984532277",
+      "tokenHash": "f2590404517688fbc7ee7903d1ca8421c84c634a5667a5e4896ee709565dc147",
+      "expiresAt": "2026-09-12T04:10:57.563Z",
+      "createdAt": "2026-09-05T04:10:57.563Z"
     }
   ],
   "investments": [
@@ -90,26 +202,37 @@
   ],
   "transactions": [
     {
-      "id": "tx_dep_109284",
-      "userId": "usr_demo_882194",
+      "id": "tx_f19c9deb-e671-4e92-a03f-73b03f4db2b3",
+      "userId": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
       "type": "deposit",
-      "amount": 25000,
+      "amount": 2500,
       "asset": "USDT",
       "status": "completed",
-      "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
-      "note": "Deposit via TRC-20 Smart Contract",
-      "createdAt": "2026-08-30T17:18:13.156Z"
+      "txHash": "0xf353ca27a8b8abd46d121b22ab8fb5d9d0b97203970321e38dd1fb630ec3c2e6",
+      "note": "Inbound USDT deposit of $2,500 awaiting admin confirmation (TX: 0xf353ca27...)",
+      "createdAt": "2026-09-05T02:10:19.469Z"
     },
     {
-      "id": "tx_inv_lock_01",
+      "id": "tx_df9769bf-0623-4d2c-9abb-b3bb67d20847",
       "userId": "usr_demo_882194",
-      "type": "investment_lock",
-      "amount": 3000,
+      "type": "yield_payout",
+      "amount": 261.25,
       "asset": "USD",
       "status": "completed",
-      "txHash": "0x10b741ad5c2901a8efbc01289547aa2810a9bf4910cf91a823bf902840182741",
-      "note": "Allocated to Standard Plan (48h)",
-      "createdAt": "2026-09-01T15:18:13.156Z"
+      "txHash": "0xfcfbdb7d515169370d0947d3eef798f82abcc017d3d0547e8b1af419bd69aeea",
+      "note": "Amateur Plan Matured: Principal $250 + Yield $11.25",
+      "createdAt": "2026-09-04T17:27:41.356Z"
+    },
+    {
+      "id": "tx_44017c98-0244-472d-8540-c08f1153417f",
+      "userId": "usr_demo_882194",
+      "type": "investment_lock",
+      "amount": 250,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x152c102d956ef3f4a91bf69c790783283b50002fb2c38cacd86dd601365bdf96",
+      "note": "Committed capital to Amateur Plan (24h • 4.5%)",
+      "createdAt": "2026-09-03T17:27:31.806Z"
     },
     {
       "id": "tx_yield_01",
@@ -145,26 +268,26 @@
       "createdAt": "2026-09-01T17:18:13.156Z"
     },
     {
-      "id": "tx_44017c98-0244-472d-8540-c08f1153417f",
+      "id": "tx_inv_lock_01",
       "userId": "usr_demo_882194",
       "type": "investment_lock",
-      "amount": 250,
+      "amount": 3000,
       "asset": "USD",
       "status": "completed",
-      "txHash": "0x152c102d956ef3f4a91bf69c790783283b50002fb2c38cacd86dd601365bdf96",
-      "note": "Committed capital to Amateur Plan (24h • 4.5%)",
-      "createdAt": "2026-09-03T17:27:31.806Z"
+      "txHash": "0x10b741ad5c2901a8efbc01289547aa2810a9bf4910cf91a823bf902840182741",
+      "note": "Allocated to Standard Plan (48h)",
+      "createdAt": "2026-09-01T15:18:13.156Z"
     },
     {
-      "id": "tx_df9769bf-0623-4d2c-9abb-b3bb67d20847",
+      "id": "tx_dep_109284",
       "userId": "usr_demo_882194",
-      "type": "yield_payout",
-      "amount": 261.25,
-      "asset": "USD",
+      "type": "deposit",
+      "amount": 25000,
+      "asset": "USDT",
       "status": "completed",
-      "txHash": "0xfcfbdb7d515169370d0947d3eef798f82abcc017d3d0547e8b1af419bd69aeea",
-      "note": "Amateur Plan Matured: Principal $250 + Yield $11.25",
-      "createdAt": "2026-09-04T17:27:41.356Z"
+      "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
+      "note": "Deposit via TRC-20 Smart Contract",
+      "createdAt": "2026-08-30T17:18:13.156Z"
     }
   ],
   "referralCommissions": [
@@ -179,5 +302,110 @@
       "commissionAmount": 320,
       "createdAt": "2026-09-01T17:18:13.156Z"
     }
-  ]
+  ],
+  "planConfigs": {
+    "amateur": {
+      "id": "amateur",
+      "name": "Amateur Plan",
+      "min": 100,
+      "max": 1999,
+      "durationHours": 24,
+      "rate": 0.045,
+      "referralRate": 0.08,
+      "description": "Foundational 24-hour cycle with guaranteed capital & yield release.",
+      "badge": "24h • 4.5%",
+      "isActive": true
+    },
+    "standard": {
+      "id": "standard",
+      "name": "Standard Plan",
+      "min": 2000,
+      "max": 5999,
+      "durationHours": 48,
+      "rate": 0.095,
+      "referralRate": 0.16,
+      "description": "Balanced accumulation over 48 hours with priority queue allocation.",
+      "badge": "48h • 9.5%",
+      "isActive": true
+    },
+    "premium": {
+      "id": "premium",
+      "name": "Premium Plan",
+      "min": 6000,
+      "max": 10999,
+      "durationHours": 72,
+      "rate": 0.155,
+      "referralRate": 0.24,
+      "description": "High-velocity institutional yield with dedicated VIP risk mitigation officer.",
+      "badge": "72h • 15.5%",
+      "isActive": true
+    },
+    "retirement": {
+      "id": "retirement",
+      "name": "Retirement Plan",
+      "min": 11000,
+      "max": null,
+      "durationHours": 96,
+      "rate": 0.225,
+      "referralRate": 0.3,
+      "description": "Sovereign reserve tier with maximum compounding power and uncapped limits.",
+      "badge": "96h • 22.5%",
+      "isActive": true
+    }
+  },
+  "notifications": [
+    {
+      "id": "notif_welcome_01",
+      "userId": null,
+      "targetEmail": null,
+      "title": "Institutional Smart Contract Protocol Activated",
+      "message": "Welcome to Heron Digital Capital. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.",
+      "type": "announcement",
+      "sender": "Chief Risk Officer",
+      "readBy": [],
+      "createdAt": "2026-09-05T01:42:17.134Z"
+    }
+  ],
+  "depositAddresses": {
+    "USDT_TRC20": {
+      "key": "USDT_TRC20",
+      "asset": "USDT",
+      "network": "Tron (TRC-20)",
+      "address": "TX9d8b7a6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a",
+      "isActive": true,
+      "updatedAt": "2026-09-05T01:42:17.057Z"
+    },
+    "USDT_ERC20": {
+      "key": "USDT_ERC20",
+      "asset": "USDT",
+      "network": "Ethereum (ERC-20)",
+      "address": "0x882194f8a7e6d5c4b3a201948572615049382710",
+      "isActive": true,
+      "updatedAt": "2026-09-05T01:42:17.058Z"
+    },
+    "BTC": {
+      "key": "BTC",
+      "asset": "BTC",
+      "network": "Bitcoin Native SegWit",
+      "address": "bc1q9d8a7f6e5c4b3a201948572615049382710082",
+      "isActive": true,
+      "updatedAt": "2026-09-05T01:42:17.058Z"
+    },
+    "ETH": {
+      "key": "ETH",
+      "asset": "ETH",
+      "network": "Ethereum Mainnet",
+      "address": "0x882194f8a7e6d5c4b3a201948572615049382710",
+      "isActive": true,
+      "updatedAt": "2026-09-05T01:42:17.058Z"
+    },
+    "SOL": {
+      "key": "SOL",
+      "asset": "SOL",
+      "network": "Solana SPL",
+      "address": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+      "isActive": true,
+      "updatedAt": "2026-09-05T01:42:17.058Z"
+    }
+  }
 }

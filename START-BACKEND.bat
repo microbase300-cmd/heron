@@ -9,5 +9,5 @@ echo   Press CTRL+C to stop
 echo  =====================================================
 echo.
 cd /d "%~dp0backend"
-node dist/server.js
+npm run dev
 pause

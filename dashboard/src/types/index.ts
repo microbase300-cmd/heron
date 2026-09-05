@@ -1,4 +1,4 @@
-﻿export type PlanId = 'amateur' | 'standard' | 'premium' | 'retirement';
+export type PlanId = 'amateur' | 'standard' | 'premium' | 'retirement';
 
 export interface PlanConfig {
   id: PlanId;
@@ -55,12 +55,35 @@ export interface WalletSummary {
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus' | 'investment_lock';
+  type: 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus' | 'investment_lock' | 'admin_adjustment';
   amount: number;
-  asset: 'USD' | 'BTC' | 'ETH' | 'USDT' | 'SOL';
+  asset: string;
   status: 'completed' | 'pending' | 'rejected';
   txHash: string;
   note: string;
+  createdAt: string;
+}
+
+export interface DepositAddressConfig {
+  key: string;
+  asset: string;
+  network: string;
+  address: string;
+  memo?: string;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface NotificationMessage {
+  id: string;
+  userId?: string | null;
+  targetEmail?: string | null;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'alert' | 'announcement';
+  sender: string;
+  readBy: string[];
+  isRead: boolean;
   createdAt: string;
 }
 
@@ -86,3 +109,4 @@ export interface ReferralData {
     joinedAt: string;
   }[];
 }
+

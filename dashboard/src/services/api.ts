@@ -1,4 +1,4 @@
-﻿import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData } from '../types';
+import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig } from '../types';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -38,7 +38,14 @@ class ApiService {
     return data;
   }
 
-  // Auth
+  // Auth & OTP
+  async sendRegistrationOtp(email: string): Promise<{ message: string; devOtp?: string; expiresAt: number }> {
+    return this.request('/auth/send-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
   async login(email: string, password: string): Promise<{ token: string; user: User }> {
     const data = await this.request<{ token: string; user: User }>('/auth/login', {
       method: 'POST',
@@ -48,10 +55,16 @@ class ApiService {
     return data;
   }
 
-  async register(name: string, email: string, password: string, referralCode?: string): Promise<{ token: string; user: User }> {
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    otpCode: string,
+    referralCode?: string
+  ): Promise<{ token: string; user: User }> {
     const data = await this.request<{ token: string; user: User }>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, referralCode })
+      body: JSON.stringify({ name, email, password, otpCode, referralCode })
     });
     this.setToken(data.token);
     return data;
@@ -77,26 +90,54 @@ class ApiService {
     });
   }
 
-  // Wallet
+  // Wallet & Deposit Addresses
   async getWalletSummary(): Promise<WalletSummary> {
     return this.request<WalletSummary>('/wallet/summary');
   }
 
-  async getDepositAddresses(): Promise<{ addresses: Record<string, { network: string; address: string }> }> {
+  async getDepositAddresses(): Promise<{ addresses: Record<string, DepositAddressConfig> }> {
     return this.request('/wallet/addresses');
   }
 
-  async deposit(amount: number, asset: string): Promise<{ message: string; transaction: Transaction; newBalance: number }> {
+  async deposit(amount: number, asset: string, txHash?: string): Promise<{ message: string; transaction: Transaction; status: string }> {
     return this.request('/wallet/deposit', {
       method: 'POST',
-      body: JSON.stringify({ amount, asset })
+      body: JSON.stringify({ amount, asset, txHash })
     });
   }
 
-  async withdraw(amount: number, asset: string, destinationAddress: string): Promise<{ message: string; transaction: Transaction; newBalance: number }> {
+  async requestWithdrawalOtp(): Promise<{ message: string; devOtp?: string; expiresAt: number }> {
+    return this.request('/wallet/request-withdrawal-otp', {
+      method: 'POST'
+    });
+  }
+
+  async withdraw(
+    amount: number,
+    asset: string,
+    destinationAddress: string,
+    otpCode: string
+  ): Promise<{ message: string; transaction: Transaction; newBalance: number; status: string }> {
     return this.request('/wallet/withdraw', {
       method: 'POST',
-      body: JSON.stringify({ amount, asset, destinationAddress })
+      body: JSON.stringify({ amount, asset, destinationAddress, otpCode })
+    });
+  }
+
+  // Notifications
+  async getNotifications(): Promise<{ notifications: NotificationMessage[]; unreadCount: number }> {
+    return this.request<{ notifications: NotificationMessage[]; unreadCount: number }>('/notifications');
+  }
+
+  async markNotificationAsRead(id: string): Promise<{ message: string; id: string }> {
+    return this.request(`/notifications/${id}/read`, {
+      method: 'POST'
+    });
+  }
+
+  async markAllNotificationsAsRead(): Promise<{ message: string }> {
+    return this.request('/notifications/read-all', {
+      method: 'POST'
     });
   }
 
@@ -127,7 +168,6 @@ class ApiService {
         } : null;
       }).filter(Boolean) as any;
     } catch {
-      // Fallback prices if offline
       return [
         { symbol: 'BTC', price: 68420.50, change24h: 3.42 },
         { symbol: 'ETH', price: 3540.20, change24h: 2.15 },

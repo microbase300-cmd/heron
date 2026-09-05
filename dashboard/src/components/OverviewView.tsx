@@ -13,6 +13,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import { WalletSummary, Investment, User } from '../types';
+import { PortfolioYieldChart } from './charts/PortfolioYieldChart';
+import { AssetAllocationChart } from './charts/AssetAllocationChart';
 
 interface OverviewViewProps {
   summary: WalletSummary | null;
@@ -37,7 +39,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   return (
     <div className="space-y-8">
       {/* Top Banner: NAV & 24h Delta */}
-      <div className="relative overflow-hidden rounded-2xl glass-card-featured p-8 border border-gold/30">
+      <div className="relative overflow-hidden rounded-2xl glass-card-featured p-5 sm:p-8 border border-gold/30">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-emerald-glow/5 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -45,16 +47,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-mono text-gold uppercase tracking-widest mb-2">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Net Asset Value • Sovereign Digital Reserve</span>
+              <span>Net Asset Value • Sovereign Reserve</span>
             </div>
-            <div className="text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight flex items-baseline gap-4">
+            <div className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight flex flex-wrap items-baseline gap-3 sm:gap-4">
               ${totalNAV.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              <span className="text-sm font-sans font-semibold px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-glow border border-emerald-500/30 flex items-center gap-1">
+              <span className="text-xs sm:text-sm font-sans font-semibold px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-glow border border-emerald-500/30 flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
                 +15.5% Accrued
               </span>
             </div>
-            <div className="mt-3 flex items-center gap-4 text-xs text-white/50 font-mono">
+            <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-white/50 font-mono">
               <span>≈ {btcEquivalent} BTC</span>
               <span>•</span>
               <span>≈ {ethEquivalent} ETH</span>
@@ -133,7 +135,25 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       </div>
 
-      {/* 2-Column: Compound Yield Curve vs Active Mandates Live Status */}
+      {/* Row 1: Interactive Recharts Visualizations (Yield Curve + Asset Allocation) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <PortfolioYieldChart
+            totalNAV={totalNAV}
+            profitAccrued={summary?.totalProfitAccrued ?? 0}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <AssetAllocationChart
+            available={summary?.availableBalance ?? user?.balance ?? 0}
+            escrow={summary?.lockedInInvestments ?? 0}
+            yieldProfit={summary?.totalProfitAccrued ?? 0}
+            referral={summary?.totalReferralEarnings ?? 0}
+          />
+        </div>
+      </div>
+
+      {/* Row 2: Programmatic Return Horizons & Active Compounding Mandates */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Institutional Compounding Architecture */}
         <div className="lg:col-span-2 p-6 rounded-2xl glass-card space-y-6">

@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Heron Capital",
+    "slug": "heron-mobile",
+    "scheme": "heron",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#070908",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.heron.mobile"
+    },
+    "android": {
+      "package": "com.heron.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
