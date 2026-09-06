@@ -23,6 +23,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.2.0] - 2026-09-06
+### Changed
+- **Comprehensive Ecosystem-Wide Terminology Standardization (Mandate ➔ Investment)**:
+  - Standardized all client-facing and administrative interface terminology across the entire repository to "Investment" / "Active Investments" / "New Investment" / "Invest" / "Investment Plans":
+    - **Dashboard (`dashboard/`)**: Updated navigation items in `Sidebar.tsx` ("Active Investments", "New Investment"), `Navbar.tsx` (header titles and "New Investment" CTA), `App.tsx` (mobile bottom nav "Investments" tab), `OverviewView.tsx` ("New Investment ↗", "Active Investments Quick Tracker", "No Active Investments"), `MandatesView.tsx` ("Active Investments", "No Investments Found"), `NewInvestmentView.tsx` ("Redirecting to active investments..."), `ReferralsView.tsx` ("Share institutional investments", "Investment Tier"), `LedgerView.tsx` ("Investment Locks"), and `AuthModal.tsx` ("Open a sovereign digital asset investment account").
+    - **Marketing & Public Portal (`web/` & HTML files)**: Standardized `Home.tsx` / `index.html` ("Amateur Investment", "Standard Investment", "Premium Investment"), `Pricing.tsx` / `pricing.html` ("01 / capital investments & architecture", "Choose your investment plan", "Dedicated Private Investment Director", "Share your investment invite link", "Speak directly with an Investment Officer"), `Strategies.tsx` / `strategies.html` ("defined investments", "Discuss an investment", "Different investments", "Strategic Investments"), `Contact.tsx` / `contact.html` ("Institutional investment", "investment desk"), `Company.tsx` / `company.html` ("define an investment strategy"), `YieldSimulator.tsx` / `assets/js/main.js` ("Matched Investment Tier", "Invest with $... ↗"), `LegalModal.tsx` ("execute authenticated investments", "Investment Agreements"), and `MobileAppModal.tsx` ("instant investment execution").
+    - **Admin Operations Portal (`admin/`)**: Standardized `AdminSidebar.tsx` ("Escrow Investments"), `EscrowMandatesView.tsx` ("Smart Escrow & Compounding Investments", "Active Escrow Contracts", "Matured & Settled Investments", "Investment ID", "Failed to force-mature investment"), and `PlanConfigView.tsx` ("Configure Investment Plan", "Investment plan tier updated", "Plan Description").
+    - **Mobile Application (`mobile/`)**: Standardized `App.tsx` (Bottom tab bar label "Investments", "Institutional Yield Investments", "No active investments deployed", "Institutional Investments", "+ Deploy New Investment", "Deploy Capital Investment", "Select Investment Tier", "Investment Deployed" alert, "Failed to deploy investment" alert) and `README.md` ("Active Investments & Smart Escrow Timelocks").
+    - **Backend Services (`backend/`)**: Standardized `routes/admin.ts` (route comments, "Investment successfully force-matured and disbursed"), `services/investmentEngine.ts` (notification title "Investment Matured"), `types/index.ts` & `services/db.ts` (added `activeInvestmentsCount` alongside backward-compatible `activeMandatesCount`), and `db/schema.sql`.
+
+---
+
 ## [1.1.5] - 2026-09-06
 ### Fixed
 - **JSON Serialization Null `max` Crash in Plan Tier Formatting & Limit Validation**:

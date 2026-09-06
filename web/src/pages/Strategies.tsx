@@ -21,7 +21,7 @@ export default function Strategies() {
             <Reveal className="delay-2">
               <p className="page-intro">
                 Heron's strategy architecture turns market complexity into defined
-                mandates, explicit risk parameters and a repeatable decision
+                investments, explicit risk parameters and a repeatable decision
                 process.
               </p>
             </Reveal>
@@ -29,7 +29,7 @@ export default function Strategies() {
             <Reveal className="delay-3">
               <div className="hero-bottom">
                 <Link className="btn btn-gold" to="/contact">
-                  Discuss a mandate ↗
+                  Discuss an investment ↗
                 </Link>
                 <a className="text-link" href="#framework">
                   See the framework ↓
@@ -71,7 +71,7 @@ export default function Strategies() {
       <div className="data-band">
         <div className="container data-band-inner">
           <div className="data-cell">
-            Mandate<strong>Multi-strategy</strong>
+            Investment<strong>Multi-strategy</strong>
           </div>
           <div className="data-cell">
             Coverage<strong>Digital assets</strong>
@@ -149,7 +149,7 @@ export default function Strategies() {
               <div>
                 <div className="eyebrow">03 / strategy families</div>
                 <h2 className="display">
-                  Different mandates.
+                  Different investments.
                   <br />
                   Same discipline.
                 </h2>
@@ -166,7 +166,7 @@ export default function Strategies() {
                   <p>
                     Built for clients seeking measured exposure to established
                     digital assets with liquidity, concentration and drawdown
-                    awareness at the center of the mandate.
+                    awareness at the center of the investment.
                   </p>
                   <div className="family-meta">
                     <span>Profile / Core</span>
@@ -174,7 +174,7 @@ export default function Strategies() {
                     <span>Approach / Strategic</span>
                   </div>
                 </div>
-                <Link to="/contact" className="family-arrow" aria-label="Discuss Core Digital Mandate">
+                <Link to="/contact" className="family-arrow" aria-label="Discuss Core Digital Strategy">
                   ↗
                 </Link>
               </article>
@@ -196,7 +196,7 @@ export default function Strategies() {
                     <span>Approach / Opportunistic</span>
                   </div>
                 </div>
-                <Link to="/contact" className="family-arrow" aria-label="Discuss Growth & Opportunity Mandate">
+                <Link to="/contact" className="family-arrow" aria-label="Discuss Growth & Opportunity Strategy">
                   ↗
                 </Link>
               </article>
@@ -206,10 +206,10 @@ export default function Strategies() {
               <article className="family-card">
                 <div className="family-index">03</div>
                 <div>
-                  <h3>Strategic Mandates</h3>
+                  <h3>Strategic Investments</h3>
                   <p>
                     Custom portfolio architecture for clients who need a more
-                    tailored mandate across liquidity, risk appetite, allocation
+                    tailored structure across liquidity, risk appetite, allocation
                     bands and reporting requirements.
                   </p>
                   <div className="family-meta">
@@ -218,7 +218,7 @@ export default function Strategies() {
                     <span>Approach / Bespoke</span>
                   </div>
                 </div>
-                <Link to="/contact" className="family-arrow" aria-label="Discuss Strategic Mandates">
+                <Link to="/contact" className="family-arrow" aria-label="Discuss Strategic Investments">
                   ↗
                 </Link>
               </article>

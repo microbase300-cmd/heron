@@ -53,7 +53,7 @@ export default function Company() {
               </h2>
               <p className="body">
                 We bring institutional habits to a market that moves at digital
-                speed: define a mandate, understand the exposures, monitor the
+                speed: define an investment strategy, understand the exposures, monitor the
                 environment and communicate clearly.
               </p>
               <p className="body">

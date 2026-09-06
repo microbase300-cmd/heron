@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ReceiptText, ArrowDownLeft, ArrowUpRight, TrendingUp, Users, Lock, CheckCircle2, Copy, Check } from 'lucide-react';
 import { Transaction } from '../types';
 
@@ -46,7 +46,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ transactions }) => {
             { id: 'all', label: 'All' },
             { id: 'deposit', label: 'Deposits' },
             { id: 'yield_payout', label: 'Yield Payouts' },
-            { id: 'investment_lock', label: 'Mandate Locks' },
+            { id: 'investment_lock', label: 'Investment Locks' },
             { id: 'referral_bonus', label: 'Affiliate' },
             { id: 'withdrawal', label: 'Withdrawals' },
           ].map(f => (

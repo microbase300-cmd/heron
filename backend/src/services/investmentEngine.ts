@@ -42,7 +42,7 @@ export function startInvestmentEngine(intervalMs = 10000) {
               id: `notif_${uuidv4()}`,
               userId: user.id,
               targetEmail: user.email,
-              title: `Yield Mandate Matured: ${inv.planName}`,
+              title: `Investment Matured: ${inv.planName}`,
               message: `Your ${inv.planName} cycle is complete. Payout of $${inv.totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })} ($${inv.amount.toLocaleString()} principal + $${inv.expectedProfit.toLocaleString()} yield) has been credited to your available balance.`,
               type: 'success',
               sender: 'Smart Escrow Yield Engine',

@@ -209,7 +209,7 @@ export const App: React.FC = () => {
           }`}
         >
           <Timer className="w-4 h-4" />
-          <span className="text-[10px] font-medium tracking-tight">Mandates</span>
+          <span className="text-[10px] font-medium tracking-tight">Investments</span>
         </button>
 
         <button

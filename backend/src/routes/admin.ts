@@ -253,7 +253,7 @@ router.post('/transactions/:id/reject', (req: AuthRequest, res: Response) => {
   }
 });
 
-// 8. GET /api/admin/investments - All Live & Completed Mandates
+// 8. GET /api/admin/investments - All Live & Completed Investments
 router.get('/investments', (_req: AuthRequest, res: Response) => {
   try {
     const investments = db.getAllInvestments();
@@ -263,7 +263,7 @@ router.get('/investments', (_req: AuthRequest, res: Response) => {
   }
 });
 
-// 9. POST /api/admin/investments/:id/force-mature - Force Immediate Mandate Maturity
+// 9. POST /api/admin/investments/:id/force-mature - Force Immediate Investment Maturity
 router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -271,7 +271,7 @@ router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) =
     const inv = investments.find((i) => i.id === id);
 
     if (!inv) {
-      res.status(404).json({ error: 'Investment mandate not found.' });
+      res.status(404).json({ error: 'Investment not found.' });
       return;
     }
 
@@ -304,12 +304,12 @@ router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) =
     db.createTransaction(tx);
 
     res.json({
-      message: 'Mandate successfully force-matured and disbursed.',
+      message: 'Investment successfully force-matured and disbursed.',
       investmentId: id,
       totalPayout: inv.totalPayout,
     });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to force-mature investment mandate.' });
+    res.status(500).json({ error: 'Failed to force-mature investment.' });
   }
 });
 

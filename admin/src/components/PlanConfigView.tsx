@@ -76,7 +76,7 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
         description: formDesc,
       });
 
-      setSuccessMsg(`Mandate tier "${editingPlan.name}" updated successfully.`);
+      setSuccessMsg(`Investment plan tier "${editingPlan.name}" updated successfully.`);
       await onRefreshPlans();
       setTimeout(() => {
         setEditingPlan(null);
@@ -206,7 +206,7 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
                 <Sliders className="w-5 h-5 text-gold" />
-                Configure Mandate: {editingPlan.name}
+                Configure Investment Plan: {editingPlan.name}
               </h3>
               <button onClick={() => setEditingPlan(null)} className="text-white/40 hover:text-white">
                 <X className="w-5 h-5" />
@@ -309,7 +309,7 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-white/60 mb-1">Mandate Description</label>
+                <label className="block text-xs font-mono text-white/60 mb-1">Plan Description</label>
                 <textarea
                   rows={3}
                   value={formDesc}

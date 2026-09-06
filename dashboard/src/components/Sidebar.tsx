@@ -35,8 +35,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems = [
     { id: 'overview', label: 'Portfolio Overview', icon: LayoutDashboard },
-    { id: 'mandates', label: 'Active Mandates', icon: Timer, badge: 'Live' },
-    { id: 'invest', label: 'Open Mandate', icon: TrendingUp },
+    { id: 'mandates', label: 'Active Investments', icon: Timer, badge: 'Live' },
+    { id: 'invest', label: 'New Investment', icon: TrendingUp },
     { id: 'deposit', label: 'Deposit Hub', icon: ArrowDownLeft },
     { id: 'withdraw', label: 'Withdraw Terminal', icon: ArrowUpRight },
     { id: 'referrals', label: 'Affiliate Network', icon: Users, badge: '30%' },

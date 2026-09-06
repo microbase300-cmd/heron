@@ -45,7 +45,7 @@ export default function MobileAppModal({ isOpen, onClose }: MobileAppModalProps)
         </h2>
         <p className="body">
           The native Heron mobile experience is built with React Native & Expo
-          for encrypted portfolio visibility, instant mandate execution, and
+          for encrypted portfolio visibility, instant investment execution, and
           biometric authorization.
         </p>
 

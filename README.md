@@ -57,7 +57,7 @@ npm run dev
 - **Role**: `admin` (Level 4 Operations Clearance)
 
 ### Investor Client Portal (`http://localhost:5173`):
-- **Primary Sovereign Investor**: `alex.vance@vanceholdings.com` / `Heron2026!` (Funded with $45,000 NAV & active escrow mandate)
+- **Primary Sovereign Investor**: `alex.vance@vanceholdings.com` / `Heron2026!` (Funded with $45,000 NAV & active escrow investment)
 - **Senior Institutional Investor**: `investor@heronassets.com` / `Heron2026!`
 - **Testing & Credentials Guide**: Full test matrix documented in [`TESTING_CREDENTIALS.md`](./TESTING_CREDENTIALS.md).
 - **New Account**: Click *"Register Account"* to create an investor profile and receive a unique referral link.

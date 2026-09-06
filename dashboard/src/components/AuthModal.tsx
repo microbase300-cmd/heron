@@ -105,7 +105,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
               ? 'Authenticate to access portfolio intelligence'
               : registerStep === 'otp'
               ? `Enter the 6-digit authorization code sent to ${email}`
-              : 'Open a sovereign digital asset mandate account'}
+              : 'Open a sovereign digital asset investment account'}
           </p>
         </div>
 

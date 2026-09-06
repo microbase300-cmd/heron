@@ -28,7 +28,7 @@ export default function Pricing() {
         <div className="container">
           <Reveal>
             <div className="eyebrow">
-              01 / capital mandates &amp; investment architecture
+              01 / capital investments &amp; architecture
             </div>
           </Reveal>
 
@@ -65,7 +65,7 @@ export default function Pricing() {
                 </h2>
               </div>
               <p className="body">
-                Choose your investment mandate below. Capital and profits are held
+                Choose your investment plan below. Capital and profits are held
                 in institutional cryptographic escrow and automatically disbursed
                 upon maturity directly to your connected wallet.
               </p>
@@ -321,7 +321,7 @@ export default function Pricing() {
                   <li>96h institutional liquidity cycle</li>
                   <li>Maximum 30% affiliate revenue</li>
                   <li>Sovereign cold vault custody</li>
-                  <li>Dedicated Private Mandate Director</li>
+                  <li>Dedicated Private Investment Director</li>
                   <li>Uncapped capital allocation capacity</li>
                 </ul>
 
@@ -379,7 +379,7 @@ export default function Pricing() {
               </h2>
               <p className="body">
                 Heron operates an institutional referral network. Share your
-                mandate invite link with private clients, hedge funds, or peers to
+                investment invite link with private clients, hedge funds, or peers to
                 unlock instant, direct-to-wallet commission payouts across all 4
                 tiers.
               </p>
@@ -458,12 +458,12 @@ export default function Pricing() {
             <div className="eyebrow">06 / transparent disclosures</div>
             <h2 className="display">Stewardship without compromise.</h2>
             <p className="body">
-              Digital asset markets operate continuously. All mandates are subject
+              Digital asset markets operate continuously. All investments are subject
               to our cryptographic smart contract rules, transparent allocation
               disclosures, and multi-tier fraud prevention checks prior to release.
             </p>
             <Link className="linkline" to="/contact">
-              <span>Speak directly with a Mandate Officer</span>
+              <span>Speak directly with an Investment Officer</span>
               <span>↗</span>
             </Link>
           </Reveal>

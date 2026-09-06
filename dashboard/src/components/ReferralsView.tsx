@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Users, Copy, Check, Sparkles, TrendingUp, ShieldCheck, Share2 } from 'lucide-react';
 import { ReferralData } from '../types';
 
@@ -32,10 +32,10 @@ export const ReferralsView: React.FC<ReferralsViewProps> = ({ data }) => {
               <Sparkles className="w-3.5 h-3.5" /> Your Client Invitation Link
             </span>
             <div className="text-2xl font-serif font-bold text-white">
-              Share institutional mandates. Receive instant wallet payouts.
+              Share institutional investments. Receive instant wallet payouts.
             </div>
             <p className="text-xs text-white/50 max-w-xl">
-              Commissions are automatically credited to your available balance the exact moment a referred investor confirms their mandate.
+              Commissions are automatically credited to your available balance the exact moment a referred investor confirms their investment.
             </p>
           </div>
 
@@ -124,7 +124,7 @@ export const ReferralsView: React.FC<ReferralsViewProps> = ({ data }) => {
               <thead className="text-white/40 uppercase border-b border-white/[0.08]">
                 <tr>
                   <th className="pb-3 font-medium">Referred Client</th>
-                  <th className="pb-3 font-medium">Mandate Tier</th>
+                  <th className="pb-3 font-medium">Investment Tier</th>
                   <th className="pb-3 font-medium">Allocation</th>
                   <th className="pb-3 font-medium">Rate</th>
                   <th className="pb-3 font-medium text-right">Commission Disbursed</th>

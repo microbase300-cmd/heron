@@ -14,8 +14,8 @@ interface NavbarProps {
 
 const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
   overview: { title: 'Portfolio Intelligence', subtitle: 'Real-time capital valuation and accrued programmatic yield' },
-  mandates: { title: 'Active Mandates', subtitle: 'Live cryptographic timelocks and scheduled maturity releases' },
-  invest: { title: 'Deploy Capital', subtitle: 'Select an institutional mandate tier with guaranteed return parameters' },
+  mandates: { title: 'Active Investments', subtitle: 'Live cryptographic timelocks and scheduled maturity releases' },
+  invest: { title: 'Deploy Capital', subtitle: 'Select an institutional investment tier with guaranteed return parameters' },
   deposit: { title: 'Multi-Asset Liquidity Hub', subtitle: 'Deposit BTC, ETH, USDT (TRC-20 / ERC-20), or SOL' },
   withdraw: { title: 'Disbursement Terminal', subtitle: 'Automated direct-to-wallet withdrawal pipeline' },
   referrals: { title: 'Partner Affiliate Network', subtitle: 'Earn up to 30% instant commission on referred client allocations' },
@@ -75,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] text-[11px] sm:text-xs font-bold tracking-wide transition-all shadow-lg shadow-gold/20"
         >
           <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>New Mandate</span>
+          <span>New Investment</span>
         </button>
       </div>
     </header>

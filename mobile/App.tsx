@@ -492,12 +492,12 @@ export default function App() {
     setModalLoading(true);
     try {
       await mobileApi.createInvestment(selectedPlanId, amt);
-      Alert.alert('Mandate Deployed', 'Your timelocked smart contract has started. Programmatic yield will accrue in real time.');
+      Alert.alert('Investment Deployed', 'Your timelocked smart contract has started. Programmatic yield will accrue in real time.');
       setShowInvestModal(false);
       setInvestAmount('');
       loadAllData();
     } catch (err: any) {
-      Alert.alert('Investment Error', err.message || 'Failed to deploy mandate.');
+      Alert.alert('Investment Error', err.message || 'Failed to deploy investment.');
     } finally {
       setModalLoading(false);
     }
@@ -931,7 +931,7 @@ export default function App() {
             {/* Quick Mandate Deploy Card */}
             <View style={styles.deployCard}>
               <View style={styles.deployLeft}>
-                <Text style={styles.deployTitle}>Institutional Yield Mandates</Text>
+                <Text style={styles.deployTitle}>Institutional Yield Investments</Text>
                 <Text style={styles.deploySub}>Earn 4.5% - 22.5% fixed programmatic return</Text>
               </View>
               <TouchableOpacity
@@ -953,7 +953,7 @@ export default function App() {
 
             {activeMandates.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No active investment mandates deployed.</Text>
+                <Text style={styles.emptyText}>No active investments deployed.</Text>
                 <TouchableOpacity onPress={() => setShowInvestModal(true)}>
                   <Text style={styles.emptyLink}>Deploy Capital to Start Earning →</Text>
                 </TouchableOpacity>
@@ -995,16 +995,16 @@ export default function App() {
         )}
 
         {activeTab === 'mandates' && (
-          /* TAB 2: MANDATES */
+          /* TAB 2: INVESTMENTS */
           <View style={styles.tabContent}>
             <View style={styles.mandatesHeaderBox}>
-              <Text style={styles.pageTitle}>Institutional Mandates</Text>
+              <Text style={styles.pageTitle}>Institutional Investments</Text>
               <Text style={styles.pageSub}>Deterministic smart escrow contracts with automated yield releases.</Text>
               <TouchableOpacity
                 style={styles.goldBtnFull}
                 onPress={() => setShowInvestModal(true)}
               >
-                <Text style={styles.goldBtnText}>+ Deploy New Mandate</Text>
+                <Text style={styles.goldBtnText}>+ Deploy New Investment</Text>
               </TouchableOpacity>
             </View>
 
@@ -1162,7 +1162,7 @@ export default function App() {
       <View style={styles.bottomNav}>
         {[
           { id: 'overview', label: 'Portfolio', icon: '📊' },
-          { id: 'mandates', label: 'Mandates', icon: '⚡' },
+          { id: 'mandates', label: 'Investments', icon: '⚡' },
           { id: 'liquidity', label: 'Liquidity', icon: '💳' },
           { id: 'referrals', label: 'Affiliate', icon: '👥' },
           { id: 'ledger', label: 'Ledger', icon: '📜' },
@@ -1354,14 +1354,14 @@ export default function App() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.sheetHeader}>
-              <Text style={styles.modalTitle}>Deploy Capital Mandate</Text>
+              <Text style={styles.modalTitle}>Deploy Capital Investment</Text>
               <TouchableOpacity onPress={() => setShowInvestModal(false)}>
                 <Text style={styles.closeBtnText}>✕</Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.sheetBody}>
-              <Text style={styles.fieldLabel}>Select Mandate Tier</Text>
+              <Text style={styles.fieldLabel}>Select Investment Tier</Text>
               {plans.map((plan) => (
                 <TouchableOpacity
                   key={plan.id}

@@ -23,8 +23,8 @@ export default function Contact() {
         : ''
       setFormData((prev) => ({
         ...prev,
-        interest: 'Institutional mandate',
-        message: `Inquiring about opening a mandate for ${planName} ${
+        interest: 'Institutional investment',
+        message: `Inquiring about opening an investment for ${planName} ${
           formattedAmount ? `with initial allocation of ${formattedAmount}` : ''
         }.`,
       }))
@@ -72,7 +72,7 @@ export default function Contact() {
                 Strategy starts with context.
               </h2>
               <p className="body">
-                Use the inquiry form to begin a conversation about mandates,
+                Use the inquiry form to begin a conversation about investments,
                 portfolio strategy, market intelligence or client services.
               </p>
 
@@ -131,8 +131,8 @@ export default function Contact() {
                     Digital asset strategy
                   </option>
                   <option value="Portfolio discussion">Portfolio discussion</option>
-                  <option value="Institutional mandate">
-                    Institutional mandate
+                  <option value="Institutional investment">
+                    Institutional investment
                   </option>
                   <option value="General inquiry">General inquiry</option>
                 </select>
@@ -168,7 +168,7 @@ export default function Contact() {
                     fontWeight: 500,
                   }}
                 >
-                  ✓ Thank you. Your inquiry has been transmitted to the mandate desk. A partner will respond within 1 business day.
+                  ✓ Thank you. Your inquiry has been transmitted to the investment desk. A partner will respond within 1 business day.
                 </p>
               )}
             </form>

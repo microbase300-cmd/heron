@@ -208,7 +208,7 @@
       if (resReferral) resReferral.textContent = `${formatCurrency(referralEarn)} (${selectedPlan.referralStr})`;
       if (resDurationText) resDurationText.textContent = `${selectedPlan.hours} hours (${selectedPlan.rateStr} net return)`;
       if (calcInvestBtn) {
-        calcInvestBtn.textContent = `Open Mandate with ${formatCurrency(amount)} ↗`;
+        calcInvestBtn.textContent = `Invest with ${formatCurrency(amount)} ↗`;
         calcInvestBtn.href = `contact.html?plan=${selectedPlan.id}&amount=${amount}`;
       }
 

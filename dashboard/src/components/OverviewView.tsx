@@ -80,7 +80,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               className="px-5 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] hover:border-gold/30 text-white text-xs font-bold tracking-wide transition-all flex items-center gap-2"
             >
               <TrendingUp className="w-4 h-4 text-gold" />
-              Open Mandate ↗
+              New Investment ↗
             </button>
           </div>
         </div>
@@ -108,7 +108,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             ${(summary?.lockedInInvestments ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] text-amber-400/80 mt-1">
-            {activeInvestments.length} active mandate{activeInvestments.length === 1 ? '' : 's'} compounding
+            {activeInvestments.length} active investment{activeInvestments.length === 1 ? '' : 's'} compounding
           </div>
         </div>
 
@@ -153,7 +153,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       </div>
 
-      {/* Row 2: Programmatic Return Horizons & Active Compounding Mandates */}
+      {/* Row 2: Programmatic Return Horizons & Active Compounding Investments */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Institutional Compounding Architecture */}
         <div className="lg:col-span-2 p-6 rounded-2xl glass-card space-y-6">
@@ -212,7 +212,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
         </div>
 
-        {/* Right 1 Col: Active Mandates Quick Tracker */}
+        {/* Right 1 Col: Active Investments Quick Tracker */}
         <div className="p-6 rounded-2xl glass-card flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-4 mb-4">
@@ -270,7 +270,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <div className="w-12 h-12 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto text-white/40">
                   <Clock className="w-6 h-6" />
                 </div>
-                <div className="text-sm font-serif text-white/80">No Active Mandates</div>
+                <div className="text-sm font-serif text-white/80">No Active Investments</div>
                 <p className="text-xs text-white/40 max-w-xs mx-auto">
                   Deploy liquidity into 24h, 48h, 72h, or 96h cycles to begin earning programmatic yields.
                 </p>

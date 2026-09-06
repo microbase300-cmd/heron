@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Timer, CheckCircle2, Lock, ShieldCheck, ArrowRight, TrendingUp, Sparkles, RefreshCw } from 'lucide-react';
 import { Investment } from '../types';
 
@@ -47,7 +47,7 @@ export const MandatesView: React.FC<MandatesViewProps> = ({
       {/* Header & Filter Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-serif font-bold text-white tracking-tight">Active Escrow Mandates</h2>
+          <h2 className="text-xl font-serif font-bold text-white tracking-tight">Active Investments</h2>
           <p className="text-xs text-white/50 font-mono mt-0.5">Automated smart contracts locking capital across defined cycle horizons</p>
         </div>
 
@@ -83,7 +83,7 @@ export const MandatesView: React.FC<MandatesViewProps> = ({
         </div>
       </div>
 
-      {/* Mandate Cards Grid */}
+      {/* Investment Cards Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filtered.map(inv => {
@@ -194,7 +194,7 @@ export const MandatesView: React.FC<MandatesViewProps> = ({
           <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center mx-auto text-gold">
             <Timer className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-serif font-bold text-white">No Mandates Found</h3>
+          <h3 className="text-xl font-serif font-bold text-white">No Investments Found</h3>
           <p className="text-xs text-white/50 leading-relaxed">
             You currently have no {filter} capital allocations. Deploy your available balance into the Amateur (24h), Standard (48h), Premium (72h), or Retirement (96h) plan to start earning.
           </p>

@@ -41,7 +41,7 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
             </h2>
             <div className="body" style={{ maxHeight: '55vh', overflowY: 'auto', paddingRight: '12px' }}>
               <p>
-                <strong>1. Data Collection & Minimization:</strong> Heron Assets Trustees collects only necessary information to process inquiries and execute authenticated mandates. We do not store unencrypted credentials or private keys.
+                <strong>1. Data Collection & Minimization:</strong> Heron Assets Trustees collects only necessary information to process inquiries and execute authenticated investments. We do not store unencrypted credentials or private keys.
               </p>
               <p>
                 <strong>2. Cryptographic Security:</strong> All client telemetry and communications are transmitted over TLS 1.3 with end-to-end encryption. Ledger operations and wallet identifiers are protected by multi-signature protocols.
@@ -61,7 +61,7 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
             </h2>
             <div className="body" style={{ maxHeight: '55vh', overflowY: 'auto', paddingRight: '12px' }}>
               <p>
-                <strong>1. Mandate Agreements:</strong> Participation in any capital allocation tier is subject to automated smart contract timelocks and programmatic maturity schedules.
+                <strong>1. Investment Agreements:</strong> Participation in any capital allocation tier is subject to automated smart contract timelocks and programmatic maturity schedules.
               </p>
               <p>
                 <strong>2. Automated Settlement:</strong> Capital commitments are settled at the designated horizon (24h, 48h, 72h, or 96h) directly through decentralized escrow protocols to the participant's specified wallet address.

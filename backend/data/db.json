@@ -66,7 +66,7 @@
       "name": "Alexander Vance",
       "passwordHash": "$2a$10$ocMSmylYDV60zjJ5iQiBj.0QaDS85exUeBB8e.OqohOMbJ7q0L6Jm",
       "role": "user",
-      "balance": 44000,
+      "balance": 40500,
       "referralCode": "HERON-VANCE",
       "referredBy": null,
       "status": "active",
@@ -268,6 +268,21 @@
       "startedAt": "2026-09-03T17:27:31.806Z",
       "expiresAt": "2026-09-04T17:27:31.806Z",
       "completedAt": "2026-09-04T17:27:41.130Z"
+    },
+    {
+      "id": "inv_d8513c42-6b2b-4852-a66e-731f5858f455",
+      "userId": "usr_demo_vance",
+      "planId": "standard",
+      "planName": "Standard Plan",
+      "amount": 3500,
+      "rate": 0.095,
+      "durationHours": 48,
+      "expectedProfit": 332.5,
+      "totalPayout": 3832.5,
+      "status": "active",
+      "startedAt": "2026-09-06T12:51:17.649Z",
+      "expiresAt": "2026-09-08T12:51:17.649Z",
+      "completedAt": null
     }
   ],
   "transactions": [
@@ -380,6 +395,17 @@
       "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
       "note": "Deposit via TRC-20 Smart Contract",
       "createdAt": "2026-08-30T17:18:13.156Z"
+    },
+    {
+      "id": "tx_2916abb6-28b8-473c-a56e-e3212b270002",
+      "userId": "usr_demo_vance",
+      "type": "investment_lock",
+      "amount": 3500,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x752054a5407d74f4e46ee72aa29c1f2d991dce5c286dfb273c230e9ba363dd53",
+      "note": "Committed capital to Standard Plan (48h • 9.5%)",
+      "createdAt": "2026-09-06T12:51:17.649Z"
     }
   ],
   "referralCommissions": [

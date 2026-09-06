@@ -692,6 +692,7 @@ class DatabaseService {
       totalLockedInEscrow,
       totalYieldDisbursed,
       totalReferralsPaid,
+      activeInvestmentsCount: activeInvestments.length,
       activeMandatesCount: activeInvestments.length,
       pendingTransactionsCount
     };

@@ -117,7 +117,8 @@ export interface AdminMetrics {
   totalLockedInEscrow: number;
   totalYieldDisbursed: number;
   totalReferralsPaid: number;
-  activeMandatesCount: number;
+  activeInvestmentsCount: number;
+  activeMandatesCount?: number;
   pendingTransactionsCount: number;
 }
 

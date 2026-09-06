@@ -130,17 +130,17 @@ export default function Home() {
 
               <div>
                 <Link className="linkline" to="/pricing">
-                  <span>Amateur Mandate (24h • 4.5%)</span>
+                  <span>Amateur Investment (24h • 4.5%)</span>
                   <span>↗</span>
                 </Link>
 
                 <Link className="linkline" to="/pricing">
-                  <span>Standard Mandate (48h • 9.5%)</span>
+                  <span>Standard Investment (48h • 9.5%)</span>
                   <span>↗</span>
                 </Link>
 
                 <Link className="linkline" to="/pricing">
-                  <span>Premium Mandate (72h • 15.5%)</span>
+                  <span>Premium Investment (72h • 15.5%)</span>
                   <span>↗</span>
                 </Link>
 

@@ -34,7 +34,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     },
     { id: 'wallets', label: 'Deposit Wallets', icon: Wallet },
     { id: 'notifications', label: 'Broadcasts & Messages', icon: Bell },
-    { id: 'investments', label: 'Escrow Mandates', icon: Layers },
+    { id: 'investments', label: 'Escrow Investments', icon: Layers },
     { id: 'plans', label: 'Plan Parameters', icon: Sliders },
   ];
 

@@ -130,7 +130,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
       {successMsg && (
         <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-3">
           <Check className="w-4 h-4 shrink-0 text-emerald-glow" />
-          <span>{successMsg} Redirecting to active mandates...</span>
+          <span>{successMsg} Redirecting to active investments...</span>
         </div>
       )}
 

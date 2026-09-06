@@ -209,6 +209,23 @@ graph TD
 
 ---
 
+### Phase 14: Institutional Terminology Standardization (Mandate ➔ Investment)
+1. **Dashboard UI Refactoring (`dashboard/`)**:
+   - Replaced all user-facing labels from "Mandate" to "Investment": "Active Investments", "New Investment", "Investment Tier", "Investment Locks", and "Open a sovereign digital asset investment account".
+   - Preserved internal navigation routing and tab mappings while updating tab titles and mobile bottom navigation bars.
+2. **Public Platform & HTML Migration (`web/`, `index.html`, `pricing.html`, `strategies.html`, `contact.html`, `company.html`, `assets/js/main.js`)**:
+   - Standardized plan names to "Amateur Investment", "Standard Investment", and "Premium Investment".
+   - Updated copy across strategy, pricing, contact, company, yield simulation, and legal disclosures ("Matched Investment Tier", "Invest with $... ↗", "Dedicated Private Investment Director", "Investment Agreements").
+3. **Admin Operations & Protocol Modernization (`admin/`)**:
+   - Standardized `AdminSidebar.tsx` to "Escrow Investments", `EscrowMandatesView.tsx` to "Smart Escrow & Compounding Investments" / "Active Escrow Contracts" / "Matured & Settled Investments", and `PlanConfigView.tsx` to "Configure Investment Plan".
+4. **Mobile Application Modernization (`mobile/`)**:
+   - Standardized bottom nav tab to "Investments", header cards to "Institutional Yield Investments", deploy modals to "Deploy Capital Investment" / "Select Investment Tier", and alerts to "Investment Deployed".
+5. **Backend Data & Route Contract Modernization (`backend/`)**:
+   - Added `activeInvestmentsCount` in `AdminMetrics` and `db.getAdminMetrics()` with backward-compatible alias.
+   - Standardized administrative force-mature route responses and maturity notification titles ("Investment Matured").
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services

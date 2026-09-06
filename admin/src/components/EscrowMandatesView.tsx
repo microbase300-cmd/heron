@@ -37,7 +37,7 @@ export const EscrowMandatesView: React.FC<EscrowMandatesViewProps> = ({
       alert(`Success: ${res.message} ($${res.totalPayout.toLocaleString()} disbursed)`);
       onRefreshInvestments();
     } catch (err: any) {
-      alert(err.message || 'Failed to force-mature mandate.');
+      alert(err.message || 'Failed to force-mature investment.');
     } finally {
       setProcessingId(null);
     }
@@ -50,7 +50,7 @@ export const EscrowMandatesView: React.FC<EscrowMandatesViewProps> = ({
         <div>
           <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-gold" />
-            Smart Escrow & Compounding Mandates
+            Smart Escrow & Compounding Investments
           </h2>
           <p className="text-xs text-white/50 font-mono">
             Direct inspection of high-yield escrow contracts and automated maturity queues.
@@ -69,7 +69,7 @@ export const EscrowMandatesView: React.FC<EscrowMandatesViewProps> = ({
         </div>
       </div>
 
-      {/* Active Mandates Grid */}
+      {/* Active Investments Grid */}
       <div className="space-y-3">
         <h3 className="font-serif text-sm font-bold text-white/80 uppercase tracking-wider font-mono">
           Active Escrow Contracts ({activeMandates.length})
@@ -134,23 +134,23 @@ export const EscrowMandatesView: React.FC<EscrowMandatesViewProps> = ({
           </div>
         ) : (
           <div className="glass-panel p-8 rounded-2xl text-center text-white/40 font-mono text-xs">
-            No active investor escrow mandates at this time.
+            No active investor escrow investments at this time.
           </div>
         )}
       </div>
 
-      {/* Completed Mandates History */}
+      {/* Completed Investments History */}
       {completedMandates.length > 0 && (
         <div className="space-y-3 pt-4">
           <h3 className="font-serif text-sm font-bold text-white/80 uppercase tracking-wider font-mono">
-            Matured & Settled Mandates ({completedMandates.length})
+            Matured & Settled Investments ({completedMandates.length})
           </h3>
 
           <div className="glass-panel rounded-2xl overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead className="bg-white/[0.04] text-white/50 font-mono uppercase border-b border-white/[0.08]">
                 <tr>
-                  <th className="py-3 px-4">Mandate ID</th>
+                  <th className="py-3 px-4">Investment ID</th>
                   <th className="py-3 px-4">Investor</th>
                   <th className="py-3 px-4">Plan</th>
                   <th className="py-3 px-4">Committed</th>

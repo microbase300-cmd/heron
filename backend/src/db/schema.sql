@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS plan_configs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Investments / Mandates Table
+-- 4. Investments Table
 CREATE TABLE IF NOT EXISTS investments (
     id VARCHAR(64) PRIMARY KEY,
     user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,

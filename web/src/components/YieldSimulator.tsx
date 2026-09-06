@@ -194,7 +194,7 @@ export default function YieldSimulator({
         <div>
           <div className="calc-plan-detected">
             <div>
-              <div className="eyebrow">Matched Mandate Tier</div>
+              <div className="eyebrow">Matched Investment Tier</div>
               <h3
                 style={{
                   font: "500 28px/1.2 'Instrument Serif',serif",
@@ -253,7 +253,7 @@ export default function YieldSimulator({
           to={`/contact?plan=${activePlan.id}&amount=${amount}`}
           style={{ textAlign: 'center', display: 'block' }}
         >
-          Open Mandate with {formatCurrency(amount)} ↗
+          Invest with {formatCurrency(amount)} ↗
         </Link>
       </div>
     </div>
