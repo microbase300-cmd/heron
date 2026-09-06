@@ -78,9 +78,17 @@ class ApiService {
   async getPlans(): Promise<{ plans: PlanConfig[] }> {
     try {
       const res = await this.request<any>('/invest/plans');
-      const plansArray = Array.isArray(res) ? res : Array.isArray(res?.plans) ? res.plans : [];
-      if (plansArray.length > 0) {
-        return { plans: plansArray };
+      const rawList = Array.isArray(res) ? res : Array.isArray(res?.plans) ? res.plans : [];
+      if (rawList.length > 0) {
+        const normalized = rawList.map((p: any) => ({
+          ...p,
+          min: typeof p.min === 'number' ? p.min : 100,
+          max: (p.max === null || p.max === undefined || p.max === Infinity || p.max >= 99999999 || !isFinite(p.max)) ? Infinity : Number(p.max),
+          rate: typeof p.rate === 'number' ? p.rate : 0.05,
+          referralRate: typeof p.referralRate === 'number' ? p.referralRate : 0.1,
+          durationHours: typeof p.durationHours === 'number' ? p.durationHours : 24
+        }));
+        return { plans: normalized };
       }
     } catch (e) {
       console.warn('Could not load remote plans, utilizing standard institutional fallback tiers:', e);

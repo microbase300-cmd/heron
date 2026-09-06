@@ -10,6 +10,21 @@ interface NewInvestmentViewProps {
   onOpenDeposit: () => void;
 }
 
+const isUncapped = (max: number | null | undefined): boolean => {
+  return max === null || max === undefined || max === Infinity || !isFinite(Number(max)) || Number(max) >= 99999999;
+};
+
+const formatPlanMax = (max: number | null | undefined): string => {
+  if (isUncapped(max)) return 'Unlimited';
+  const num = Number(max);
+  return isNaN(num) ? 'Unlimited' : `$${num.toLocaleString()}`;
+};
+
+const formatPlanMin = (min: number | null | undefined): string => {
+  const num = Number(min);
+  return isNaN(num) ? '$100' : `$${num.toLocaleString()}`;
+};
+
 export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
   plans,
   user,
@@ -26,47 +41,53 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
   const effectivePlans = plans && plans.length > 0 ? plans : DEFAULT_PLANS;
   const selectedPlan = effectivePlans.find(p => p.id === selectedPlanId) || effectivePlans[0] || DEFAULT_PLANS[0];
 
+  const planRate = typeof selectedPlan?.rate === 'number' ? selectedPlan.rate : 0.095;
+  const planReferralRate = typeof selectedPlan?.referralRate === 'number' ? selectedPlan.referralRate : 0.16;
+  const planName = selectedPlan?.name || 'Selected Plan';
+  const planDuration = typeof selectedPlan?.durationHours === 'number' ? selectedPlan.durationHours : 48;
+  const planMin = typeof selectedPlan?.min === 'number' ? selectedPlan.min : 100;
+  const planMax = selectedPlan?.max;
+
   // Auto-switch plan when amount changes or adjust amount when plan clicked
   const handleSelectPlan = (p: PlanConfig) => {
     setSelectedPlanId(p.id);
-    if (amount < p.min || (p.max !== Infinity && amount > p.max)) {
-      setAmount(p.min);
+    const pMin = typeof p.min === 'number' ? p.min : 100;
+    if (amount < pMin || (!isUncapped(p.max) && typeof p.max === 'number' && amount > p.max)) {
+      setAmount(pMin);
     }
   };
 
   const handleAmountChange = (val: number) => {
-    setAmount(val);
+    const safeVal = isNaN(val) ? 0 : val;
+    setAmount(safeVal);
     // Find matching tier automatically
     for (const p of effectivePlans) {
-      if (val >= p.min && (p.max === Infinity || val <= p.max)) {
+      const pMin = typeof p.min === 'number' ? p.min : 100;
+      if (safeVal >= pMin && (isUncapped(p.max) || safeVal <= (p.max as number))) {
         setSelectedPlanId(p.id);
         break;
       }
     }
   };
 
-  const planRate = selectedPlan?.rate || 0.095;
-  const planReferralRate = selectedPlan?.referralRate || 0.16;
-  const planName = selectedPlan?.name || 'Selected Plan';
-  const planDuration = selectedPlan?.durationHours || 48;
+  const safeAmount = (isNaN(amount) || amount === null || amount === undefined) ? 0 : amount;
+  const expectedProfit = Number((safeAmount * planRate).toFixed(2));
+  const totalPayout = Number((safeAmount + expectedProfit).toFixed(2));
+  const referralBonus = Number((safeAmount * planReferralRate).toFixed(2));
 
-  const expectedProfit = Number((amount * planRate).toFixed(2));
-  const totalPayout = Number((amount + expectedProfit).toFixed(2));
-  const referralBonus = Number((amount * planReferralRate).toFixed(2));
-
-  const availableBalance = user?.balance ?? 0;
-  const isInsufficient = amount > availableBalance;
+  const availableBalance = typeof user?.balance === 'number' && !isNaN(user.balance) ? user.balance : 0;
+  const isInsufficient = safeAmount > availableBalance;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlan) return;
 
-    if (amount < selectedPlan.min) {
-      setError(`Minimum deposit for ${selectedPlan.name} is $${selectedPlan.min.toLocaleString()}`);
+    if (safeAmount < planMin) {
+      setError(`Minimum deposit for ${planName} is $${planMin.toLocaleString()}`);
       return;
     }
-    if (selectedPlan.max !== Infinity && amount > selectedPlan.max) {
-      setError(`Maximum deposit for ${selectedPlan.name} is $${selectedPlan.max.toLocaleString()}`);
+    if (!isUncapped(planMax) && typeof planMax === 'number' && safeAmount > planMax) {
+      setError(`Maximum deposit for ${planName} is $${planMax.toLocaleString()}`);
       return;
     }
     if (isInsufficient) {
@@ -79,7 +100,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
     setSuccessMsg(null);
 
     try {
-      const res = await api.createInvestment(selectedPlan.id, amount);
+      const res = await api.createInvestment(selectedPlan.id, safeAmount);
       setSuccessMsg(res.message);
       setTimeout(() => {
         onSuccess();
@@ -164,17 +185,15 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
                 <div className="space-y-1.5 text-xs font-mono">
                   <div className="flex justify-between text-white/60">
                     <span>Min:</span>
-                    <span className="text-white font-semibold">${p.min.toLocaleString()}</span>
+                    <span className="text-white font-semibold">{formatPlanMin(p.min)}</span>
                   </div>
                   <div className="flex justify-between text-white/60">
                     <span>Max:</span>
-                    <span className="text-white font-semibold">
-                      {p.max === Infinity ? 'Unlimited' : `$${p.max.toLocaleString()}`}
-                    </span>
+                    <span className="text-white font-semibold">{formatPlanMax(p.max)}</span>
                   </div>
                   <div className="flex justify-between text-gold">
                     <span>Referral:</span>
-                    <span className="font-semibold">{(p.referralRate * 100).toFixed(0)}% Instant</span>
+                    <span className="font-semibold">{((typeof p.referralRate === 'number' ? p.referralRate : 0.1) * 100).toFixed(0)}% Instant</span>
                   </div>
                 </div>
               </div>
@@ -283,7 +302,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
               <div>
                 <div className="text-[10px] text-white/40 font-mono uppercase">Capital Allocated</div>
                 <div className="text-xl font-serif font-bold text-white mt-0.5">
-                  ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  ${safeAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
               </div>
 
@@ -325,7 +344,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  <span>Deploy ${amount.toLocaleString()} into {planName} ↗</span>
+                  <span>Deploy ${safeAmount.toLocaleString()} into {planName} ↗</span>
                 </>
               )}
             </button>

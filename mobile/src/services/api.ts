@@ -225,8 +225,16 @@ class MobileApiService {
   async getPlans(): Promise<{ plans: PlanConfig[] }> {
     const res = await this.request<any>('/invest/plans');
     const raw = res?.plans || res;
-    const list: PlanConfig[] = Array.isArray(raw) ? raw : Object.values(raw || {});
-    return { plans: list };
+    const list: any[] = Array.isArray(raw) ? raw : Object.values(raw || {});
+    const normalized: PlanConfig[] = list.map((p) => ({
+      ...p,
+      min: typeof p.min === 'number' ? p.min : 100,
+      max: (p.max === null || p.max === undefined || p.max === Infinity || p.max >= 99999999 || !isFinite(p.max)) ? Infinity : Number(p.max),
+      rate: typeof p.rate === 'number' ? p.rate : 0.05,
+      referralRate: typeof p.referralRate === 'number' ? p.referralRate : 0.1,
+      durationHours: typeof p.durationHours === 'number' ? p.durationHours : 24
+    }));
+    return { plans: normalized };
   }
 
   async getMyInvestments(): Promise<{ investments: Investment[] }> {

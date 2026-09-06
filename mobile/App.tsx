@@ -1373,7 +1373,7 @@ export default function App() {
                     <Text style={styles.planCardBadge}>{plan.badge}</Text>
                   </View>
                   <Text style={styles.planCardLimits}>
-                    Min: ${plan.min.toLocaleString()} • Max: {plan.max >= 10000000 ? 'Uncapped' : `$${plan.max.toLocaleString()}`}
+                    Min: ${(typeof plan.min === 'number' ? plan.min : 100).toLocaleString()} • Max: {(plan.max === null || plan.max === undefined || plan.max === Infinity || plan.max >= 99999999) ? 'Uncapped' : `$${Number(plan.max).toLocaleString()}`}
                   </Text>
                 </TouchableOpacity>
               ))}

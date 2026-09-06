@@ -207,6 +207,20 @@
       "tokenHash": "bd8fb19f62fb2ea83195a63071c14253088520df7870f798b63253cfd44ed514",
       "expiresAt": "2026-09-13T11:12:05.785Z",
       "createdAt": "2026-09-06T11:12:05.785Z"
+    },
+    {
+      "id": "rft_9b27f0c6-34a8-4ca4-83b2-ed4ad1226397",
+      "userId": "usr_demo_vance",
+      "tokenHash": "80e2080499887d4e4475f25c96f767309380b498f167fedab360223f9eef15ae",
+      "expiresAt": "2026-09-13T11:29:50.088Z",
+      "createdAt": "2026-09-06T11:29:50.089Z"
+    },
+    {
+      "id": "rft_20985785-a84d-4e95-afc1-b7c0ede6cfd5",
+      "userId": "usr_demo_vance",
+      "tokenHash": "979954ef8271b722b0cf6737fdd4fe5a1232e64839ab81c3759541974225c27b",
+      "expiresAt": "2026-09-13T12:43:43.837Z",
+      "createdAt": "2026-09-06T12:43:43.837Z"
     }
   ],
   "investments": [

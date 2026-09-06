@@ -35,6 +35,7 @@ This document is the **single source of truth** for all errors reported, bugs id
 14. [BUG-014: High-Priority Message Visibility & Notification Detail Accessibility](#bug-014-high-priority-message-visibility--notification-detail-accessibility)
 15. [BUG-015: Mobile Pop-Up Modal Bottom-Sheet Anchor Misalignment](#bug-015-mobile-pop-up-modal-bottom-sheet-anchor-misalignment)
 16. [BUG-016: Investor Dashboard Plan Deployment Navigation & Undefined State Crash](#bug-016-investor-dashboard-plan-deployment-navigation--undefined-state-crash)
+17. [BUG-017: JSON Serialization Null 'max' Runtime Crash in Plan Tier Formatting & Limit Validation](#bug-017-json-serialization-null-max-runtime-crash-in-plan-tier-formatting--limit-validation)
 
 ---
 
@@ -324,3 +325,27 @@ This document is the **single source of truth** for all errors reported, bugs id
   - Hardened `backend/src/services/db.ts` to auto-initialize and validate `schema.planConfigs` on startup.
 - **Regression Prevention Rule**:
   - *Never access sub-properties on plan or model objects without guaranteed fallback arrays (`effectivePlans = plans?.length ? plans : DEFAULT_PLANS`) and safe fallback defaults.*
+
+---
+
+### BUG-017: JSON Serialization Null 'max' Runtime Crash in Plan Tier Formatting & Limit Validation
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `dashboard/src/components/NewInvestmentView.tsx`, `dashboard/src/services/api.ts`, `mobile/src/services/api.ts`, `mobile/App.tsx`, `backend/src/routes/invest.ts`, and `admin/src/components/PlanConfigView.tsx`
+- **Symptom**: When navigating to the "Open Mandate" tab, the dashboard displayed a blank page. Additionally, users were unable to activate uncapped plans (Retirement Plan).
+- **Root Cause**:
+  1. In JavaScript, `JSON.stringify({ max: Infinity })` converts `Infinity` into `null`. When remote plans were returned by the backend or loaded over the network, `plan.max` for the uncapped Retirement plan was `null`.
+  2. In `NewInvestmentView.tsx`, the JSX executed `{p.max === Infinity ? 'Unlimited' : `$${p.max.toLocaleString()}`}`. Because `null === Infinity` is `false`, it attempted to call `null.toLocaleString()`, triggering a fatal `TypeError: Cannot read properties of null (reading 'toLocaleString')` that unmounted the React component tree and rendered a blank page.
+  3. In `backend/src/routes/invest.ts`, the validation `if (plan.max !== Infinity && numAmount > plan.max)` evaluated to `true` when `plan.max` was `null` (since `null !== Infinity` is `true` and in JS `numAmount > null` is `numAmount > 0`), causing every investment in the Retirement plan to be rejected with `Maximum deposit for Retirement Plan is $null`.
+- **Exact Resolution**:
+  - Built defensive helper functions `isUncapped()`, `formatPlanMax()`, and `formatPlanMin()` in `dashboard/src/components/NewInvestmentView.tsx` that safely treat `null`, `undefined`, `Infinity`, and large numbers as uncapped `'Unlimited'` without calling `.toLocaleString()` on non-number/null values.
+  - Normalized all incoming plan payloads in `dashboard/src/services/api.ts` and `mobile/src/services/api.ts` so `max` is restored to `Infinity` when received as `null`/`undefined`.
+  - Fixed the backend maximum deposit limit check in `backend/src/routes/invest.ts`:
+    ```typescript
+    const isMaxUncapped = plan.max === null || plan.max === undefined || plan.max === Infinity || !isFinite(Number(plan.max)) || Number(plan.max) >= 99999999;
+    if (!isMaxUncapped && typeof plan.max === 'number' && numAmount > plan.max) {
+      return res.status(400).json({ error: `Maximum deposit for ${plan.name} is $${plan.max.toLocaleString()}.` });
+    }
+    ```
+  - Safeguarded plan limit displays in `mobile/App.tsx` and `admin/src/components/PlanConfigView.tsx`.
+- **Regression Prevention Rule**:
+  - *Always remember that `Infinity` serializes to `null` in JSON. Never invoke `.toLocaleString()` on numeric fields without verifying `typeof x === 'number' && !isNaN(x)` and handling `isUncapped(x)`.*

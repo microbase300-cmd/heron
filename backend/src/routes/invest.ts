@@ -58,7 +58,8 @@ router.post('/create', requireAuth, (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: `Minimum deposit for ${plan.name} is $${plan.min.toLocaleString()}.` });
     }
 
-    if (plan.max !== Infinity && numAmount > plan.max) {
+    const isMaxUncapped = plan.max === null || plan.max === undefined || plan.max === Infinity || !isFinite(Number(plan.max)) || Number(plan.max) >= 99999999;
+    if (!isMaxUncapped && typeof plan.max === 'number' && numAmount > plan.max) {
       return res.status(400).json({ error: `Maximum deposit for ${plan.name} is $${plan.max.toLocaleString()}.` });
     }
 

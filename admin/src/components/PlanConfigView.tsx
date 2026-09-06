@@ -183,7 +183,7 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                   <span>Max Allocation</span>
                 </div>
                 <div className="text-white font-bold text-sm mt-0.5">
-                  {plan.max >= 10000000 ? 'Uncapped' : `$${plan.max.toLocaleString()}`}
+                  {(plan.max === null || plan.max === undefined || plan.max === Infinity || plan.max >= 99999999) ? 'Uncapped' : `$${Number(plan.max).toLocaleString()}`}
                 </div>
               </div>
             </div>

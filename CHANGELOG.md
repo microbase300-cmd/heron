@@ -23,6 +23,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.5] - 2026-09-06
+### Fixed
+- **JSON Serialization Null `max` Crash in Plan Tier Formatting & Limit Validation**:
+  - Resolved fatal `TypeError: Cannot read properties of null (reading 'toLocaleString')` caused when `Infinity` in uncapped plans (Retirement Plan) serialized to `null` in JSON payloads.
+  - Added `formatPlanMax()`, `formatPlanMin()`, and `isUncapped()` defensive helpers in `dashboard/src/components/NewInvestmentView.tsx`.
+  - Normalized plan attributes in `dashboard/src/services/api.ts` and `mobile/src/services/api.ts`, restoring `Infinity` from `null`/`undefined` JSON representations.
+  - Fixed backend deposit upper-limit validation in `backend/src/routes/invest.ts`, allowing investors to activate uncapped plans without false `numAmount > null` rejections.
+  - Safeguarded plan limit displays in `mobile/App.tsx` and `admin/src/components/PlanConfigView.tsx`.
+
+---
+
 ## [1.1.4] - 2026-09-06
 ### Fixed
 - **Open Mandate View & Plan Deployment Activation Workflow**:

@@ -200,6 +200,15 @@ graph TD
 
 ---
 
+### Phase 13: Null Max JSON Serialization Guard & Plan Limit Hardening
+1. **JSON Null Serialization Defense**:
+   - Implemented `formatPlanMax()`, `formatPlanMin()`, and `isUncapped()` in `NewInvestmentView.tsx` to handle `null`, `undefined`, `Infinity`, and large bounds without calling `.toLocaleString()` on non-numbers.
+   - Normalized `getPlans()` across `dashboard/src/services/api.ts` and `mobile/src/services/api.ts` restoring `Infinity` from JSON `null` values.
+   - Fixed backend plan limit validation in `backend/src/routes/invest.ts`, allowing execution for uncapped tiers.
+   - Protected plan limit displays in `mobile/App.tsx` and `admin/src/components/PlanConfigView.tsx`.
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services
