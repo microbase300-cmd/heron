@@ -32,6 +32,7 @@ This document is the **single source of truth** for all errors reported, bugs id
 11. [BUG-011: TypeScript Compilation Execution Discrepancy (`tsc` vs `npx tsc`)](#bug-011-typescript-compilation-execution-discrepancy-tsc-vs-npx-tsc)
 12. [BUG-012: Residual Demo Banners & Autofill Buttons Compromising Production Presentation](#bug-012-residual-demo-banners--autofill-buttons-compromising-production-presentation)
 13. [BUG-013: Admin Broadcast & Direct Messaging Investor Dropdown List Empty / Unrendered](#bug-013-admin-broadcast--direct-messaging-investor-dropdown-list-empty--unrendered)
+14. [BUG-014: High-Priority Message Visibility & Notification Detail Accessibility](#bug-014-high-priority-message-visibility--notification-detail-accessibility)
 
 ---
 
@@ -271,3 +272,17 @@ This document is the **single source of truth** for all errors reported, bugs id
   - Added instant search filtering and selected recipient confirmation card.
 - **Regression Prevention Rule**:
   - *Always provide both visual card pickers and explicitly styled dropdown options for administrator user selections.*
+
+---
+
+### BUG-014: High-Priority Message Visibility & Notification Detail Accessibility
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `dashboard/src/components/NotificationCenter.tsx` & `mobile/App.tsx`
+- **Symptom**: Critical administrative alerts and confirmations (such as approved deposits, account safety notices, or settlement updates) were confined to standard notification drawer items without prominent real-time interruption, and clicking notification items lacked a full formatted message inspector.
+- **Root Cause**: The notification system lacked an automated high-priority modal interceptor with session deduplication, and notification items were rendered as simple summary rows without a dedicated message box modal view.
+- **Exact Resolution**:
+  - **Automatic Pop-Up Modal**: Built an automatic modal interceptor that triggers when unread messages of type `alert`, `warning`, or `success` arrive in polling. Deduplicated via `useRef(new Set())` to ensure notifications only trigger an active pop-up once per session.
+  - **Dedicated Executive Message Box Modal**: Built an executive dispatch dialog that opens upon tapping/clicking any notification card in both Web Dashboard and Mobile App, revealing full message body, dispatch authority, timestamp, communication category, and verified audit status.
+  - **Real-Time Read Sync**: Wired "Acknowledge & Confirm" and card-click handlers to `api.markNotificationAsRead(id)` to synchronize backend status and decrement badge counters.
+- **Regression Prevention Rule**:
+  - *Always support both ambient bell badges and explicit priority modal dialogs for high-severity communications, and ensure all notification items provide an interactive full-detail view.*

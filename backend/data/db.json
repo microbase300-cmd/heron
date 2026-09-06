@@ -172,6 +172,20 @@
       "tokenHash": "fb4bffb951ecb808aac1c1b656647939444b93329a8891d4540e5529a4d30c5b",
       "expiresAt": "2026-09-13T10:17:28.409Z",
       "createdAt": "2026-09-06T10:17:28.409Z"
+    },
+    {
+      "id": "rft_7b6a057b-b31c-41d4-96f1-e3b38aefef23",
+      "userId": "usr_demo_vance",
+      "tokenHash": "bf122a3ebeee20d1689a08fd6999bd843fc9b815974824f23344e64b3a55247f",
+      "expiresAt": "2026-09-13T10:25:31.374Z",
+      "createdAt": "2026-09-06T10:25:31.374Z"
+    },
+    {
+      "id": "rft_e6251682-17b9-4bbf-a0ff-c36326a14d5a",
+      "userId": "usr_admin_001",
+      "tokenHash": "c568e15c2236a6f7ecee0eaf319c551a84c4f6a4328e5fec6242cb21f2bf20df",
+      "expiresAt": "2026-09-13T10:27:45.550Z",
+      "createdAt": "2026-09-06T10:27:45.550Z"
     }
   ],
   "investments": [
@@ -397,6 +411,28 @@
     }
   },
   "notifications": [
+    {
+      "id": "notif_105d77a0-48bc-4dc0-b501-74b0db544570",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Account error",
+      "message": "testing alert",
+      "type": "alert",
+      "sender": "Chief Risk Officer",
+      "readBy": [],
+      "createdAt": "2026-09-06T10:25:07.164Z"
+    },
+    {
+      "id": "notif_5c7b414b-e4cc-4977-a3ae-df031d841a6b",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Testing",
+      "message": "testing the message.",
+      "type": "announcement",
+      "sender": "Chief Risk Officer",
+      "readBy": [],
+      "createdAt": "2026-09-06T10:20:04.163Z"
+    },
     {
       "id": "notif_33e26ffd-7ba5-4f4f-87f6-843e40b618be",
       "userId": "usr_demo_882194",

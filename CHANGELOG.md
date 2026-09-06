@@ -23,6 +23,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.2] - 2026-09-06
+### Added
+- **Automatic Priority Dispatch Pop-Up Modal**:
+  - Implemented automatic high-priority pop-up modal for unread `alert`, `success`, and `warning` communications across Web Investor Dashboard (`dashboard/src/components/NotificationCenter.tsx`) and Mobile App (`mobile/App.tsx`).
+  - Added session-level deduplication (`seenPopupsRef` and `seenMobilePopupsRef`) ensuring users are not interrupted repeatedly during regular background polling cycles.
+  - Added "Acknowledge & Confirm" action that automatically marks the dispatch as read in backend persistence.
+- **Dedicated Executive Message Box Modal**:
+  - Built an institutional message detail inspector modal for all communications.
+  - Clicking any notification item in the Notification Center drawer opens the complete formatted dispatch including sender authority, timestamp, category badge, and verified audit status.
+  - Automatic read-receipt synchronization decrements unread counters in real time.
+
+---
+
 ## [1.1.1] - 2026-09-06
 ### Fixed
 - **Admin Direct Messaging Investor Dropdown**: Upgraded `NotificationsDeskView.tsx` with:

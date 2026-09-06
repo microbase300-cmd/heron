@@ -236,6 +236,11 @@ export default function App() {
   const [depositAddresses, setDepositAddresses] = useState<DepositAddressConfig[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Notification popup & message box states
+  const [priorityPopUpNotif, setPriorityPopUpNotif] = useState<NotificationMessage | null>(null);
+  const [selectedDetailNotif, setSelectedDetailNotif] = useState<NotificationMessage | null>(null);
+  const seenMobilePopupsRef = useRef<Set<string>>(new Set());
+
   // Modal form states
   const [depositAsset, setDepositAsset] = useState('USDT (TRC-20)');
   const [depositAmount, setDepositAmount] = useState('');
@@ -289,8 +294,20 @@ export default function App() {
       if (plansRes.status === 'fulfilled') setPlans(plansRes.value.plans || []);
       if (txsRes.status === 'fulfilled') setTransactions(txsRes.value.transactions || []);
       if (notifRes.status === 'fulfilled') {
-        setNotifications(notifRes.value.notifications || []);
+        const notifList = notifRes.value.notifications || [];
+        setNotifications(notifList);
         setUnreadCount(notifRes.value.unreadCount || 0);
+
+        const urgent = notifList.find(
+          (n: NotificationMessage) =>
+            !n.isRead &&
+            (n.type === 'alert' || n.type === 'success' || n.type === 'warning') &&
+            !seenMobilePopupsRef.current.has(n.id)
+        );
+        if (urgent && !priorityPopUpNotif) {
+          seenMobilePopupsRef.current.add(urgent.id);
+          setPriorityPopUpNotif(urgent);
+        }
       }
       if (refRes.status === 'fulfilled') setReferralData(refRes.value);
       if (tickerRes.status === 'fulfilled') setTickers(tickerRes.value || []);
@@ -1403,19 +1420,163 @@ export default function App() {
                 </View>
               ) : (
                 notifications.map((n) => (
-                  <View key={n.id} style={[styles.notifCard, !n.isRead && styles.notifCardUnread]}>
+                  <TouchableOpacity
+                    key={n.id}
+                    style={[styles.notifCard, !n.isRead && styles.notifCardUnread]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedDetailNotif(n);
+                      if (!n.isRead) {
+                        mobileApi.markNotificationRead(n.id);
+                        setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item));
+                        setUnreadCount(c => Math.max(0, c - 1));
+                      }
+                    }}
+                  >
                     <View style={styles.notifTop}>
                       <Text style={styles.notifTitle}>{n.title}</Text>
-                      <Text style={styles.notifType}>{n.type.toUpperCase()}</Text>
+                      <View style={[
+                        styles.notifTypeBadge,
+                        n.type === 'alert' && { backgroundColor: 'rgba(245,158,11,0.2)', borderColor: 'rgba(245,158,11,0.4)' },
+                        n.type === 'success' && { backgroundColor: 'rgba(40,209,124,0.2)', borderColor: 'rgba(40,209,124,0.4)' }
+                      ]}>
+                        <Text style={[
+                          styles.notifType,
+                          n.type === 'alert' && { color: '#f59e0b' },
+                          n.type === 'success' && { color: '#28d17c' }
+                        ]}>{n.type.toUpperCase()}</Text>
+                      </View>
                     </View>
-                    <Text style={styles.notifMsg}>{n.message}</Text>
-                    <Text style={styles.notifMeta}>
-                      {n.sender} • {new Date(n.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
+                    <Text style={styles.notifMsg} numberOfLines={2}>{n.message}</Text>
+                    <View style={styles.notifFooterRow}>
+                      <Text style={styles.notifMeta}>
+                        {n.sender || 'Executive Desk'} • {new Date(n.createdAt).toLocaleDateString()}
+                      </Text>
+                      <Text style={styles.notifTapOpen}>Tap to View Message →</Text>
+                    </View>
+                  </TouchableOpacity>
                 ))
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: PRIORITY ALERT & SUCCESS POP-UP MODAL */}
+      {/* ========================================================================= */}
+      <Modal visible={!!priorityPopUpNotif} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[
+            styles.priorityPopUpCard,
+            priorityPopUpNotif?.type === 'alert' && { borderColor: '#f59e0b' },
+            priorityPopUpNotif?.type === 'success' && { borderColor: '#28d17c' }
+          ]}>
+            <View style={styles.priorityPopUpHeader}>
+              <View style={[
+                styles.priorityIconCircle,
+                priorityPopUpNotif?.type === 'alert' && { backgroundColor: 'rgba(245,158,11,0.2)', borderColor: '#f59e0b' },
+                priorityPopUpNotif?.type === 'success' && { backgroundColor: 'rgba(40,209,124,0.2)', borderColor: '#28d17c' }
+              ]}>
+                <Text style={styles.priorityIconText}>
+                  {priorityPopUpNotif?.type === 'alert' ? '⚠️' : '🛡️'}
+                </Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.priorityBrandTag}>HERON CAPITAL DISPATCH</Text>
+                <Text style={styles.priorityPopUpTitle}>
+                  {priorityPopUpNotif?.type === 'alert' ? 'Security & Settlement Alert' : 'Operational Confirmation'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setPriorityPopUpNotif(null)}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.priorityContentBox}>
+              <Text style={styles.priorityHeadline}>{priorityPopUpNotif?.title}</Text>
+              <Text style={styles.priorityBody}>{priorityPopUpNotif?.message}</Text>
+            </View>
+
+            <View style={styles.priorityMetaRow}>
+              <Text style={styles.prioritySender}>
+                From: <Text style={{ color: '#d4af37' }}>{priorityPopUpNotif?.sender || 'Chief Risk Officer'}</Text>
+              </Text>
+              <Text style={styles.priorityTime}>
+                {priorityPopUpNotif ? new Date(priorityPopUpNotif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.goldBtnFull}
+              onPress={() => {
+                if (priorityPopUpNotif) {
+                  mobileApi.markNotificationRead(priorityPopUpNotif.id);
+                  setNotifications(prev => prev.map(item => item.id === priorityPopUpNotif.id ? { ...item, isRead: true } : item));
+                  setUnreadCount(c => Math.max(0, c - 1));
+                  setPriorityPopUpNotif(null);
+                }
+              }}
+            >
+              <Text style={styles.goldBtnText}>Acknowledge & Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 6: DEDICATED MESSAGE BOX MODAL (FOR ALL CLICKED NOTIFICATIONS) */}
+      {/* ========================================================================= */}
+      <Modal visible={!!selectedDetailNotif} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.msgBoxCard}>
+            <View style={styles.msgBoxHeader}>
+              <View style={styles.msgBoxIconBadge}>
+                <Text style={{ fontSize: 18 }}>✉️</Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={styles.msgBoxSubtitle}>OFFICIAL DISPATCH • {selectedDetailNotif?.type?.toUpperCase()}</Text>
+                <Text style={styles.msgBoxMainTitle}>Executive Communication Box</Text>
+              </View>
+              <TouchableOpacity onPress={() => setSelectedDetailNotif(null)}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.msgBoxBodyScroll}>
+              <View style={styles.msgBoxInnerContent}>
+                <Text style={styles.msgDetailHeadline}>{selectedDetailNotif?.title}</Text>
+                <Text style={styles.msgDetailText}>{selectedDetailNotif?.message}</Text>
+              </View>
+
+              <View style={styles.msgDetailMetaGrid}>
+                <View style={styles.msgMetaItem}>
+                  <Text style={styles.msgMetaLabel}>DISPATCHED BY</Text>
+                  <Text style={styles.msgMetaValue}>{selectedDetailNotif?.sender || 'Chief Risk Officer'}</Text>
+                </View>
+                <View style={styles.msgMetaItem}>
+                  <Text style={styles.msgMetaLabel}>TIME / DATE</Text>
+                  <Text style={styles.msgMetaValue}>
+                    {selectedDetailNotif ? new Date(selectedDetailNotif.createdAt).toLocaleString() : ''}
+                  </Text>
+                </View>
+                <View style={styles.msgMetaItem}>
+                  <Text style={styles.msgMetaLabel}>CATEGORY</Text>
+                  <Text style={[styles.msgMetaValue, { color: '#d4af37' }]}>{selectedDetailNotif?.type?.toUpperCase()}</Text>
+                </View>
+                <View style={styles.msgMetaItem}>
+                  <Text style={styles.msgMetaLabel}>STATUS</Text>
+                  <Text style={[styles.msgMetaValue, { color: '#28d17c' }]}>Verified & Logged</Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.goldBtnFull}
+              onPress={() => setSelectedDetailNotif(null)}
+            >
+              <Text style={styles.goldBtnText}>Close Message Box</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -2297,6 +2458,200 @@ const styles = StyleSheet.create({
   notifMeta: {
     fontSize: 9,
     color: 'rgba(255,255,255,0.4)',
+  },
+  notifTypeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.3)',
+    backgroundColor: 'rgba(212,175,55,0.1)',
+  },
+  notifFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  notifTapOpen: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#d4af37',
+  },
+  // Modal 5: Priority Pop-Up Modal
+  priorityPopUpCard: {
+    width: '90%',
+    maxWidth: 420,
+    backgroundColor: '#0c1210',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#d4af37',
+    padding: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.9,
+    shadowRadius: 25,
+    elevation: 20,
+  },
+  priorityPopUpHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  priorityIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: 'rgba(212,175,55,0.15)',
+    borderWidth: 1,
+    borderColor: '#d4af37',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  priorityIconText: {
+    fontSize: 20,
+  },
+  priorityBrandTag: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#d4af37',
+    letterSpacing: 1.5,
+  },
+  priorityPopUpTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 2,
+  },
+  priorityContentBox: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 14,
+    marginVertical: 14,
+  },
+  priorityHeadline: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 6,
+  },
+  priorityBody: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 18,
+  },
+  priorityMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  prioritySender: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  priorityTime: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    fontVariant: ['tabular-nums'],
+  },
+  // Modal 6: Message Box Modal
+  msgBoxCard: {
+    width: '92%',
+    maxWidth: 440,
+    maxHeight: '80%',
+    backgroundColor: '#0c1210',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(212,175,55,0.4)',
+    padding: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.9,
+    shadowRadius: 25,
+    elevation: 20,
+  },
+  msgBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  msgBoxIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(212,175,55,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  msgBoxSubtitle: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#d4af37',
+    letterSpacing: 1.2,
+  },
+  msgBoxMainTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 2,
+  },
+  msgBoxBodyScroll: {
+    marginVertical: 12,
+  },
+  msgBoxInnerContent: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 14,
+    marginBottom: 12,
+  },
+  msgDetailHeadline: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  msgDetailText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 18,
+  },
+  msgDetailMetaGrid: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+    padding: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  msgMetaItem: {
+    width: '48%',
+    marginBottom: 4,
+  },
+  msgMetaLabel: {
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  msgMetaValue: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '600',
   },
   modalBtnRow: {
     flexDirection: 'row',

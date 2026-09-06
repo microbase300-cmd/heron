@@ -161,6 +161,18 @@ graph TD
 
 ---
 
+### Phase 10: High-Priority Pop-Up Alerts & Executive Message Box Modals
+1. **Automated Priority Pop-Up Engine**:
+   - Built automatic pop-up modal interceptors across Web Dashboard (`NotificationCenter.tsx`) and Mobile App (`mobile/App.tsx`) that trigger on receipt of unread `alert`, `warning`, or `success` dispatches.
+   - Integrated session deduplication via `seenPopupsRef` / `seenMobilePopupsRef` to guarantee single-fire behavior per notification without polling re-triggers.
+   - Implemented "Acknowledge & Confirm" action that sends `api.markNotificationAsRead(id)` to update backend state.
+2. **Interactive Executive Message Box Inspector**:
+   - Configured all notification items across Web and Mobile with click-to-open handlers.
+   - Designed institutional Message Box modal detailing full dispatch headline, multi-paragraph message body, verified sender authority, category badges, and cryptographic audit timestamp.
+   - Integrated automatic read-receipt synchronization on click.
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services
