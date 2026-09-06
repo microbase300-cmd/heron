@@ -23,6 +23,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.3] - 2026-09-06
+### Added
+- **Real-Time Deposit & Withdrawal Confirmation Pop-Ups**:
+  - Wired real-time automatic priority pop-ups for administrative deposit confirmations, deposit rejections, withdrawal disbursements, and withdrawal rejections.
+  - Added real-time notification dispatch upon manual executive balance adjustments in `backend/src/routes/admin.ts`.
+  - Accelerated notification polling interval to 10 seconds for instant alert delivery.
+
+### Fixed
+- **Screen Centering Alignment for Pop-Up Modals**:
+  - Replaced bottom-anchored modal overlays in `mobile/App.tsx` with dedicated `modalOverlayCenter` (`justifyContent: 'center'`, `alignItems: 'center'`, `padding: 16`), centering Priority Alerts, Operational Confirmations, and Executive Message Box modals squarely on the mobile screen.
+  - Reinforced Web Dashboard modal overlay centering (`fixed inset-0 z-[99999] flex items-center justify-center`) with elevated z-index and backdrop blur across all viewports.
+
+---
+
 ## [1.1.2] - 2026-09-06
 ### Added
 - **Automatic Priority Dispatch Pop-Up Modal**:

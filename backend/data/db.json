@@ -186,6 +186,20 @@
       "tokenHash": "c568e15c2236a6f7ecee0eaf319c551a84c4f6a4328e5fec6242cb21f2bf20df",
       "expiresAt": "2026-09-13T10:27:45.550Z",
       "createdAt": "2026-09-06T10:27:45.550Z"
+    },
+    {
+      "id": "rft_2180dc1a-5f63-4c7a-8c44-d807068c2092",
+      "userId": "usr_admin_001",
+      "tokenHash": "8a2fc5a6599077e3eec9909c78463e2dd80e88ad417120d7ac62cbdcbd3655ec",
+      "expiresAt": "2026-09-13T10:54:45.024Z",
+      "createdAt": "2026-09-06T10:54:45.024Z"
+    },
+    {
+      "id": "rft_f6dd0b5a-b04c-4b03-bce0-a816e4c835ba",
+      "userId": "usr_demo_vance",
+      "tokenHash": "2343139f0a6bda6bddee2e33b409005c30350fde0a8855032519a5bc1d1a5f50",
+      "expiresAt": "2026-09-13T10:54:57.431Z",
+      "createdAt": "2026-09-06T10:54:57.431Z"
     }
   ],
   "investments": [
@@ -412,6 +426,19 @@
   },
   "notifications": [
     {
+      "id": "notif_39d0ca63-d44c-4de0-88c3-0590257c0f4d",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Deposit Successfull",
+      "message": "we have confirmed ur deposite",
+      "type": "success",
+      "sender": "Chief Risk Officer",
+      "readBy": [
+        "usr_demo_vance"
+      ],
+      "createdAt": "2026-09-06T10:55:58.337Z"
+    },
+    {
       "id": "notif_105d77a0-48bc-4dc0-b501-74b0db544570",
       "userId": "usr_demo_vance",
       "targetEmail": "alex.vance@vanceholdings.com",
@@ -419,7 +446,9 @@
       "message": "testing alert",
       "type": "alert",
       "sender": "Chief Risk Officer",
-      "readBy": [],
+      "readBy": [
+        "usr_demo_vance"
+      ],
       "createdAt": "2026-09-06T10:25:07.164Z"
     },
     {

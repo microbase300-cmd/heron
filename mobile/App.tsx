@@ -1466,7 +1466,7 @@ export default function App() {
       {/* MODAL 5: PRIORITY ALERT & SUCCESS POP-UP MODAL */}
       {/* ========================================================================= */}
       <Modal visible={!!priorityPopUpNotif} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlayCenter}>
           <View style={[
             styles.priorityPopUpCard,
             priorityPopUpNotif?.type === 'alert' && { borderColor: '#f59e0b' },
@@ -1528,7 +1528,7 @@ export default function App() {
       {/* MODAL 6: DEDICATED MESSAGE BOX MODAL (FOR ALL CLICKED NOTIFICATIONS) */}
       {/* ========================================================================= */}
       <Modal visible={!!selectedDetailNotif} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlayCenter}>
           <View style={styles.msgBoxCard}>
             <View style={styles.msgBoxHeader}>
               <View style={styles.msgBoxIconBadge}>
@@ -2315,6 +2315,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'flex-end',
   },
+  modalOverlayCenter: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.88)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
   modalContent: {
     backgroundColor: '#0f1412',
     borderTopLeftRadius: 24,
@@ -2480,30 +2487,31 @@ const styles = StyleSheet.create({
   },
   // Modal 5: Priority Pop-Up Modal
   priorityPopUpCard: {
-    width: '90%',
-    maxWidth: 420,
+    width: '100%',
+    maxWidth: 380,
     backgroundColor: '#0c1210',
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 2,
     borderColor: '#d4af37',
-    padding: 20,
+    padding: 22,
+    alignSelf: 'center',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.9,
-    shadowRadius: 25,
-    elevation: 20,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.95,
+    shadowRadius: 28,
+    elevation: 25,
   },
   priorityPopUpHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 12,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   priorityIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: 'rgba(212,175,55,0.15)',
     borderWidth: 1,
     borderColor: '#d4af37',
@@ -2511,11 +2519,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   priorityIconText: {
-    fontSize: 20,
+    fontSize: 22,
   },
   priorityBrandTag: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#d4af37',
     letterSpacing: 1.5,
   },
@@ -2527,21 +2535,21 @@ const styles = StyleSheet.create({
   },
   priorityContentBox: {
     backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
-    padding: 14,
+    padding: 16,
     marginVertical: 14,
   },
   priorityHeadline: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 6,
   },
   priorityBody: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.85)',
     lineHeight: 18,
   },
   priorityMetaRow: {
@@ -2549,7 +2557,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
   prioritySender: {
     fontSize: 10,
@@ -2562,19 +2570,20 @@ const styles = StyleSheet.create({
   },
   // Modal 6: Message Box Modal
   msgBoxCard: {
-    width: '92%',
-    maxWidth: 440,
-    maxHeight: '80%',
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '82%',
     backgroundColor: '#0c1210',
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: 'rgba(212,175,55,0.4)',
-    padding: 20,
+    borderColor: 'rgba(212,175,55,0.5)',
+    padding: 22,
+    alignSelf: 'center',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.9,
-    shadowRadius: 25,
-    elevation: 20,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.95,
+    shadowRadius: 28,
+    elevation: 25,
   },
   msgBoxHeader: {
     flexDirection: 'row',

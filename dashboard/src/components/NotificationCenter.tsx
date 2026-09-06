@@ -66,7 +66,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 20000); // Polling every 20s
+    const interval = setInterval(fetchNotifications, 10000); // Polling every 10s for real-time deposit/withdrawal alerts
     return () => clearInterval(interval);
   }, []);
 
@@ -309,8 +309,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       {/* 1. AUTOMATIC POP-UP MODAL FOR URGENT ALERTS & SUCCESS CONFIRMATIONS */}
       {/* ========================================================================= */}
       {priorityPopUp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl bg-[#0c1210] border-2 border-gold/60 p-6 sm:p-8 shadow-2xl shadow-black">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#0c1210] border-2 border-gold/60 p-6 sm:p-8 shadow-2xl shadow-black">
             {/* Header Crest */}
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-3">
@@ -396,8 +396,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       {/* 2. DEDICATED MESSAGE BOX MODAL (FOR ALL CLICKED NOTIFICATIONS) */}
       {/* ========================================================================= */}
       {selectedNotification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-150">
-          <div className="relative w-full max-w-lg rounded-2xl bg-[#0c1210] border border-gold/40 p-6 sm:p-8 shadow-2xl shadow-black">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#0c1210] border border-gold/40 p-6 sm:p-8 shadow-2xl shadow-black">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-3">

@@ -173,6 +173,18 @@ graph TD
 
 ---
 
+### Phase 11: Real-Time Settlement Confirmations & Pop-Up Screen Centering
+1. **Settlement & Liquidity Confirmation Dispatches**:
+   - Wired real-time `success` and `alert` notification generation for deposit approvals, deposit rejections, withdrawal disbursements, and withdrawal refunds in `backend/src/routes/admin.ts`.
+   - Added real-time notification dispatch on manual administrative balance adjustments.
+   - Accelerated notification polling interval to 10 seconds for real-time responsiveness.
+2. **Modal Screen-Centering Architecture**:
+   - Built dedicated `modalOverlayCenter` (`justifyContent: 'center'`, `alignItems: 'center'`, `backgroundColor: 'rgba(0,0,0,0.88)'`) in `mobile/App.tsx`, replacing drawer-style bottom alignment with center positioning.
+   - Refined mobile card styles (`priorityPopUpCard` and `msgBoxCard`) with `alignSelf: 'center'` and constrained max-widths.
+   - Elevated Web Dashboard modal backdrop to `z-[99999]` with `mx-auto my-auto` centering.
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services

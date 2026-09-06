@@ -78,6 +78,21 @@ router.post('/users/:id/balance', (req: AuthRequest, res: Response) => {
     };
     db.createTransaction(tx);
 
+    // Dispatch real-time notification to user
+    db.createNotification({
+      id: `notif_${uuidv4()}`,
+      userId: user.id,
+      targetEmail: user.email,
+      title: action === 'credit'
+        ? `Liquidity Credited: $${adjustAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+        : `Balance Debit Adjustment: $${adjustAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      message: `An executive balance ${action} of $${adjustAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} has been applied to your portfolio. ${note ? `Note: ${note}` : ''}`,
+      type: action === 'credit' ? 'success' : 'alert',
+      sender: 'Executive Treasury Desk',
+      readBy: [],
+      createdAt: new Date().toISOString()
+    });
+
     res.json({
       message: `Successfully ${action}ed $${adjustAmount.toFixed(2)} to ${user.name}.`,
       newBalance,

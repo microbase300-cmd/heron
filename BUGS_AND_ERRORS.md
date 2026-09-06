@@ -33,6 +33,7 @@ This document is the **single source of truth** for all errors reported, bugs id
 12. [BUG-012: Residual Demo Banners & Autofill Buttons Compromising Production Presentation](#bug-012-residual-demo-banners--autofill-buttons-compromising-production-presentation)
 13. [BUG-013: Admin Broadcast & Direct Messaging Investor Dropdown List Empty / Unrendered](#bug-013-admin-broadcast--direct-messaging-investor-dropdown-list-empty--unrendered)
 14. [BUG-014: High-Priority Message Visibility & Notification Detail Accessibility](#bug-014-high-priority-message-visibility--notification-detail-accessibility)
+15. [BUG-015: Mobile Pop-Up Modal Bottom-Sheet Anchor Misalignment](#bug-015-mobile-pop-up-modal-bottom-sheet-anchor-misalignment)
 
 ---
 
@@ -286,3 +287,18 @@ This document is the **single source of truth** for all errors reported, bugs id
   - **Real-Time Read Sync**: Wired "Acknowledge & Confirm" and card-click handlers to `api.markNotificationAsRead(id)` to synchronize backend status and decrement badge counters.
 - **Regression Prevention Rule**:
   - *Always support both ambient bell badges and explicit priority modal dialogs for high-severity communications, and ensure all notification items provide an interactive full-detail view.*
+
+---
+
+### BUG-015: Mobile Pop-Up Modal Bottom-Sheet Anchor Misalignment
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `mobile/App.tsx` & `dashboard/src/components/NotificationCenter.tsx`
+- **Symptom**: High-priority alert pop-ups and message box dialogs were anchored to the bottom edge on mobile screens rather than remaining centered in the middle of the viewport.
+- **Root Cause**: The mobile modals reused `styles.modalOverlay` which had `justifyContent: 'flex-end'` (intended for slide-up drawers like deposit/withdraw forms).
+- **Exact Resolution**:
+  - Created a dedicated `modalOverlayCenter` in `mobile/App.tsx` configured with `justifyContent: 'center'`, `alignItems: 'center'`, `backgroundColor: 'rgba(0,0,0,0.88)'`, and `padding: 16`.
+  - Applied `modalOverlayCenter` to Modal 5 (Priority Alert & Success Pop-Up) and Modal 6 (Executive Message Box).
+  - Explicitly set `alignSelf: 'center'` and constrained `maxWidth` on cards for centered presentation across all mobile screen dimensions.
+  - Reinforced Web Dashboard modal overlay centering with `z-[99999]` and `mx-auto my-auto`.
+- **Regression Prevention Rule**:
+  - *Never reuse bottom-drawer modal overlays for alert/pop-up dialogs. Always use dedicated centered overlay styles (`justifyContent: 'center'`, `alignItems: 'center'`).*
