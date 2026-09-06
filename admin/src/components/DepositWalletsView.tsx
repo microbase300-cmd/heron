@@ -12,6 +12,89 @@ import {
 import { DepositAddressConfig } from '../types';
 import { adminApi } from '../services/api';
 
+const NETWORK_PRESETS: Record<string, string[]> = {
+  USDT: [
+    'Tron (TRC-20)',
+    'Ethereum (ERC-20)',
+    'BNB Smart Chain (BEP-20)',
+    'Solana SPL',
+    'Polygon (PoS)',
+    'Arbitrum One (L2)',
+    'Optimism (OP Mainnet)',
+    'Base (Coinbase L2)',
+    'Avalanche C-Chain',
+    'TON (The Open Network)'
+  ],
+  BTC: [
+    'Bitcoin Native SegWit',
+    'Bitcoin Legacy (Mainnet)',
+    'Bitcoin Taproot (P2TR)',
+    'Lightning Network',
+    'BNB Smart Chain (BEP-20)'
+  ],
+  ETH: [
+    'Ethereum Mainnet',
+    'Arbitrum One (L2)',
+    'Optimism (OP Mainnet)',
+    'Base (Coinbase L2)',
+    'Polygon (PoS)',
+    'BNB Smart Chain (BEP-20)'
+  ],
+  SOL: [
+    'Solana SPL',
+    'Solana Native'
+  ],
+  USDC: [
+    'Ethereum (ERC-20)',
+    'Solana SPL',
+    'Tron (TRC-20)',
+    'Polygon (PoS)',
+    'Arbitrum One (L2)',
+    'Base (L2)',
+    'Avalanche C-Chain',
+    'BNB Smart Chain (BEP-20)'
+  ],
+  BNB: [
+    'BNB Smart Chain (BEP-20)',
+    'BNB Beacon Chain (BEP-2)'
+  ],
+  XRP: [
+    'XRP Ripple Ledger (Native)'
+  ],
+  DOGE: [
+    'Dogecoin Mainnet'
+  ],
+  ADA: [
+    'Cardano Mainnet'
+  ],
+  LTC: [
+    'Litecoin Mainnet'
+  ]
+};
+
+const COMMON_NETWORKS = [
+  'Tron (TRC-20)',
+  'Ethereum (ERC-20)',
+  'Ethereum Mainnet',
+  'Bitcoin Native SegWit',
+  'Bitcoin Legacy (Mainnet)',
+  'Bitcoin Taproot (P2TR)',
+  'Solana SPL',
+  'Solana Native',
+  'BNB Smart Chain (BEP-20)',
+  'Polygon (PoS)',
+  'Arbitrum One (L2)',
+  'Optimism (OP Mainnet)',
+  'Base (Coinbase L2)',
+  'Avalanche C-Chain',
+  'TON (The Open Network)',
+  'Lightning Network',
+  'XRP Ripple Ledger (Native)',
+  'Dogecoin Mainnet',
+  'Cardano Mainnet',
+  'Litecoin Mainnet'
+];
+
 export const DepositWalletsView: React.FC = () => {
   const [wallets, setWallets] = useState<DepositAddressConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,10 +107,25 @@ export const DepositWalletsView: React.FC = () => {
     try {
       setLoading(true);
       const data = await adminApi.getWallets();
-      setWallets(data);
+      const list = Array.isArray(data)
+        ? data
+        : data && typeof data === 'object'
+        ? Object.entries(data).map(([k, v]: [string, any]) => ({
+            key: v?.key || k,
+            asset: v?.asset || 'USDT',
+            network: v?.network || k,
+            address: v?.address || '',
+            memo: v?.memo,
+            isActive: v?.isActive !== undefined ? v.isActive : true,
+            updatedAt: v?.updatedAt || new Date().toISOString(),
+          }))
+        : [];
+      setWallets(list);
       const map: Record<string, DepositAddressConfig> = {};
-      data.forEach(w => {
-        map[w.key] = { ...w };
+      list.forEach((w) => {
+        if (w && w.key) {
+          map[w.key] = { ...w };
+        }
       });
       setEditedWallets(map);
     } catch (err: any) {
@@ -82,30 +180,30 @@ export const DepositWalletsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-gold" />
+          <h2 className="font-sans text-xl font-bold text-[#EAECEF] flex items-center gap-2 tracking-tight">
+            <Wallet className="w-5 h-5 text-[#F0B90B]" />
             Receiving Deposit Wallet Configurations
           </h2>
-          <p className="text-xs text-white/50 font-mono">
+          <p className="text-xs text-[#848E9C] font-mono">
             Manage hot / cold storage receiving addresses displayed directly to investors in their deposit terminal.
           </p>
         </div>
 
         <button
           onClick={fetchWallets}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/80 hover:text-white text-xs font-mono transition-all self-start sm:self-auto"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-[#848E9C] hover:text-[#EAECEF] text-xs font-mono transition-all self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#F0B90B]' : ''}`} />
           <span>Refresh Addresses</span>
         </button>
       </div>
 
       {/* Security Disclaimer */}
-      <div className="p-4 rounded-2xl bg-gold/5 border border-gold/20 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-[#F0B90B] shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="text-white font-medium">Enterprise Treasury Notice</p>
-          <p className="text-white/60 leading-relaxed">
+          <p className="text-[#EAECEF] font-bold">Enterprise Treasury Notice</p>
+          <p className="text-[#848E9C] leading-relaxed">
             Changing these deposit addresses takes effect immediately across all client-facing dashboard portals. Double check destination addresses, network types, and memo fields before saving to prevent stranded liquidity.
           </p>
         </div>
@@ -113,7 +211,7 @@ export const DepositWalletsView: React.FC = () => {
 
       {/* Wallets Grid */}
       {loading ? (
-        <div className="p-12 text-center text-white/40 font-mono text-xs">
+        <div className="p-12 text-center text-[#848E9C] font-mono text-xs">
           Loading platform receiving addresses...
         </div>
       ) : (
@@ -127,38 +225,38 @@ export const DepositWalletsView: React.FC = () => {
             return (
               <div
                 key={wallet.key}
-                className="glass-panel p-5 rounded-2xl border border-white/[0.08] space-y-4 relative overflow-hidden"
+                className="glass-panel p-5 rounded-xl border border-[#2B313A] bg-[#1E2329] space-y-4 relative overflow-hidden hover:border-[#F0B90B]/30 transition-all"
               >
                 {/* Header of Card */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold font-mono font-bold text-xs">
+                    <div className="w-9 h-9 rounded-lg bg-[#F0B90B]/15 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B] font-mono font-bold text-xs">
                       {current.asset}
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-[#EAECEF] flex items-center gap-2">
                         <span>{current.network}</span>
                         {current.isActive ? (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30">
                             Active
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-950/60 text-rose-400 border border-rose-500/30">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30">
                             Disabled
                           </span>
                         )}
                       </h3>
-                      <p className="text-[11px] font-mono text-white/40">Key: {wallet.key}</p>
+                      <p className="text-[11px] font-mono text-[#848E9C]">Key: {wallet.key}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1.5 cursor-pointer text-xs font-mono text-white/70">
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs font-mono text-[#848E9C] hover:text-[#EAECEF]">
                       <input
                         type="checkbox"
                         checked={current.isActive}
                         onChange={(e) => handleChange(wallet.key, 'isActive', e.target.checked)}
-                        className="rounded border-white/20 text-gold focus:ring-gold/50 bg-black/40"
+                        className="rounded border-[#363D47] text-[#F0B90B] focus:ring-[#F0B90B]/50 bg-[#2B313A]"
                       />
                       <span>Enabled</span>
                     </label>
@@ -168,7 +266,7 @@ export const DepositWalletsView: React.FC = () => {
                 {/* Form Fields */}
                 <div className="space-y-3 pt-2">
                   <div>
-                    <label className="block text-[11px] font-mono text-white/50 mb-1">
+                    <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                       Receiving Address (Public)
                     </label>
                     <div className="relative flex items-center">
@@ -177,15 +275,15 @@ export const DepositWalletsView: React.FC = () => {
                         value={current.address}
                         onChange={(e) => handleChange(wallet.key, 'address', e.target.value)}
                         placeholder="Enter full blockchain address..."
-                        className="w-full glass-input text-xs font-mono py-2 pl-3 pr-10 text-white rounded-xl"
+                        className="w-full glass-input text-xs font-mono py-2 pl-3 pr-10 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47]"
                       />
                       <button
                         onClick={() => copyToClipboard(wallet.key, current.address)}
-                        className="absolute right-2 p-1.5 rounded-lg text-white/40 hover:text-gold hover:bg-white/10 transition-all"
+                        className="absolute right-2 p-1.5 rounded-lg text-[#848E9C] hover:text-[#F0B90B] hover:bg-[#181A20] transition-all"
                         title="Copy Address"
                       >
                         {copiedKey === wallet.key ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 text-[#0ECB81]" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}
@@ -195,33 +293,80 @@ export const DepositWalletsView: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-mono text-white/50 mb-1">
+                      <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                         Network Label
                       </label>
-                      <input
-                        type="text"
-                        value={current.network}
-                        onChange={(e) => handleChange(wallet.key, 'network', e.target.value)}
-                        className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
-                      />
+                      {(() => {
+                        const assetUpper = (current.asset || '').toUpperCase();
+                        const presets = NETWORK_PRESETS[assetUpper] || COMMON_NETWORKS;
+                        const isPreset = presets.includes(current.network);
+                        const isCommon = COMMON_NETWORKS.includes(current.network);
+                        const isKnown = isPreset || isCommon;
+
+                        return (
+                          <div className="space-y-1.5">
+                            <select
+                              value={isKnown ? current.network : '__CUSTOM__'}
+                              onChange={(e) => {
+                                if (e.target.value === '__CUSTOM__') {
+                                  if (isKnown) {
+                                    handleChange(wallet.key, 'network', '');
+                                  }
+                                } else {
+                                  handleChange(wallet.key, 'network', e.target.value);
+                                }
+                              }}
+                              className="w-full glass-input text-xs font-mono py-2 px-3 text-[#EAECEF] rounded-lg bg-[#2B313A] border border-[#363D47] focus:border-[#F0B90B] outline-none cursor-pointer"
+                            >
+                              <optgroup label={`Recommended for ${current.asset || 'Asset'}`}>
+                                {presets.map((net) => (
+                                  <option key={net} value={net} className="bg-[#1E2329] text-[#EAECEF]">
+                                    {net}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Other Standard Blockchain Networks">
+                                {COMMON_NETWORKS.filter((n) => !presets.includes(n)).map((net) => (
+                                  <option key={net} value={net} className="bg-[#1E2329] text-[#848E9C]">
+                                    {net}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <option value="__CUSTOM__" className="bg-[#1E2329] text-[#F0B90B] font-bold">
+                                ✎ Custom / Other Network Label...
+                              </option>
+                            </select>
+
+                            {!isKnown && (
+                              <input
+                                type="text"
+                                value={current.network}
+                                onChange={(e) => handleChange(wallet.key, 'network', e.target.value)}
+                                placeholder="Type custom network label..."
+                                className="w-full glass-input text-xs font-mono py-1.5 px-3 text-[#EAECEF] rounded-lg border border-[#F0B90B]/40 bg-[#F0B90B]/10 placeholder:text-[#848E9C]"
+                              />
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-mono text-white/50 mb-1">
+                      <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                         Asset Symbol
                       </label>
                       <input
                         type="text"
                         value={current.asset}
                         onChange={(e) => handleChange(wallet.key, 'asset', e.target.value)}
-                        className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
+                        className="w-full glass-input text-xs font-mono py-2 px-3 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47]"
                       />
                     </div>
                   </div>
 
                   {current.memo !== undefined && (
                     <div>
-                      <label className="block text-[11px] font-mono text-white/50 mb-1">
+                      <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                         Routing Tag / Memo (Optional)
                       </label>
                       <input
@@ -229,7 +374,7 @@ export const DepositWalletsView: React.FC = () => {
                         value={current.memo || ''}
                         onChange={(e) => handleChange(wallet.key, 'memo', e.target.value)}
                         placeholder="e.g. 1004829"
-                        className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
+                        className="w-full glass-input text-xs font-mono py-2 px-3 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47]"
                       />
                     </div>
                   )}
@@ -238,34 +383,34 @@ export const DepositWalletsView: React.FC = () => {
                 {/* Feedback Message */}
                 {itemFeedback && (
                   <div
-                    className={`p-2.5 rounded-xl text-xs font-mono flex items-center gap-2 ${
+                    className={`p-2.5 rounded-lg text-xs font-mono flex items-center gap-2 ${
                       itemFeedback.type === 'success'
-                        ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                        ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                        : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
                     }`}
                   >
                     {itemFeedback.type === 'success' ? (
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0ECB81]" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <AlertCircle className="w-4 h-4 shrink-0 text-[#F6465D]" />
                     )}
                     <span>{itemFeedback.message}</span>
                   </div>
                 )}
 
                 {/* Action Bar */}
-                <div className="pt-2 flex items-center justify-between border-t border-white/[0.06]">
-                  <span className="text-[10px] font-mono text-white/40">
+                <div className="pt-2 flex items-center justify-between border-t border-[#2B313A]">
+                  <span className="text-[10px] font-mono text-[#848E9C]">
                     Updated: {new Date(wallet.updatedAt).toLocaleDateString()}
                   </span>
 
                   <button
                     onClick={() => handleSave(wallet.key)}
                     disabled={isSaving || !isModified}
-                    className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-md ${
+                    className={`px-4 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-md ${
                       isModified
-                        ? 'bg-gradient-to-r from-gold to-gold-light text-[#0b0d0d] hover:brightness-105 shadow-gold/20'
-                        : 'bg-white/[0.04] text-white/30 cursor-not-allowed border border-white/[0.05]'
+                        ? 'btn-binance'
+                        : 'bg-[#2B313A] text-[#5E6673] cursor-not-allowed border border-[#363D47]'
                     }`}
                   >
                     <Save className="w-3.5 h-3.5" />
@@ -280,3 +425,4 @@ export const DepositWalletsView: React.FC = () => {
     </div>
   );
 };
+

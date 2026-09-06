@@ -20,11 +20,27 @@ router.get('/my', requireAuth, (req: AuthRequest, res: Response) => {
   const formatted = investments.map(inv => {
     const started = new Date(inv.startedAt).getTime();
     const expires = new Date(inv.expiresAt).getTime();
-    const totalDurationMs = expires - started;
+    const totalDurationMs = Math.max(1, expires - started);
     const elapsedMs = Math.max(0, now - started);
-    const progressPercent = inv.status === 'completed' ? 100 : Math.min(100, Math.round((elapsedMs / totalDurationMs) * 100));
-    const secondsRemaining = inv.status === 'completed' ? 0 : Math.max(0, Math.round((expires - now) / 1000));
-    const currentAccruedProfit = inv.status === 'completed' ? inv.expectedProfit : Number(((elapsedMs / totalDurationMs) * inv.expectedProfit).toFixed(2));
+    const isCompleted = inv.status === 'completed';
+    const isMatured = inv.status === 'matured' || (inv.status === 'active' && now >= expires);
+    const isCancelled = inv.status === 'cancelled';
+
+    const progressPercent = (isCompleted || isMatured)
+      ? 100
+      : isCancelled
+      ? 0
+      : Math.min(100, Math.round((elapsedMs / totalDurationMs) * 100));
+
+    const secondsRemaining = (isCompleted || isMatured || isCancelled)
+      ? 0
+      : Math.max(0, Math.round((expires - now) / 1000));
+
+    const currentAccruedProfit = (isCompleted || isMatured)
+      ? inv.expectedProfit
+      : isCancelled
+      ? 0
+      : Number(((elapsedMs / totalDurationMs) * inv.expectedProfit).toFixed(2));
 
     return {
       ...inv,

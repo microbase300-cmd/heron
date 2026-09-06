@@ -221,6 +221,97 @@
       "tokenHash": "979954ef8271b722b0cf6737fdd4fe5a1232e64839ab81c3759541974225c27b",
       "expiresAt": "2026-09-13T12:43:43.837Z",
       "createdAt": "2026-09-06T12:43:43.837Z"
+    },
+    {
+      "id": "rft_4474db96-f9a6-458c-b259-37647d926ea3",
+      "userId": "usr_demo_vance",
+      "tokenHash": "2baf5a17f4603047d569abd1fe0b0c78e0cff0b07667b7dd365e1fe69902328d",
+      "expiresAt": "2026-09-13T13:28:42.452Z",
+      "createdAt": "2026-09-06T13:28:42.453Z"
+    },
+    {
+      "id": "rft_4f68f14c-db28-4b7c-a91a-17eb5c804f92",
+      "userId": "usr_admin_001",
+      "tokenHash": "29c21408ad6c5ceeecabd23d3aed8f42cadb6e66a7b751af29c1924888353533",
+      "expiresAt": "2026-09-13T13:41:25.228Z",
+      "createdAt": "2026-09-06T13:41:25.228Z"
+    },
+    {
+      "id": "rft_e8453256-0a64-4619-8769-c3aaf6924565",
+      "userId": "usr_admin_001",
+      "tokenHash": "ebcc687f57329bb9a77d24c2ef978c322351ac77d18d3f2a69ce3152bc94225a",
+      "expiresAt": "2026-09-13T14:00:57.926Z",
+      "createdAt": "2026-09-06T14:00:57.926Z"
+    },
+    {
+      "id": "rft_c9103740-e356-4b3a-bef2-f3064e814c4d",
+      "userId": "usr_admin_001",
+      "tokenHash": "0fc4c0d61be532ce7fa841f9a54feb735a4b8bb0e2c377fd475f3e028ed7e04d",
+      "expiresAt": "2026-09-13T14:24:46.790Z",
+      "createdAt": "2026-09-06T14:24:46.790Z"
+    },
+    {
+      "id": "rft_67d3376f-78ea-4a27-af0e-9c396f79c214",
+      "userId": "usr_admin_001",
+      "tokenHash": "0aa68d37a003041cae3f810f102aa66cc477e0c6b773a5a8fe54b2bae2071cdf",
+      "expiresAt": "2026-09-13T14:49:34.450Z",
+      "createdAt": "2026-09-06T14:49:34.450Z"
+    },
+    {
+      "id": "rft_492fc08c-398c-468c-a358-dbe9696b3aea",
+      "userId": "usr_admin_001",
+      "tokenHash": "44bc5480f465b8ad39ea303a98fdfded485ed997029b953ebfec0ba71ec2fd50",
+      "expiresAt": "2026-09-13T15:06:07.194Z",
+      "createdAt": "2026-09-06T15:06:07.194Z"
+    },
+    {
+      "id": "rft_faac0b9e-d1bb-415c-9736-0a7bebd39152",
+      "userId": "usr_admin_001",
+      "tokenHash": "e3a208edd6c84c4a6fd40542f9cc531bee97a3c20fcb452f88455810518e28b6",
+      "expiresAt": "2026-09-13T15:26:44.869Z",
+      "createdAt": "2026-09-06T15:26:44.869Z"
+    },
+    {
+      "id": "rft_d7059635-e936-4b47-9180-9d104e36c953",
+      "userId": "usr_demo_vance",
+      "tokenHash": "448e8ee0f17ecead1e3bf33b9ce84ce3b1df23d39aebc5f014f8a6a14d7ddd5f",
+      "expiresAt": "2026-09-13T15:32:12.775Z",
+      "createdAt": "2026-09-06T15:32:12.775Z"
+    },
+    {
+      "id": "rft_8e670d79-1406-4dbf-b1df-40067f5fcfbf",
+      "userId": "usr_demo_vance",
+      "tokenHash": "23fdef3afd5b391406a553ce9078b888e343d2e1e691ff8bf29b145d91e32c04",
+      "expiresAt": "2026-09-13T16:02:05.238Z",
+      "createdAt": "2026-09-06T16:02:05.238Z"
+    },
+    {
+      "id": "rft_182c27f2-b389-4fa9-85fb-21254d4c80e9",
+      "userId": "usr_demo_vance",
+      "tokenHash": "b8e9af0c6ad15595993fa3ea6aed2d42f165a64cc1fabe7fa6f8e4069ab1c29c",
+      "expiresAt": "2026-09-13T17:23:32.164Z",
+      "createdAt": "2026-09-06T17:23:32.165Z"
+    },
+    {
+      "id": "rft_ae41b2d1-d21c-4363-a284-8519779b54e2",
+      "userId": "usr_demo_vance",
+      "tokenHash": "cdb088ab409a999ceba40bbe715857d2558b826c96e8d53a7843a5f641b3bce5",
+      "expiresAt": "2026-09-13T22:48:40.506Z",
+      "createdAt": "2026-09-06T22:48:40.514Z"
+    },
+    {
+      "id": "rft_1b229f46-086a-4f03-a295-98f01dea030c",
+      "userId": "usr_demo_vance",
+      "tokenHash": "f3ca9fdd1b2bca03fa1580b8b775909f2c5e985fa01689688a41705527c2cb10",
+      "expiresAt": "2026-09-13T23:19:56.636Z",
+      "createdAt": "2026-09-06T23:19:56.640Z"
+    },
+    {
+      "id": "rft_379b51b4-5a32-476c-a583-7fca8c775c43",
+      "userId": "usr_demo_vance",
+      "tokenHash": "5f477ce56c288eb12846d7b981324792384ea5d9fbfcdcb974a08913a4603daf",
+      "expiresAt": "2026-09-13T23:41:35.564Z",
+      "createdAt": "2026-09-06T23:41:35.564Z"
     }
   ],
   "investments": [
@@ -286,6 +377,17 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_2916abb6-28b8-473c-a56e-e3212b270002",
+      "userId": "usr_demo_vance",
+      "type": "investment_lock",
+      "amount": 3500,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x752054a5407d74f4e46ee72aa29c1f2d991dce5c286dfb273c230e9ba363dd53",
+      "note": "Committed capital to Standard Plan (48h • 9.5%)",
+      "createdAt": "2026-09-06T12:51:17.649Z"
+    },
     {
       "id": "tx_685cffe1-f22a-457d-9d7e-4c2db0d4187b",
       "userId": "usr_demo_vance",
@@ -395,17 +497,6 @@
       "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
       "note": "Deposit via TRC-20 Smart Contract",
       "createdAt": "2026-08-30T17:18:13.156Z"
-    },
-    {
-      "id": "tx_2916abb6-28b8-473c-a56e-e3212b270002",
-      "userId": "usr_demo_vance",
-      "type": "investment_lock",
-      "amount": 3500,
-      "asset": "USD",
-      "status": "completed",
-      "txHash": "0x752054a5407d74f4e46ee72aa29c1f2d991dce5c286dfb273c230e9ba363dd53",
-      "note": "Committed capital to Standard Plan (48h • 9.5%)",
-      "createdAt": "2026-09-06T12:51:17.649Z"
     }
   ],
   "referralCommissions": [

@@ -85,41 +85,41 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="relative w-full max-w-md rounded-2xl glass-card-featured border-gold/40 p-6 sm:p-8 shadow-2xl shadow-black">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-md rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 sm:p-8 shadow-2xl shadow-black">
         <button
           onClick={() => {
             onClose();
             setStep('details');
             setError(null);
           }}
-          className="absolute top-5 right-5 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.05] transition-all"
+          className="absolute top-5 right-5 p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
+          <div className="w-10 h-10 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B]">
             <ArrowUpRight className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-serif text-xl font-bold text-white">Disburse Liquidity</h3>
-            <p className="text-xs text-white/50 font-mono">
+            <h3 className="font-sans text-xl font-bold text-[#EAECEF] tracking-tight">Disburse Liquidity</h3>
+            <p className="text-xs text-[#848E9C] font-mono">
               {step === 'details' ? 'Two-factor authorized cryptographic withdrawal' : 'Step 2: 2FA Security Authorization'}
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+          <div className="mb-4 p-3 rounded-xl bg-[#F6465D]/15 border border-[#F6465D]/30 text-[#F6465D] text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#F6465D]" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-            <Clock className="w-4 h-4 shrink-0 text-emerald-glow" />
+          <div className="mb-4 p-3 rounded-xl bg-[#0ECB81]/15 border border-[#0ECB81]/30 text-[#0ECB81] text-xs flex items-center gap-2">
+            <Clock className="w-4 h-4 shrink-0 text-[#0ECB81]" />
             <span>{success}</span>
           </div>
         )}
@@ -127,14 +127,14 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         {step === 'details' ? (
           <form onSubmit={handleRequestOtp} className="space-y-4">
             <div>
-              <div className="flex justify-between text-xs font-mono text-white/50 mb-1.5">
+              <div className="flex justify-between text-xs font-mono text-[#848E9C] mb-1.5">
                 <span>Withdrawal Asset</span>
-                <span className="text-white/70">Available: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <span className="text-[#EAECEF]">Available: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
               <select
                 value={asset}
                 onChange={(e) => setAsset(e.target.value)}
-                className="w-full p-3 rounded-xl glass-input text-xs font-semibold"
+                className="w-full p-3 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#EAECEF] text-xs font-semibold focus:border-[#F0B90B] focus:outline-none"
               >
                 <option value="USDT (TRC-20)">Tether (USDT TRC-20)</option>
                 <option value="USDT (ERC-20)">Tether (USDT ERC-20)</option>
@@ -145,15 +145,15 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-white/50 mb-1.5">
+              <div className="flex justify-between text-xs font-mono text-[#848E9C] mb-1.5">
                 <span>Amount ($ USD)</span>
                 <div className="flex gap-1">
-                  {[0.25, 0.5, 1].map((pct) => (
+                  {[0.25, 0.5, 0.75, 1].map((pct) => (
                     <button
                       key={pct}
                       type="button"
                       onClick={() => setAmount(Number((availableBalance * pct).toFixed(2)))}
-                      className="px-2 py-0.5 rounded bg-white/[0.06] hover:bg-white/[0.12] text-[10px] text-gold font-mono"
+                      className="px-2 py-0.5 rounded bg-[#2B313A] hover:bg-[#363D47] text-[10px] text-[#F0B90B] font-mono font-bold"
                     >
                       {pct * 100}%
                     </button>
@@ -166,12 +166,12 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                 step={10}
                 min={10}
-                className="w-full p-3 rounded-xl glass-input font-serif text-lg font-bold"
+                className="w-full p-3 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#EAECEF] font-sans text-lg font-bold focus:border-[#F0B90B] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-white/50 mb-1.5">
+              <label className="block text-xs font-mono text-[#848E9C] mb-1.5">
                 Destination Cryptographic Address
               </label>
               <input
@@ -179,30 +179,30 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="e.g. TX9d8b7a6c5d4e3f..."
-                className="w-full p-3 rounded-xl glass-input font-mono text-xs"
+                className="w-full p-3 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#EAECEF] font-mono text-xs focus:border-[#F0B90B] focus:outline-none"
                 required
               />
             </div>
 
-            <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] text-xs font-mono space-y-1.5 text-white/60">
+            <div className="p-3.5 rounded-xl bg-[#181A20] border border-[#2B313A] text-xs font-mono space-y-1.5 text-[#848E9C]">
               <div className="flex justify-between">
                 <span>Settlement Fee:</span>
-                <span className="text-emerald-glow font-bold">0.00% ($0.00)</span>
+                <span className="text-[#0ECB81] font-bold">0.00% ($0.00)</span>
               </div>
               <div className="flex justify-between">
                 <span>Network Gas:</span>
-                <span className="text-white">Subsidized by Heron</span>
+                <span className="text-[#EAECEF]">Subsidized by Protocol</span>
               </div>
-              <div className="flex justify-between pt-1 border-t border-white/[0.06] text-white font-bold">
+              <div className="flex justify-between pt-1 border-t border-[#2B313A] text-[#EAECEF] font-bold">
                 <span>Net Disbursement:</span>
-                <span className="text-gold font-serif text-base">${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <span className="text-[#F0B90B] font-sans font-bold text-base">${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading || amount <= 0 || amount > availableBalance}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-gold/20 disabled:opacity-40 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#F0B90B]/15 disabled:opacity-40 flex items-center justify-center gap-2 active:scale-95"
             >
               <KeyRound className="w-4 h-4" />
               <span>{loading ? 'Requesting OTP...' : 'Authorize with Security OTP ↗'}</span>
@@ -211,19 +211,19 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         ) : (
           /* Step 2: Withdrawal Security OTP Confirmation */
           <form onSubmit={handleConfirmWithdrawal} className="space-y-4">
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-xs font-mono space-y-2">
-              <div className="flex justify-between text-white/60">
+            <div className="p-3.5 rounded-xl bg-[#181A20] border border-[#2B313A] text-xs font-mono space-y-2">
+              <div className="flex justify-between text-[#848E9C]">
                 <span>Disbursement:</span>
-                <span className="font-bold text-gold font-serif">${amount.toLocaleString()}</span>
+                <span className="font-bold text-[#F0B90B] font-sans">${amount.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-white/60 truncate">
+              <div className="flex justify-between text-[#848E9C] truncate">
                 <span>Destination:</span>
-                <span className="text-white">{address.slice(0, 8)}...{address.slice(-6)}</span>
+                <span className="text-[#EAECEF]">{address.slice(0, 8)}...{address.slice(-6)}</span>
               </div>
 
               {devOtp && (
-                <div className="mt-2 pt-2 border-t border-white/[0.06] text-center">
-                  <span className="px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-mono">
+                <div className="mt-2 pt-2 border-t border-[#2B313A] text-center">
+                  <span className="px-3 py-1 rounded-full bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[#F0B90B] text-xs font-mono font-bold">
                     Security Code: <strong>{devOtp}</strong>
                   </span>
                 </div>
@@ -231,7 +231,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-white/50 mb-1 text-center">
+              <label className="block text-xs font-mono text-[#848E9C] mb-1 text-center">
                 Enter 6-Digit Withdrawal Authorization Code
               </label>
               <input
@@ -242,7 +242,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 placeholder="123456"
                 required
                 autoFocus
-                className="w-full text-center text-xl font-mono font-bold tracking-widest py-3 rounded-xl glass-input text-gold"
+                className="w-full text-center text-xl font-mono font-bold tracking-widest py-3 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#F0B90B] focus:border-[#F0B90B] focus:outline-none"
               />
             </div>
 
@@ -250,7 +250,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
               <button
                 type="button"
                 onClick={() => setStep('details')}
-                className="w-1/3 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white text-xs font-mono transition-all flex items-center justify-center gap-1"
+                className="w-1/3 py-3 rounded-lg bg-[#2B313A] hover:bg-[#363D47] text-[#EAECEF] text-xs font-mono transition-all flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back</span>
@@ -258,7 +258,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
               <button
                 type="submit"
                 disabled={loading || otpCode.length !== 6}
-                className="w-2/3 py-3 rounded-xl bg-gold hover:bg-gold-light text-[#0b0d0d] font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-gold/20 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="w-2/3 py-3 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#F0B90B]/15 flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-95"
               >
                 <Send className="w-4 h-4" />
                 <span>{loading ? 'Submitting...' : 'Confirm Withdrawal'}</span>

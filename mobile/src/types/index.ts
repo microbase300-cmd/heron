@@ -22,10 +22,13 @@ export interface Investment {
   durationHours: number;
   expectedProfit: number;
   totalPayout: number;
-  status: 'active' | 'completed' | 'cancelled';
+  status: 'active' | 'matured' | 'completed' | 'cancelled';
   startedAt: string;
   expiresAt: string;
   completedAt?: string | null;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  disbursedBy?: string | null;
   progressPercent: number;
   secondsRemaining: number;
   currentAccruedProfit: number;

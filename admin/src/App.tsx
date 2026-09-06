@@ -5,6 +5,7 @@ import { AdminLogin } from './components/AdminLogin';
 import { AdminNavbar } from './components/AdminNavbar';
 import { AdminSidebar, AdminTab } from './components/AdminSidebar';
 import { ExecutiveMetricsView } from './components/ExecutiveMetricsView';
+import { InvestorPortfoliosView } from './components/InvestorPortfoliosView';
 import { UserManagementView } from './components/UserManagementView';
 import { TransactionDeskView } from './components/TransactionDeskView';
 import { EscrowMandatesView } from './components/EscrowMandatesView';
@@ -15,6 +16,7 @@ import { NotificationsDeskView } from './components/NotificationsDeskView';
 export function App() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getStoredUser());
   const [currentTab, setCurrentTab] = useState<AdminTab>('metrics');
+  const [selectedInvestorId, setSelectedInvestorId] = useState<string | null>(null);
 
   // Platform Operational Data State
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
@@ -87,7 +89,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070909] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#181A20] text-[#EAECEF] flex flex-col font-sans selection:bg-[#F0B90B] selection:text-[#181A20]">
       <AdminNavbar
         user={currentUser}
         onLogout={handleLogout}
@@ -112,10 +114,23 @@ export function App() {
               />
             )}
 
+            {currentTab === 'investor_portfolios' && (
+              <InvestorPortfoliosView
+                users={users}
+                investments={investments}
+                initialSelectedUserId={selectedInvestorId}
+                onRefreshData={fetchAllData}
+              />
+            )}
+
             {currentTab === 'users' && (
               <UserManagementView
                 users={users}
                 onRefreshUsers={fetchAllData}
+                onSelectInvestor={(userId) => {
+                  setSelectedInvestorId(userId);
+                  setCurrentTab('investor_portfolios');
+                }}
               />
             )}
 
@@ -140,6 +155,10 @@ export function App() {
               <EscrowMandatesView
                 investments={investments}
                 onRefreshInvestments={fetchAllData}
+                onSelectInvestor={(userId) => {
+                  setSelectedInvestorId(userId);
+                  setCurrentTab('investor_portfolios');
+                }}
               />
             )}
 

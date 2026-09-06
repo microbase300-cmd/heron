@@ -116,20 +116,20 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h2 className="text-xl font-serif font-bold text-white tracking-tight">Deploy Institutional Capital</h2>
-        <p className="text-xs text-white/50 font-mono mt-0.5">Select an investment horizon. Yields accrue automatically via cryptographic smart escrow.</p>
+        <h2 className="text-lg sm:text-xl font-sans font-bold text-[#EAECEF] tracking-tight">Deploy Institutional Capital</h2>
+        <p className="text-xs text-[#848E9C] font-mono mt-0.5">Select an investment horizon. Yields accrue automatically via cryptographic smart escrow.</p>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-3">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="p-4 rounded-xl bg-[#F6465D]/10 border border-[#F6465D]/30 text-[#F6465D] text-xs flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[#F6465D]" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-3">
-          <Check className="w-4 h-4 shrink-0 text-emerald-glow" />
+        <div className="p-4 rounded-xl bg-[#0ECB81]/10 border border-[#0ECB81]/30 text-[#0ECB81] text-xs flex items-center gap-3">
+          <Check className="w-4 h-4 shrink-0 text-[#0ECB81]" />
           <span>{successMsg} Redirecting to active investments...</span>
         </div>
       )}
@@ -144,66 +144,66 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
             <div
               key={p.id}
               onClick={() => handleSelectPlan(p)}
-              className={`p-6 rounded-2xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between ${
+              className={`p-6 rounded-2xl cursor-pointer transition-all duration-300 relative flex flex-col justify-between border ${
                 isSelected 
-                  ? 'bg-gradient-to-b from-[#18221c] to-[#0c110e] border-2 border-gold shadow-xl shadow-gold/10' 
+                  ? 'bg-[#242A32] border-2 border-[#F0B90B] shadow-xl shadow-[#F0B90B]/10' 
                   : isFeatured 
-                    ? 'glass-card border-gold/40' 
-                    : 'glass-card hover:border-white/20'
+                    ? 'bg-[#1E2329] border-[#F0B90B]/40 hover:border-[#F0B90B]/70' 
+                    : 'bg-[#1E2329] border-[#2B313A] hover:border-[#F0B90B]/40'
               }`}
             >
               {isFeatured && (
-                <span className="absolute top-0 right-0 bg-gold text-[#0b0d0d] text-[9px] font-mono font-bold uppercase px-3 py-1 rounded-bl-xl tracking-widest">
+                <span className="absolute top-0 right-0 bg-[#F0B90B] text-[#181A20] text-[9px] font-mono font-black uppercase px-3 py-1 rounded-bl-xl tracking-widest shadow-sm">
                   VIP High-Yield
                 </span>
               )}
 
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-white/50">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#848E9C]">
                     Horizon Tier
                   </span>
                   <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
-                    isSelected ? 'bg-gold text-[#0b0d0d]' : 'bg-white/[0.06] text-gold border border-gold/20'
+                    isSelected ? 'bg-[#F0B90B] text-[#181A20]' : 'bg-[#2B313A] text-[#F0B90B] border border-[#F0B90B]/20'
                   }`}>
                     {p.durationHours} Hours
                   </span>
                 </div>
 
-                <h3 className="font-serif text-2xl font-bold text-white mb-1">{p.name}</h3>
-                <p className="text-[11px] text-white/50 min-h-[32px]">{p.description}</p>
+                <h3 className="font-sans text-lg font-bold text-[#EAECEF] mb-0.5 tracking-tight">{p.name}</h3>
+                <p className="text-[11px] text-[#848E9C] min-h-[32px]">{p.description}</p>
 
-                <div className="my-4 pb-4 border-b border-white/[0.08]">
-                  <div className="text-4xl font-serif font-bold text-gold">
+                <div className="my-3.5 pb-3.5 border-b border-[#2B313A]">
+                  <div className="text-2xl sm:text-3xl font-sans font-bold text-[#F0B90B] tracking-tight">
                     {(p.rate * 100).toFixed(1)}%
                   </div>
-                  <div className="text-[10px] text-white/40 font-mono uppercase mt-0.5">
+                  <div className="text-[10px] text-[#848E9C] font-mono uppercase mt-0.5">
                     Guaranteed net yield after {p.durationHours}h
                   </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs font-mono">
-                  <div className="flex justify-between text-white/60">
+                  <div className="flex justify-between text-[#848E9C]">
                     <span>Min:</span>
-                    <span className="text-white font-semibold">{formatPlanMin(p.min)}</span>
+                    <span className="text-[#EAECEF] font-semibold">{formatPlanMin(p.min)}</span>
                   </div>
-                  <div className="flex justify-between text-white/60">
+                  <div className="flex justify-between text-[#848E9C]">
                     <span>Max:</span>
-                    <span className="text-white font-semibold">{formatPlanMax(p.max)}</span>
+                    <span className="text-[#EAECEF] font-semibold">{formatPlanMax(p.max)}</span>
                   </div>
-                  <div className="flex justify-between text-gold">
+                  <div className="flex justify-between text-[#F0B90B]">
                     <span>Referral:</span>
                     <span className="font-semibold">{((typeof p.referralRate === 'number' ? p.referralRate : 0.1) * 100).toFixed(0)}% Instant</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-3 border-t border-white/[0.08] flex items-center justify-between">
-                <span className="text-xs font-medium text-white/70">
+              <div className="mt-6 pt-3 border-t border-[#2B313A] flex items-center justify-between">
+                <span className="text-xs font-medium text-[#848E9C]">
                   {isSelected ? 'Selected' : 'Select Plan'}
                 </span>
                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-                  isSelected ? 'bg-gold border-gold text-[#0b0d0d]' : 'border-white/20'
+                  isSelected ? 'bg-[#F0B90B] border-[#F0B90B] text-[#181A20]' : 'border-[#363D47]'
                 }`}>
                   {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
@@ -214,28 +214,28 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
       </div>
 
       {/* Calculator & Investment Execution Box */}
-      <form onSubmit={handleSubmit} className="p-8 rounded-2xl glass-card border-gold/30">
+      <form onSubmit={handleSubmit} className="p-8 rounded-2xl bg-[#1E2329] border border-[#2B313A] shadow-xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Left: Input & Slider */}
           <div className="space-y-6">
             <div>
-              <div className="flex items-center justify-between text-xs font-mono text-white/50 mb-2">
+              <div className="flex items-center justify-between text-xs font-mono text-[#848E9C] mb-2">
                 <span>Enter Investment Capital (USD)</span>
-                <span className="flex items-center gap-1.5 text-white/70">
-                  <Wallet className="w-3.5 h-3.5 text-gold" />
+                <span className="flex items-center gap-1.5 text-[#EAECEF]">
+                  <Wallet className="w-3.5 h-3.5 text-[#F0B90B]" />
                   Available: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
-              <div className="flex items-center rounded-xl bg-black/50 border border-white/[0.15] px-4 py-3 focus-within:border-gold transition-colors">
-                <span className="text-2xl font-serif text-gold font-bold mr-3">$</span>
+              <div className="flex items-center rounded-xl bg-[#181A20] border border-[#2B313A] px-4 py-3 focus-within:border-[#F0B90B] transition-colors">
+                <span className="text-2xl font-sans text-[#F0B90B] font-bold mr-3">$</span>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => handleAmountChange(parseFloat(e.target.value) || 0)}
                   min={100}
                   step={50}
-                  className="w-full bg-transparent text-3xl font-serif font-bold text-white outline-none"
+                  className="w-full bg-transparent text-3xl font-sans font-bold text-[#EAECEF] outline-none"
                 />
               </div>
 
@@ -246,10 +246,10 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
                 step={50}
                 value={Math.min(amount, 50000)}
                 onChange={(e) => handleAmountChange(parseFloat(e.target.value))}
-                className="w-full mt-4 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                className="w-full mt-4 h-1.5 bg-[#2B313A] rounded-lg appearance-none cursor-pointer"
               />
 
-              <div className="flex justify-between text-[10px] font-mono text-white/40 mt-1">
+              <div className="flex justify-between text-[10px] font-mono text-[#848E9C] mt-1">
                 <span>$100 (Amateur)</span>
                 <span>$2,000 (Standard)</span>
                 <span>$6,000 (Premium)</span>
@@ -266,8 +266,8 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
                   onClick={() => handleAmountChange(val)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
                     amount === val 
-                      ? 'bg-gold text-[#0b0d0d] font-bold' 
-                      : 'bg-white/[0.04] text-white/60 hover:text-white border border-white/[0.08]'
+                      ? 'bg-[#F0B90B] text-[#181A20] font-bold shadow-sm' 
+                      : 'bg-[#2B313A] text-[#848E9C] hover:text-[#EAECEF] border border-[#363D47]'
                   }`}
                 >
                   ${val.toLocaleString()}
@@ -276,53 +276,61 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
             </div>
 
             {isInsufficient && (
-              <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[#F0B90B] text-xs flex items-center justify-between">
                 <span>Available liquidity is lower than target allocation.</span>
                 <button
                   type="button"
                   onClick={onOpenDeposit}
-                  className="px-2.5 py-1 rounded bg-gold text-[#0b0d0d] font-bold text-[11px] uppercase tracking-wide hover:bg-gold-light"
+                  className="px-2.5 py-1 rounded bg-[#F0B90B] text-[#181A20] font-bold text-[11px] uppercase tracking-wide hover:bg-[#FCD535] active:scale-95"
                 >
                   Deposit Now
                 </button>
               </div>
             )}
+
+            {/* Plan Quick Selector Bar */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-[#848E9C]">Auto-Detected Plan:</span>
+              <span className="text-xs font-mono font-bold text-[#F0B90B] px-2.5 py-1 rounded-full bg-[#F0B90B]/10 border border-[#F0B90B]/30">
+                {planName} ({(planRate * 100).toFixed(1)}% yield • {planDuration}h)
+              </span>
+            </div>
           </div>
 
           {/* Right: Real-time Return Projection */}
-          <div className="p-6 rounded-xl bg-black/40 border border-white/[0.08] space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <span className="text-xs font-mono uppercase text-white/50">Projected Return Schedule</span>
-              <span className="text-xs font-mono font-bold text-gold px-2.5 py-0.5 rounded-full bg-gold/10 border border-gold/30">
+          <div className="p-6 rounded-xl bg-[#181A20] border border-[#2B313A] space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2B313A] pb-3">
+              <span className="text-xs font-mono uppercase text-[#848E9C]">Projected Return Schedule</span>
+              <span className="text-xs font-mono font-bold text-[#F0B90B] px-2.5 py-0.5 rounded-full bg-[#F0B90B]/10 border border-[#F0B90B]/30">
                 {planName} • {planDuration}h
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-[10px] text-white/40 font-mono uppercase">Capital Allocated</div>
-                <div className="text-xl font-serif font-bold text-white mt-0.5">
+                <div className="text-[10px] text-[#848E9C] font-mono uppercase">Capital Allocated</div>
+                <div className="text-xl font-sans font-bold text-[#EAECEF] mt-0.5">
                   ${safeAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] text-white/40 font-mono uppercase">Guaranteed Yield</div>
-                <div className="text-xl font-serif font-bold text-emerald-glow mt-0.5">
+                <div className="text-[10px] text-[#848E9C] font-mono uppercase">Guaranteed Yield</div>
+                <div className="text-xl font-sans font-bold text-[#0ECB81] mt-0.5">
                   +${expectedProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] text-white/40 font-mono uppercase">Total Maturity Disbursement</div>
-                <div className="text-2xl font-serif font-bold text-gold mt-0.5">
+                <div className="text-[10px] text-[#848E9C] font-mono uppercase">Total Maturity Disbursement</div>
+                <div className="text-2xl font-sans font-bold text-[#F0B90B] mt-0.5">
                   ${totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] text-white/40 font-mono uppercase">Referral Payout Capacity</div>
-                <div className="text-base font-serif font-bold text-white/70 mt-0.5">
+                <div className="text-[10px] text-[#848E9C] font-mono uppercase">Referral Payout Capacity</div>
+                <div className="text-base font-sans font-bold text-[#848E9C] mt-0.5">
                   ${referralBonus.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({(planReferralRate * 100).toFixed(0)}%)
                 </div>
               </div>
@@ -333,8 +341,8 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
               disabled={loading || isInsufficient}
               className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                 isInsufficient 
-                  ? 'bg-white/10 text-white/30 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] shadow-xl shadow-gold/20'
+                  ? 'bg-[#2B313A] text-[#5E6673] cursor-not-allowed' 
+                  : 'bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] shadow-xl shadow-[#F0B90B]/15 active:scale-[0.99]'
               }`}
             >
               {loading ? (

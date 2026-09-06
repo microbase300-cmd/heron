@@ -135,30 +135,31 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
   const getNotificationIcon = (type: NotificationMessage['type']) => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-glow" />;
+        return <CheckCircle2 className="w-4 h-4 text-[#0ECB81]" />;
       case 'warning':
+        return <ShieldAlert className="w-4 h-4 text-[#F6465D]" />;
       case 'alert':
-        return <AlertTriangle className="w-4 h-4 text-amber-400" />;
+        return <AlertTriangle className="w-4 h-4 text-[#F0B90B]" />;
       case 'announcement':
-        return <Megaphone className="w-4 h-4 text-gold" />;
+        return <Megaphone className="w-4 h-4 text-[#F0B90B]" />;
       case 'info':
       default:
-        return <Sparkles className="w-4 h-4 text-cyan-400" />;
+        return <Sparkles className="w-4 h-4 text-[#387bf0]" />;
     }
   };
 
   const getTypeBadge = (type: NotificationMessage['type']) => {
     switch (type) {
       case 'announcement':
-        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-gold/20 text-gold border border-gold/30">Broadcast</span>;
+        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30 font-bold">Broadcast</span>;
       case 'alert':
       case 'warning':
-        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">Alert</span>;
+        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30 font-bold">Alert</span>;
       case 'success':
-        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-glow border border-emerald-500/30">Success</span>;
+        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30 font-bold">Success</span>;
       case 'info':
       default:
-        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Direct</span>;
+        return <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#2B313A] text-[#848E9C] border border-[#363D47] font-semibold">Direct</span>;
     }
   };
 
@@ -170,12 +171,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           setIsOpen(!isOpen);
           if (!isOpen) fetchNotifications();
         }}
-        className="relative p-2 sm:p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] hover:border-gold/30 text-white/80 hover:text-white transition-all cursor-pointer"
+        className="relative p-2 sm:p-2.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] border border-[#363D47] hover:border-[#F0B90B]/40 text-[#848E9C] hover:text-[#EAECEF] transition-all cursor-pointer"
         aria-label="Notification Center"
       >
-        <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white/80" />
+        <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#EAECEF]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-rose-500 to-amber-500 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg border border-[#070908] animate-pulse">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#F6465D] text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg border border-[#181A20] animate-pulse">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -183,16 +184,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
       {/* Dropdown Menu / Center */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-[92vw] sm:w-[420px] max-w-[440px] bg-[#0d1210] border border-white/[0.12] rounded-2xl shadow-2xl z-50 backdrop-blur-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute right-0 mt-3 w-[92vw] sm:w-[420px] max-w-[440px] bg-[#1E2329] border border-[#2B313A] rounded-2xl shadow-2xl z-50 backdrop-blur-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
-          <div className="p-4 border-b border-white/[0.08] bg-white/[0.02] flex items-center justify-between">
+          <div className="p-4 border-b border-[#2B313A] bg-[#181A20] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center text-gold">
+              <div className="w-8 h-8 rounded-lg bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B]">
                 <Bell className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white">Communications Center</h3>
-                <p className="text-[11px] text-white/50">
+                <h3 className="text-sm font-semibold text-[#EAECEF]">Communications Center</h3>
+                <p className="text-[11px] text-[#848E9C]">
                   {unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
                 </p>
               </div>
@@ -202,7 +203,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="text-[11px] text-gold hover:text-gold-light flex items-center gap-1 px-2 py-1 rounded-lg bg-gold/10 hover:bg-gold/20 transition-all font-medium cursor-pointer"
+                  className="text-[11px] text-[#F0B90B] hover:text-[#FCD535] flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F0B90B]/10 hover:bg-[#F0B90B]/20 transition-all font-bold cursor-pointer"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
                   <span className="hidden xs:inline">Mark all read</span>
@@ -210,7 +211,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                className="p-1 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -218,23 +219,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           </div>
 
           {/* Filter Bar */}
-          <div className="px-4 py-2 bg-white/[0.01] border-b border-white/[0.06] flex items-center gap-2 text-xs">
+          <div className="px-4 py-2 bg-[#181A20] border-b border-[#2B313A] flex items-center gap-2 text-xs">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
                 filter === 'all'
-                  ? 'bg-gold/20 text-gold border border-gold/30'
-                  : 'text-white/60 hover:text-white'
+                  ? 'bg-[#F0B90B] text-[#181A20]'
+                  : 'text-[#848E9C] hover:text-[#EAECEF]'
               }`}
             >
               All ({notifications.length})
             </button>
             <button
               onClick={() => setFilter('unread')}
-              className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
                 filter === 'unread'
-                  ? 'bg-gold/20 text-gold border border-gold/30'
-                  : 'text-white/60 hover:text-white'
+                  ? 'bg-[#F0B90B] text-[#181A20]'
+                  : 'text-[#848E9C] hover:text-[#EAECEF]'
               }`}
             >
               Unread ({unreadCount})
@@ -242,56 +243,56 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           </div>
 
           {/* Notification Items List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-white/[0.04] scrollbar-thin scrollbar-thumb-white/10">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#2B313A] scrollbar-thin scrollbar-thumb-[#2B313A]">
             {loading && notifications.length === 0 ? (
-              <div className="p-8 text-center text-white/40 text-xs font-mono">
+              <div className="p-8 text-center text-[#848E9C] text-xs font-mono">
                 Loading communications...
               </div>
             ) : filteredNotifications.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-3 text-white/30">
+                <div className="w-12 h-12 rounded-full bg-[#181A20] border border-[#2B313A] flex items-center justify-center mx-auto mb-3 text-[#848E9C]">
                   <Info className="w-6 h-6" />
                 </div>
-                <p className="text-xs text-white/60 font-medium">No {filter === 'unread' ? 'unread ' : ''}messages</p>
-                <p className="text-[11px] text-white/40 mt-1">Platform updates, direct communications, and settlement confirmations will appear here.</p>
+                <p className="text-xs text-[#EAECEF] font-semibold">No {filter === 'unread' ? 'unread ' : ''}messages</p>
+                <p className="text-[11px] text-[#848E9C] mt-1">Platform updates, direct communications, and settlement confirmations will appear here.</p>
               </div>
             ) : (
               filteredNotifications.map(notification => (
                 <div
                   key={notification.id}
                   onClick={() => handleOpenMessageDetail(notification)}
-                  className={`p-4 transition-all hover:bg-white/[0.06] cursor-pointer group ${
-                    !notification.isRead ? 'bg-gold/[0.04] border-l-2 border-gold' : 'opacity-85'
+                  className={`p-4 transition-all hover:bg-[#181A20] cursor-pointer group ${
+                    !notification.isRead ? 'bg-[#F0B90B]/5 border-l-2 border-[#F0B90B]' : 'opacity-90'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.08] shrink-0 mt-0.5 group-hover:border-gold/30 transition-all">
+                    <div className="p-2 rounded-lg bg-[#181A20] border border-[#2B313A] shrink-0 mt-0.5 group-hover:border-[#F0B90B]/40 transition-all">
                       {getNotificationIcon(notification.type)}
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <h4 className="text-xs font-semibold text-white truncate group-hover:text-gold transition-colors">
+                        <h4 className="text-xs font-semibold text-[#EAECEF] truncate group-hover:text-[#F0B90B] transition-colors">
                           {notification.title}
                         </h4>
-                        <span className="text-[10px] font-mono text-white/40 shrink-0">
+                        <span className="text-[10px] font-mono text-[#848E9C] shrink-0">
                           {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
-                      <p className="text-xs text-white/70 line-clamp-2 leading-relaxed break-words font-sans">
+                      <p className="text-xs text-[#848E9C] line-clamp-2 leading-relaxed break-words font-sans">
                         {notification.message}
                       </p>
 
                       <div className="mt-2.5 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
                           {getTypeBadge(notification.type)}
-                          <span className="text-[10px] font-mono text-white/40">
+                          <span className="text-[10px] font-mono text-[#848E9C]">
                             {new Date(notification.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                           </span>
                         </div>
 
-                        <span className="text-[11px] font-mono text-gold/80 group-hover:text-gold flex items-center gap-1 transition-colors">
+                        <span className="text-[11px] font-mono text-[#F0B90B] group-hover:text-[#FCD535] flex items-center gap-1 transition-colors font-semibold">
                           <span>Read Full Message</span>
                           <ArrowRight className="w-3 h-3" />
                         </span>
@@ -305,19 +306,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 1. AUTOMATIC POP-UP MODAL FOR URGENT ALERTS & SUCCESS CONFIRMATIONS */}
-      {/* ========================================================================= */}
+      {/* 1. AUTOMATIC POP-UP MODAL FOR URGENT ALERTS */}
       {priorityPopUp && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#0c1210] border-2 border-gold/60 p-6 sm:p-8 shadow-2xl shadow-black">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#1E2329] border border-[#F0B90B]/50 p-6 sm:p-8 shadow-2xl shadow-black">
             {/* Header Crest */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#2B313A]">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-lg ${
                   priorityPopUp.type === 'alert' || priorityPopUp.type === 'warning'
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-amber-500/10'
-                    : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-emerald-500/10'
+                    ? 'bg-[#F6465D]/15 border-[#F6465D]/40 text-[#F6465D]'
+                    : 'bg-[#0ECB81]/15 border-[#0ECB81]/40 text-[#0ECB81]'
                 }`}>
                   {priorityPopUp.type === 'alert' || priorityPopUp.type === 'warning' ? (
                     <ShieldAlert className="w-6 h-6" />
@@ -327,12 +326,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono uppercase tracking-widest text-gold font-bold">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#F0B90B] font-bold">
                       HERON CAPITAL DISPATCH
                     </span>
                     {getTypeBadge(priorityPopUp.type)}
                   </div>
-                  <h3 className="text-base font-serif font-bold text-white mt-0.5">
+                  <h3 className="text-base font-sans font-bold text-[#EAECEF] mt-0.5 tracking-tight">
                     {priorityPopUp.type === 'alert' ? 'Security & Settlement Alert' : 'Operational Update'}
                   </h3>
                 </div>
@@ -340,7 +339,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
               <button
                 onClick={() => setPriorityPopUp(null)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -348,20 +347,20 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
             {/* Message Body Box */}
             <div className="py-6 space-y-4">
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <h4 className="text-sm font-bold text-white mb-2 font-serif">
+              <div className="p-4 rounded-xl bg-[#181A20] border border-[#2B313A]">
+                <h4 className="text-sm font-bold text-[#EAECEF] mb-2 font-sans tracking-tight">
                   {priorityPopUp.title}
                 </h4>
-                <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-sans whitespace-pre-wrap">
+                <p className="text-xs sm:text-sm text-[#848E9C] leading-relaxed font-sans whitespace-pre-wrap">
                   {priorityPopUp.message}
                 </p>
               </div>
 
               {/* Sender & Timestamp Info */}
-              <div className="flex items-center justify-between text-xs font-mono text-white/50 px-1">
+              <div className="flex items-center justify-between text-xs font-mono text-[#848E9C] px-1">
                 <span className="flex items-center gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5 text-gold" />
-                  <span>Authorized By: <strong className="text-white/80">{priorityPopUp.sender || 'Executive Risk Desk'}</strong></span>
+                  <UserCheck className="w-3.5 h-3.5 text-[#F0B90B]" />
+                  <span>Authorized By: <strong className="text-[#EAECEF]">{priorityPopUp.sender || 'Executive Risk Desk'}</strong></span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
@@ -371,18 +370,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
             </div>
 
             {/* Actions */}
-            <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#2B313A] flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setPriorityPopUp(null)}
-                className="px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/70 hover:text-white text-xs font-mono transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] border border-[#363D47] text-[#848E9C] hover:text-[#EAECEF] text-xs font-mono transition-all cursor-pointer"
               >
                 Dismiss
               </button>
               <button
                 type="button"
                 onClick={handleAcknowledgePopUp}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] font-bold font-mono text-xs uppercase tracking-wider transition-all shadow-lg shadow-gold/20 flex items-center gap-1.5 cursor-pointer"
+                className="px-6 py-2.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold font-mono text-xs uppercase tracking-wider transition-all shadow-md shadow-[#F0B90B]/15 flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Check className="w-4 h-4" />
                 <span>Acknowledge & Confirm</span>
@@ -392,26 +391,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 2. DEDICATED MESSAGE BOX MODAL (FOR ALL CLICKED NOTIFICATIONS) */}
-      {/* ========================================================================= */}
+      {/* 2. DEDICATED MESSAGE BOX MODAL */}
       {selectedNotification && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#0c1210] border border-gold/40 p-6 sm:p-8 shadow-2xl shadow-black">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 sm:p-8 shadow-2xl shadow-black">
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#2B313A]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold shadow-lg shadow-gold/10">
-                  <Mail className="w-5 h-5 text-gold" />
+                <div className="w-10 h-10 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B]">
+                  <Mail className="w-5 h-5 text-[#F0B90B]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono uppercase tracking-widest text-gold font-bold">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#F0B90B] font-bold">
                       OFFICIAL DISPATCH
                     </span>
                     {getTypeBadge(selectedNotification.type)}
                   </div>
-                  <h3 className="text-sm font-serif font-bold text-white mt-0.5">
+                  <h3 className="text-sm font-sans font-bold text-[#EAECEF] mt-0.5 tracking-tight">
                     Executive Communication Box
                   </h3>
                 </div>
@@ -419,7 +416,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
               <button
                 onClick={() => setSelectedNotification(null)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -427,42 +424,42 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
             {/* Message Body */}
             <div className="py-6 space-y-4">
-              <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
-                <h4 className="text-base font-serif font-bold text-white leading-snug">
+              <div className="p-5 rounded-xl bg-[#181A20] border border-[#2B313A] space-y-3">
+                <h4 className="text-base font-sans font-bold text-[#EAECEF] leading-snug tracking-tight">
                   {selectedNotification.title}
                 </h4>
-                <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-wrap">
+                <p className="text-xs sm:text-sm text-[#848E9C] leading-relaxed font-sans whitespace-pre-wrap">
                   {selectedNotification.message}
                 </p>
               </div>
 
               {/* Message Metadata */}
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-white/50 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono text-[#848E9C] p-3 rounded-xl bg-[#181A20] border border-[#2B313A]">
                 <div>
-                  <span className="text-white/40 block text-[10px]">DISPATCHED BY</span>
-                  <span className="text-white/80 font-bold">{selectedNotification.sender || 'Chief Risk Officer'}</span>
+                  <span className="text-[#848E9C] block text-[10px]">DISPATCHED BY</span>
+                  <span className="text-[#EAECEF] font-bold">{selectedNotification.sender || 'Chief Risk Officer'}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">TIME / DATE</span>
-                  <span className="text-white/80 font-bold">{new Date(selectedNotification.createdAt).toLocaleString()}</span>
+                  <span className="text-[#848E9C] block text-[10px]">TIME / DATE</span>
+                  <span className="text-[#EAECEF] font-bold">{new Date(selectedNotification.createdAt).toLocaleString()}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">COMMUNICATION TYPE</span>
-                  <span className="text-gold font-bold uppercase">{selectedNotification.type}</span>
+                  <span className="text-[#848E9C] block text-[10px]">COMMUNICATION TYPE</span>
+                  <span className="text-[#F0B90B] font-bold uppercase">{selectedNotification.type}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">STATUS</span>
-                  <span className="text-emerald-400 font-bold">Verified & Logged</span>
+                  <span className="text-[#848E9C] block text-[10px]">STATUS</span>
+                  <span className="text-[#0ECB81] font-bold">Verified & Logged</span>
                 </div>
               </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#2B313A] flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] font-bold font-mono text-xs uppercase tracking-wider transition-all shadow-lg shadow-gold/20 cursor-pointer"
+                className="px-6 py-2.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold font-mono text-xs uppercase tracking-wider transition-all shadow-md shadow-[#F0B90B]/15 cursor-pointer active:scale-95"
               >
                 Close Message Box
               </button>

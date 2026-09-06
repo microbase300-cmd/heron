@@ -53,28 +53,28 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
   const chartData = generateData();
 
   return (
-    <div className="p-6 rounded-2xl glass-card space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+    <div className="p-6 rounded-2xl bg-[#1E2329] border border-[#2B313A] space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#2B313A] pb-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-gold uppercase tracking-wider mb-1">
-            <TrendingUp className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 text-xs font-mono text-[#F0B90B] uppercase tracking-wider mb-1 font-bold">
+            <TrendingUp className="w-3.5 h-3.5 text-[#F0B90B]" />
             <span>Algorithmic Yield Velocity</span>
           </div>
-          <h3 className="font-serif text-lg font-bold text-white">
+          <h3 className="font-sans text-lg font-bold text-[#EAECEF] tracking-tight">
             Portfolio Compounding Trajectory
           </h3>
         </div>
 
         {/* Timeframe selector */}
-        <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.08] self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-[#181A20] p-1 rounded-lg border border-[#2B313A] self-start sm:self-auto">
           {(['7D', '30D', '90D', '1Y'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTimeframe(t)}
-              className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+              className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-all ${
                 timeframe === t
-                  ? 'bg-gold text-[#0b0d0d] shadow-sm'
-                  : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
+                  ? 'bg-[#F0B90B] text-[#181A20] shadow-sm font-bold'
+                  : 'text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A]'
               }`}
             >
               {t}
@@ -88,29 +88,29 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
             <defs>
-              <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#d4af37" stopOpacity={0.0} />
+              <linearGradient id="binanceGoldGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#F0B90B" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="#F0B90B" stopOpacity={0.0} />
               </linearGradient>
-              <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+              <linearGradient id="binanceEmeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#0ECB81" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#0ECB81" stopOpacity={0.0} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#2B313A" vertical={false} />
 
             <XAxis
               dataKey="label"
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: 'monospace' }}
+              stroke="#848E9C"
+              tick={{ fill: '#848E9C', fontSize: 11, fontFamily: 'monospace' }}
               tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+              axisLine={{ stroke: '#2B313A' }}
             />
 
             <YAxis
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: 'monospace' }}
+              stroke="#848E9C"
+              tick={{ fill: '#848E9C', fontSize: 11, fontFamily: 'monospace' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
@@ -121,18 +121,18 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="p-3.5 rounded-xl bg-[#0e1212]/95 border border-gold/30 shadow-2xl backdrop-blur-md">
-                      <div className="text-[11px] font-mono text-white/50 mb-1 flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 text-gold" />
+                    <div className="p-3.5 rounded-xl bg-[#181A20] border border-[#F0B90B]/40 shadow-2xl backdrop-blur-md">
+                      <div className="text-[11px] font-mono text-[#848E9C] mb-1 flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3 text-[#F0B90B]" />
                         {data.label}
                       </div>
-                      <div className="text-sm font-serif font-bold text-white">
-                        NAV: <span className="text-gold">${Number(data.nav).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      <div className="text-sm font-sans font-bold text-[#EAECEF]">
+                        NAV: <span className="text-[#F0B90B] font-mono">${Number(data.nav).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                       </div>
-                      <div className="text-xs font-mono text-white/60 mt-1">
+                      <div className="text-xs font-mono text-[#848E9C] mt-1">
                         Principal: ${Number(data.principal).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </div>
-                      <div className="text-xs font-mono text-emerald-400 mt-0.5">
+                      <div className="text-xs font-mono text-[#0ECB81] mt-0.5 font-bold">
                         Alpha: +${(data.nav - data.principal).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
@@ -145,16 +145,16 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
             <Area
               type="monotone"
               dataKey="nav"
-              stroke="#d4af37"
+              stroke="#F0B90B"
               strokeWidth={2.5}
               fillOpacity={1}
-              fill="url(#goldGradient)"
+              fill="url(#binanceGoldGradient)"
             />
 
             <Area
               type="monotone"
               dataKey="benchmark"
-              stroke="rgba(255,255,255,0.2)"
+              stroke="#474D57"
               strokeWidth={1.5}
               strokeDasharray="4 4"
               fillOpacity={0}
@@ -165,18 +165,18 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
       </div>
 
       {/* Legend and Subtext */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs font-mono border-t border-white/[0.06] text-white/50">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs font-mono border-t border-[#2B313A] text-[#848E9C]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-gold"></span>
-            <span className="text-white/80">Heron Active Compounding</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#F0B90B]"></span>
+            <span className="text-[#EAECEF]">Heron Active Compounding</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-white/40 border-t border-dashed"></span>
+            <span className="w-2.5 h-0.5 bg-[#848E9C] border-t border-dashed"></span>
             <span>Standard Market Index (4.2% APR)</span>
           </div>
         </div>
-        <span className="text-emerald-glow font-semibold">+15.5% Weighted Performance</span>
+        <span className="text-[#0ECB81] font-semibold">+15.5% Weighted Performance</span>
       </div>
     </div>
   );

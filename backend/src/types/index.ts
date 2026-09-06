@@ -48,13 +48,16 @@ export interface Investment {
   durationHours: number;
   expectedProfit: number;
   totalPayout: number;
-  status: 'active' | 'completed' | 'cancelled';
+  status: 'active' | 'matured' | 'completed' | 'cancelled';
   startedAt: string;
   expiresAt: string;
   completedAt?: string | null;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  disbursedBy?: string | null;
 }
 
-export type TransactionType = 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus' | 'investment_lock' | 'admin_adjustment';
+export type TransactionType = 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus' | 'investment_lock' | 'investment_refund' | 'admin_adjustment';
 
 export interface Transaction {
   id: string;

@@ -53,10 +53,16 @@ export interface Investment {
   durationHours: number;
   expectedProfit: number;
   totalPayout: number;
-  status: 'active' | 'completed' | 'cancelled';
-  startTime: string;
-  endTime: string;
-  progressPercent: number;
+  status: 'active' | 'matured' | 'completed' | 'cancelled';
+  startedAt?: string;
+  expiresAt?: string;
+  startTime?: string;
+  endTime?: string;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  disbursedBy?: string | null;
+  progressPercent?: number;
 }
 
 export interface PlanConfig {

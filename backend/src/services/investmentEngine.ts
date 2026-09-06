@@ -12,45 +12,27 @@ export function startInvestmentEngine(intervalMs = 10000) {
       for (const inv of active) {
         const expiry = new Date(inv.expiresAt).getTime();
         if (expiry <= now) {
-          console.log(`[Investment Engine] Investment ${inv.id} (${inv.planName}) matured! Processing payout for user ${inv.userId}...`);
+          console.log(`[Investment Engine] Investment ${inv.id} (${inv.planName}) reached maturity. Transitioning status to 'matured' (Awaiting Admin Disbursement)...`);
 
-          // 1. Mark completed
-          db.completeInvestment(inv.id);
+          // 1. Transition status from 'active' to 'matured'
+          db.matureInvestment(inv.id);
 
-          // 2. Credit balance
+          // 2. Dispatch informative status update notification
           const user = db.getUserById(inv.userId);
           if (user) {
-            const newBal = user.balance + inv.totalPayout;
-            db.updateUserBalance(user.id, newBal);
-
-            // 3. Record transaction
-            const randomHex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-            db.createTransaction({
-              id: `tx_${uuidv4()}`,
-              userId: user.id,
-              type: 'yield_payout',
-              amount: inv.totalPayout,
-              asset: 'USD',
-              status: 'completed',
-              txHash: `0x${randomHex}`,
-              note: `${inv.planName} Matured: Principal $${inv.amount.toLocaleString()} + Yield $${inv.expectedProfit.toLocaleString()}`,
-              createdAt: new Date().toISOString()
-            });
-
-            // 4. Send celebratory yield payout notification
             db.createNotification({
               id: `notif_${uuidv4()}`,
               userId: user.id,
               targetEmail: user.email,
               title: `Investment Matured: ${inv.planName}`,
-              message: `Your ${inv.planName} cycle is complete. Payout of $${inv.totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })} ($${inv.amount.toLocaleString()} principal + $${inv.expectedProfit.toLocaleString()} yield) has been credited to your available balance.`,
-              type: 'success',
+              message: `Your ${inv.planName} contract has completed its ${inv.durationHours}-hour cycle. Total accrued return of $${inv.totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })} ($${inv.amount.toLocaleString()} principal + $${inv.expectedProfit.toLocaleString()} yield) is verified and queued for Treasury Desk disbursement settlement.`,
+              type: 'info',
               sender: 'Smart Escrow Yield Engine',
               readBy: [],
               createdAt: new Date().toISOString()
             });
 
-            console.log(`[Investment Engine] Payout of $${inv.totalPayout.toFixed(2)} disbursed to ${user.email}. New Balance: $${newBal.toFixed(2)}`);
+            console.log(`[Investment Engine] Investment ${inv.id} for ${user.email} marked as 'matured' awaiting executive disbursement.`);
           }
         }
       }

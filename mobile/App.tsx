@@ -35,7 +35,7 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
-type NavTab = 'overview' | 'mandates' | 'liquidity' | 'referrals' | 'ledger';
+type NavTab = 'overview' | 'investments' | 'liquidity' | 'referrals' | 'ledger';
 
 // ============================================================================
 // LUXURY OPENING SPLASH ANIMATION (HERON CAPITAL)
@@ -241,6 +241,12 @@ export default function App() {
   const [selectedDetailNotif, setSelectedDetailNotif] = useState<NotificationMessage | null>(null);
   const seenMobilePopupsRef = useRef<Set<string>>(new Set());
 
+  // Investments tab filter
+  const [investmentFilter, setInvestmentFilter] = useState<'all' | 'active' | 'matured' | 'completed' | 'cancelled'>('all');
+
+  // Ledger tab filter
+  const [ledgerFilter, setLedgerFilter] = useState<'all' | 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus'>('all');
+
   // Modal form states
   const [depositAsset, setDepositAsset] = useState('USDT (TRC-20)');
   const [depositAmount, setDepositAmount] = useState('');
@@ -257,6 +263,43 @@ export default function App() {
   const [selectedPlanId, setSelectedPlanId] = useState<PlanId>('standard');
   const [investAmount, setInvestAmount] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Helper to dynamically match deposit asset to active receiving addresses
+  const getSelectedDepositWallet = () => {
+    const isTron = depositAsset.includes('TRC-20') || depositAsset.includes('Tron');
+    const isEth = depositAsset.includes('ERC-20') || depositAsset.includes('ETH');
+    const isBtc = depositAsset === 'BTC' || depositAsset.includes('Bitcoin');
+    const isSol = depositAsset === 'SOL' || depositAsset.includes('Solana');
+
+    const mappedKey =
+      isTron ? 'USDT_TRC20' :
+      depositAsset.includes('USDT') && isEth ? 'USDT_ERC20' :
+      isBtc ? 'BTC' :
+      depositAsset === 'ETH' ? 'ETH' :
+      isSol ? 'SOL' : 'USDT_TRC20';
+
+    const found = depositAddresses.find((a) => {
+      if (a.key === mappedKey) return true;
+      if (isTron && (a.key.includes('TRC') || a.network.toLowerCase().includes('tron') || a.network.toLowerCase().includes('trc'))) return true;
+      if (depositAsset.includes('USDT') && isEth && (a.key.includes('ERC') || a.network.toLowerCase().includes('erc'))) return true;
+      if (isBtc && (a.asset === 'BTC' || a.key === 'BTC')) return true;
+      if (depositAsset === 'ETH' && (a.asset === 'ETH' || a.key === 'ETH')) return true;
+      if (isSol && (a.asset === 'SOL' || a.key === 'SOL')) return true;
+      return false;
+    });
+
+    if (found) return found;
+
+    // Guaranteed fallback configs
+    const fallbackMap: Record<string, DepositAddressConfig> = {
+      USDT_TRC20: { key: 'USDT_TRC20', asset: 'USDT', network: 'Tron (TRC-20)', address: 'TX9d8b7a6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a', isActive: true, updatedAt: '' },
+      USDT_ERC20: { key: 'USDT_ERC20', asset: 'USDT', network: 'Ethereum (ERC-20)', address: '0x882194f8a7e6d5c4b3a201948572615049382710', isActive: true, updatedAt: '' },
+      BTC: { key: 'BTC', asset: 'BTC', network: 'Bitcoin Native SegWit', address: 'bc1q9d8a7f6e5c4b3a201948572615049382710082', isActive: true, updatedAt: '' },
+      ETH: { key: 'ETH', asset: 'ETH', network: 'Ethereum Mainnet', address: '0x882194f8a7e6d5c4b3a201948572615049382710', isActive: true, updatedAt: '' },
+      SOL: { key: 'SOL', asset: 'SOL', network: 'Solana SPL', address: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', isActive: true, updatedAt: '' },
+    };
+    return fallbackMap[mappedKey] || fallbackMap.USDT_TRC20;
+  };
 
   // Countdown timer ticker for active timelocks
   const [, setTimerTick] = useState(0);
@@ -631,7 +674,7 @@ export default function App() {
                   activeOpacity={0.8}
                 >
                   {authLoading ? (
-                    <ActivityIndicator color="#070908" />
+                    <ActivityIndicator color="#181A20" />
                   ) : (
                     <Text style={styles.goldBtnText}>Access Portfolio</Text>
                   )}
@@ -689,7 +732,7 @@ export default function App() {
                       activeOpacity={0.8}
                     >
                       {authLoading ? (
-                        <ActivityIndicator color="#070908" />
+                        <ActivityIndicator color="#181A20" />
                       ) : (
                         <Text style={styles.goldBtnText}>Request Verification OTP →</Text>
                       )}
@@ -727,7 +770,7 @@ export default function App() {
                       activeOpacity={0.8}
                     >
                       {authLoading ? (
-                        <ActivityIndicator color="#070908" />
+                        <ActivityIndicator color="#181A20" />
                       ) : (
                         <Text style={styles.goldBtnText}>Complete & Verify Account</Text>
                       )}
@@ -829,7 +872,7 @@ export default function App() {
   // --------------------------------------------------------------------------
   // RENDER: Authenticated Main Dashboard
   // --------------------------------------------------------------------------
-  const activeMandates = investments.filter(i => i.status === 'active');
+  const activeInvestments = investments.filter(i => i.status === 'active');
   const availableBal = walletSummary?.availableBalance ?? currentUser.balance ?? 0;
   const portfolioNav = walletSummary?.totalPortfolioValue ?? (availableBal + (walletSummary?.lockedInInvestments ?? 0));
 
@@ -877,7 +920,7 @@ export default function App() {
             <View key={idx} style={styles.tickerPill}>
               <Text style={styles.tickerSymbol}>{t.symbol}</Text>
               <Text style={styles.tickerPrice}>${t.price >= 1 ? t.price.toLocaleString('en-US', { minimumFractionDigits: 2 }) : t.price.toFixed(4)}</Text>
-              <Text style={[styles.tickerChange, { color: t.change24h >= 0 ? '#28d17c' : '#ff5252' }]}>
+              <Text style={[styles.tickerChange, { color: t.change24h >= 0 ? '#0ECB81' : '#F6465D' }]}>
                 {t.change24h >= 0 ? '+' : ''}{t.change24h.toFixed(2)}%
               </Text>
             </View>
@@ -890,7 +933,7 @@ export default function App() {
         style={styles.mainScroll}
         contentContainerStyle={styles.mainScrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadAllData} tintColor="#d4af37" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadAllData} tintColor="#F0B90B" />}
       >
         {activeTab === 'overview' && (
           /* TAB 1: OVERVIEW */
@@ -928,7 +971,7 @@ export default function App() {
               </View>
             </View>
 
-            {/* Quick Mandate Deploy Card */}
+            {/* Quick Investment Deploy Card */}
             <View style={styles.deployCard}>
               <View style={styles.deployLeft}>
                 <Text style={styles.deployTitle}>Institutional Yield Investments</Text>
@@ -943,15 +986,15 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            {/* Active Mandates Live Timelocks */}
+            {/* Active Investments Live Timelocks */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>ACTIVE TIMELOCK CONTRACTS ({activeMandates.length})</Text>
-              <TouchableOpacity onPress={() => setActiveTab('mandates')}>
+              <Text style={styles.sectionHeading}>ACTIVE TIMELOCK CONTRACTS ({activeInvestments.length})</Text>
+              <TouchableOpacity onPress={() => setActiveTab('investments')}>
                 <Text style={styles.sectionLinkText}>View All →</Text>
               </TouchableOpacity>
             </View>
 
-            {activeMandates.length === 0 ? (
+            {activeInvestments.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Text style={styles.emptyText}>No active investments deployed.</Text>
                 <TouchableOpacity onPress={() => setShowInvestModal(true)}>
@@ -959,47 +1002,72 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             ) : (
-              activeMandates.map((inv) => (
-                <View key={inv.id} style={styles.mandateCard}>
-                  <View style={styles.mandateHeader}>
-                    <Text style={styles.mandateName}>{inv.planName}</Text>
-                    <View style={styles.countdownBadge}>
-                      <Text style={styles.countdownText}>⏱ {formatCountdown(inv.expiresAt)}</Text>
+              activeInvestments.map((inv) => {
+                const elapsedProgress = Math.min(100, Math.max(5, inv.progressPercent || 20));
+                const accrued = (inv.amount * inv.rate * (elapsedProgress / 100));
+                return (
+                  <View key={inv.id} style={styles.investmentCard}>
+                    <View style={styles.investmentHeader}>
+                      <Text style={styles.investmentName}>{inv.planName}</Text>
+                      <View style={styles.countdownBadge}>
+                        <Text style={styles.countdownText}>⏱ {formatCountdown(inv.expiresAt)}</Text>
+                      </View>
                     </View>
-                  </View>
 
-                  <View style={styles.mandateGrid}>
-                    <View>
-                      <Text style={styles.mandateLabel}>LOCKED PRINCIPAL</Text>
-                      <Text style={styles.mandateVal}>${inv.amount.toLocaleString()}</Text>
+                    <View style={styles.investmentGrid}>
+                      <View>
+                        <Text style={styles.investmentLabel}>LOCKED PRINCIPAL</Text>
+                        <Text style={styles.investmentVal}>${inv.amount.toLocaleString()}</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.investmentLabel}>CURRENT ACCRUED</Text>
+                        <Text style={[styles.investmentVal, { color: '#F0B90B' }]}>+${accrued.toFixed(2)}</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.investmentLabel}>TOTAL PAYOUT</Text>
+                        <Text style={[styles.investmentVal, { color: '#0ECB81' }]}>${inv.totalPayout.toLocaleString()}</Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text style={styles.mandateLabel}>ESTIMATED PAYOUT</Text>
-                      <Text style={[styles.mandateVal, { color: '#28d17c' }]}>${inv.totalPayout.toLocaleString()}</Text>
-                    </View>
-                  </View>
 
-                  {/* Progress bar */}
-                  <View style={styles.progressBarBg}>
-                    <View
-                      style={[
-                        styles.progressBarFill,
-                        { width: `${Math.min(100, Math.max(5, inv.progressPercent || 20))}%` }
-                      ]}
-                    />
+                    {/* Progress bar */}
+                    <View style={styles.progressBarBg}>
+                      <View
+                        style={[
+                          styles.progressBarFill,
+                          { width: `${elapsedProgress}%` }
+                        ]}
+                      />
+                    </View>
                   </View>
-                </View>
-              ))
+                );
+              })
             )}
           </View>
         )}
 
-        {activeTab === 'mandates' && (
+        {activeTab === 'investments' && (
           /* TAB 2: INVESTMENTS */
           <View style={styles.tabContent}>
-            <View style={styles.mandatesHeaderBox}>
+            <View style={styles.investmentsHeaderBox}>
               <Text style={styles.pageTitle}>Institutional Investments</Text>
               <Text style={styles.pageSub}>Deterministic smart escrow contracts with automated yield releases.</Text>
+              
+              {/* Top Quick Stats */}
+              <View style={styles.investQuickStatsRow}>
+                <View style={styles.investQuickStat}>
+                  <Text style={styles.investQuickLabel}>ACTIVE</Text>
+                  <Text style={styles.investQuickVal}>{investments.filter(i => i.status === 'active').length}</Text>
+                </View>
+                <View style={styles.investQuickStat}>
+                  <Text style={styles.investQuickLabel}>MATURED</Text>
+                  <Text style={[styles.investQuickVal, { color: '#F0B90B' }]}>{investments.filter(i => i.status === 'matured').length}</Text>
+                </View>
+                <View style={styles.investQuickStat}>
+                  <Text style={styles.investQuickLabel}>SETTLED</Text>
+                  <Text style={[styles.investQuickVal, { color: '#0ECB81' }]}>{investments.filter(i => i.status === 'completed').length}</Text>
+                </View>
+              </View>
+
               <TouchableOpacity
                 style={styles.goldBtnFull}
                 onPress={() => setShowInvestModal(true)}
@@ -1008,37 +1076,139 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.sectionHeading}>ALL INVESTMENT CONTRACTS ({investments.length})</Text>
-            {investments.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No investments found.</Text>
-              </View>
-            ) : (
-              investments.map((inv) => (
-                <View key={inv.id} style={styles.mandateCard}>
-                  <View style={styles.mandateHeader}>
-                    <Text style={styles.mandateName}>{inv.planName}</Text>
-                    <View style={[styles.statusPill, inv.status === 'completed' && styles.statusCompleted]}>
-                      <Text style={styles.statusPillText}>{inv.status.toUpperCase()}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.mandateGrid}>
-                    <View>
-                      <Text style={styles.mandateLabel}>PRINCIPAL</Text>
-                      <Text style={styles.mandateVal}>${inv.amount.toLocaleString()}</Text>
-                    </View>
-                    <View>
-                      <Text style={styles.mandateLabel}>TOTAL PAYOUT</Text>
-                      <Text style={[styles.mandateVal, { color: '#28d17c' }]}>${inv.totalPayout.toLocaleString()}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.timeInfo}>
-                    Started: {new Date(inv.startedAt).toLocaleDateString()} • Expires: {new Date(inv.expiresAt).toLocaleDateString()}
+            {/* Filter Chips */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipScroll}>
+              {[
+                { id: 'all', label: `All (${investments.length})` },
+                { id: 'active', label: `Active (${investments.filter(i => i.status === 'active').length})` },
+                { id: 'matured', label: `Matured (${investments.filter(i => i.status === 'matured').length})` },
+                { id: 'completed', label: `Settled (${investments.filter(i => i.status === 'completed').length})` },
+                ...(investments.some(i => i.status === 'cancelled')
+                  ? [{ id: 'cancelled', label: `Cancelled (${investments.filter(i => i.status === 'cancelled').length})` }]
+                  : []),
+              ].map((chip) => (
+                <TouchableOpacity
+                  key={chip.id}
+                  style={[styles.filterChip, investmentFilter === chip.id && styles.filterChipActive]}
+                  onPress={() => setInvestmentFilter(chip.id as any)}
+                >
+                  <Text style={[styles.filterChipText, investmentFilter === chip.id && styles.filterChipTextActive]}>
+                    {chip.label}
                   </Text>
-                </View>
-              ))
-            )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.sectionHeading}>
+              {investmentFilter.toUpperCase()} CONTRACTS ({
+                investments.filter(i => investmentFilter === 'all' || i.status === investmentFilter).length
+              })
+            </Text>
+
+            {(() => {
+              const list = investments.filter(i => investmentFilter === 'all' || i.status === investmentFilter);
+              if (list.length === 0) {
+                return (
+                  <View style={styles.emptyCard}>
+                    <Text style={styles.emptyText}>No {investmentFilter === 'all' ? '' : investmentFilter} investment contracts found.</Text>
+                  </View>
+                );
+              }
+              return list.map((inv) => {
+                const elapsedProgress = Math.min(100, Math.max(5, inv.progressPercent || 20));
+                const accrued = (inv.amount * inv.rate * (elapsedProgress / 100));
+
+                return (
+                  <View key={inv.id} style={[
+                    styles.investmentCard,
+                    inv.status === 'matured' && styles.investmentCardMatured,
+                    inv.status === 'cancelled' && styles.investmentCardCancelled,
+                  ]}>
+                    <View style={styles.investmentHeader}>
+                      <Text style={styles.investmentName}>{inv.planName}</Text>
+                      <View style={[
+                        styles.statusPill,
+                        inv.status === 'completed' && styles.statusCompleted,
+                        inv.status === 'matured' && styles.statusMatured,
+                        inv.status === 'cancelled' && styles.statusCancelled,
+                      ]}>
+                        <Text style={[
+                          styles.statusPillText,
+                          inv.status === 'matured' && { color: '#F0B90B' },
+                          inv.status === 'cancelled' && { color: '#F6465D' },
+                          inv.status === 'completed' && { color: '#0ECB81' },
+                        ]}>
+                          {inv.status === 'matured' ? 'MATURED (QUEUED)' : inv.status.toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.investmentGrid}>
+                      <View>
+                        <Text style={styles.investmentLabel}>PRINCIPAL</Text>
+                        <Text style={styles.investmentVal}>${inv.amount.toLocaleString()}</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.investmentLabel}>RETURN RATE</Text>
+                        <Text style={[styles.investmentVal, { color: '#F0B90B' }]}>+{(inv.rate * 100).toFixed(1)}%</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.investmentLabel}>TOTAL PAYOUT</Text>
+                        <Text style={[styles.investmentVal, { color: '#0ECB81' }]}>${inv.totalPayout.toLocaleString()}</Text>
+                      </View>
+                    </View>
+
+                    {/* Matured Notice Box */}
+                    {inv.status === 'matured' && (
+                      <View style={styles.maturedNoticeCard}>
+                        <Text style={styles.maturedNoticeTitle}>✨ 100% Maturity Completed</Text>
+                        <Text style={styles.maturedNoticeText}>
+                          Principal & programmatic yield are queued for executive disbursement to your available balance.
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Cancelled Notice Box */}
+                    {inv.status === 'cancelled' && (
+                      <View style={styles.cancellationNoticeCard}>
+                        <Text style={styles.cancellationNoticeTitle}>⚠️ Contract Terminated by Compliance:</Text>
+                        <Text style={styles.cancellationNoticeReason}>
+                          "{inv.cancellationReason || 'Protocol terms & conditions violation'}"
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Active Timelock Countdown, Yield Velocity & Progress */}
+                    {inv.status === 'active' && (
+                      <View style={styles.activeCountdownBox}>
+                        <View style={styles.activeCountdownRow}>
+                          <Text style={styles.activeCountdownLabel}>⏱ Time to Maturity:</Text>
+                          <Text style={styles.activeCountdownVal}>{formatCountdown(inv.expiresAt)}</Text>
+                        </View>
+                        
+                        <View style={styles.activeVelocityRow}>
+                          <Text style={styles.activeVelocityLabel}>Live Accrual Rate:</Text>
+                          <Text style={styles.activeVelocityVal}>+${accrued.toFixed(2)} accrued (${(inv.expectedProfit / (inv.durationHours || 24)).toFixed(2)}/hr)</Text>
+                        </View>
+
+                        <View style={styles.progressBarBg}>
+                          <View
+                            style={[
+                              styles.progressBarFill,
+                              { width: `${elapsedProgress}%` }
+                            ]}
+                          />
+                        </View>
+                      </View>
+                    )}
+
+                    <Text style={styles.timeInfo}>
+                      Started: {new Date(inv.startedAt).toLocaleDateString()} • Expires: {new Date(inv.expiresAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                );
+              });
+            })()}
           </View>
         )}
 
@@ -1098,20 +1268,36 @@ export default function App() {
             <Text style={styles.pageTitle}>Partner Affiliate Program</Text>
             <Text style={styles.pageSub}>Earn up to 30% instant programmatic commission on downline allocations.</Text>
 
+            {/* Referral Code & Link Card */}
             <View style={styles.referralCard}>
               <Text style={styles.cardEyebrow}>YOUR PARTNER REFERRAL CODE</Text>
               <Text style={styles.referralCodeText}>{referralData?.referralCode || currentUser.referralCode}</Text>
 
-              <TouchableOpacity
-                style={styles.goldBtnFull}
-                onPress={() => copyToClipboard(referralData?.referralCode || currentUser.referralCode, 'ref')}
-              >
-                <Text style={styles.goldBtnText}>
-                  {copiedKey === 'ref' ? '✓ Referral Code Copied' : 'Copy Referral Code'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.refButtonRow}>
+                <TouchableOpacity
+                  style={[styles.goldBtn, { flex: 1, marginTop: 4 }]}
+                  onPress={() => copyToClipboard(referralData?.referralCode || currentUser.referralCode, 'ref_code')}
+                >
+                  <Text style={styles.goldBtnText}>
+                    {copiedKey === 'ref_code' ? '✓ Code Copied' : '📋 Copy Code'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.secondaryActionBtn, { flex: 1, paddingVertical: 14 }]}
+                  onPress={() => {
+                    const link = referralData?.referralLink || `https://heroncapital.com/register?ref=${currentUser.referralCode}`;
+                    copyToClipboard(link, 'ref_link');
+                  }}
+                >
+                  <Text style={styles.secondaryActionText}>
+                    {copiedKey === 'ref_link' ? '✓ Link Copied' : '🔗 Copy Link'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
+            {/* Referral Stats Grid */}
             <View style={styles.refStatsGrid}>
               <View style={styles.refStatBox}>
                 <Text style={styles.statLabel}>TOTAL REFERRED</Text>
@@ -1119,11 +1305,52 @@ export default function App() {
               </View>
               <View style={styles.refStatBox}>
                 <Text style={styles.statLabel}>COMMISSIONS EARNED</Text>
-                <Text style={[styles.statValue, { color: '#d4af37' }]}>
+                <Text style={[styles.statValue, { color: '#F0B90B' }]}>
                   ${(referralData?.totalCommissionEarned || 0).toLocaleString()}
                 </Text>
               </View>
             </View>
+
+            {/* 4-Tier Affiliate Commission Schedule Table */}
+            <View style={styles.affiliateScheduleCard}>
+              <Text style={styles.affiliateScheduleTitle}>4-TIER COMMISSION ARCHITECTURE</Text>
+              <Text style={styles.affiliateScheduleSub}>Instant programmatic credits upon investor contract deployment.</Text>
+
+              <View style={styles.tierScheduleList}>
+                {[
+                  { tier: 'Tier 1 • Amateur', rate: '8.0%', range: '$100 – $1,999', badge: 'Bronze' },
+                  { tier: 'Tier 2 • Standard', rate: '16.0%', range: '$2,000 – $5,999', badge: 'Silver' },
+                  { tier: 'Tier 3 • Premium VIP', rate: '24.0%', range: '$6,000 – $10,999', badge: 'Gold' },
+                  { tier: 'Tier 4 • Retirement', rate: '30.0%', range: '$11,000+', badge: 'Diamond' },
+                ].map((item, idx) => (
+                  <View key={idx} style={styles.tierScheduleRow}>
+                    <View>
+                      <Text style={styles.tierScheduleName}>{item.tier}</Text>
+                      <Text style={styles.tierScheduleRange}>{item.range}</Text>
+                    </View>
+                    <View style={styles.tierScheduleRateBadge}>
+                      <Text style={styles.tierScheduleRateText}>{item.rate}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Downline Activity if available */}
+            {referralData && referralData.downline && referralData.downline.length > 0 && (
+              <View style={styles.downlineCard}>
+                <Text style={styles.sectionHeading}>DIRECT DOWNLINE NETWORK ({referralData.downline.length})</Text>
+                {referralData.downline.map((dl) => (
+                  <View key={dl.id} style={styles.downlineItem}>
+                    <View>
+                      <Text style={styles.downlineName}>{dl.name}</Text>
+                      <Text style={styles.downlineEmail}>{dl.email}</Text>
+                    </View>
+                    <Text style={styles.downlineDate}>{new Date(dl.joinedAt).toLocaleDateString()}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -1133,27 +1360,65 @@ export default function App() {
             <Text style={styles.pageTitle}>Cryptographic Audit Ledger</Text>
             <Text style={styles.pageSub}>Immutable on-chain records, settlement receipts, and payout proofs.</Text>
 
-            {transactions.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No ledger records found.</Text>
-              </View>
-            ) : (
-              transactions.map((tx) => (
+            {/* Ledger Filter Chips */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipScroll}>
+              {[
+                { id: 'all', label: `All (${transactions.length})` },
+                { id: 'deposit', label: `Deposits (${transactions.filter(t => t.type === 'deposit').length})` },
+                { id: 'withdrawal', label: `Withdrawals (${transactions.filter(t => t.type === 'withdrawal').length})` },
+                { id: 'yield_payout', label: `Yield (${transactions.filter(t => t.type === 'yield_payout').length})` },
+                { id: 'referral_bonus', label: `Affiliate (${transactions.filter(t => t.type === 'referral_bonus').length})` },
+              ].map((chip) => (
+                <TouchableOpacity
+                  key={chip.id}
+                  style={[styles.filterChip, ledgerFilter === chip.id && styles.filterChipActive]}
+                  onPress={() => setLedgerFilter(chip.id as any)}
+                >
+                  <Text style={[styles.filterChipText, ledgerFilter === chip.id && styles.filterChipTextActive]}>
+                    {chip.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {(() => {
+              const filteredTxs = transactions.filter(t => ledgerFilter === 'all' || t.type === ledgerFilter);
+              if (filteredTxs.length === 0) {
+                return (
+                  <View style={styles.emptyCard}>
+                    <Text style={styles.emptyText}>No ledger records found for this category.</Text>
+                  </View>
+                );
+              }
+              return filteredTxs.map((tx) => (
                 <View key={tx.id} style={styles.txCard}>
                   <View style={styles.txHeader}>
                     <Text style={styles.txType}>{tx.type.replace('_', ' ').toUpperCase()} • {tx.asset}</Text>
-                    <Text style={[styles.txAmount, { color: tx.type === 'deposit' || tx.type === 'yield_payout' ? '#28d17c' : '#ffffff' }]}>
-                      {tx.type === 'deposit' || tx.type === 'yield_payout' ? '+' : ''}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    <Text style={[styles.txAmount, { color: tx.type === 'deposit' || tx.type === 'yield_payout' || tx.type === 'referral_bonus' ? '#0ECB81' : '#ffffff' }]}>
+                      {tx.type === 'deposit' || tx.type === 'yield_payout' || tx.type === 'referral_bonus' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </Text>
                   </View>
-                  <Text style={styles.txNote}>{tx.note || tx.id}</Text>
+                  <Text style={styles.txNote}>{tx.note || `Audit Ref: ${tx.id}`}</Text>
+                  
+                  {tx.txHash && (
+                    <TouchableOpacity
+                      style={styles.txHashRow}
+                      onPress={() => copyToClipboard(tx.txHash, `tx_${tx.id}`)}
+                    >
+                      <Text style={styles.txHashText} numberOfLines={1}>TX: {tx.txHash}</Text>
+                      <Text style={styles.txHashCopy}>{copiedKey === `tx_${tx.id}` ? '✓ Copied' : 'Copy'}</Text>
+                    </TouchableOpacity>
+                  )}
+
                   <View style={styles.txFooter}>
-                    <Text style={styles.txStatus}>{tx.status.toUpperCase()}</Text>
+                    <Text style={[styles.txStatus, tx.status === 'completed' && { color: '#0ECB81' }]}>
+                      {tx.status.toUpperCase()}
+                    </Text>
                     <Text style={styles.txDate}>{new Date(tx.createdAt).toLocaleDateString()}</Text>
                   </View>
                 </View>
-              ))
-            )}
+              ));
+            })()}
           </View>
         )}
       </ScrollView>
@@ -1162,7 +1427,7 @@ export default function App() {
       <View style={styles.bottomNav}>
         {[
           { id: 'overview', label: 'Portfolio', icon: '📊' },
-          { id: 'mandates', label: 'Investments', icon: '⚡' },
+          { id: 'investments', label: 'Investments', icon: '⚡' },
           { id: 'liquidity', label: 'Liquidity', icon: '💳' },
           { id: 'referrals', label: 'Affiliate', icon: '👥' },
           { id: 'ledger', label: 'Ledger', icon: '📜' },
@@ -1209,6 +1474,54 @@ export default function App() {
                 ))}
               </View>
 
+              {/* Dynamic Receiving Address Card */}
+              {(() => {
+                const currentWallet = getSelectedDepositWallet();
+                const isCopied = copiedKey === 'deposit_modal_addr';
+                return (
+                  <View style={styles.depositAddressCard}>
+                    <View style={styles.depositAddressTopRow}>
+                      <View>
+                        <Text style={styles.depositAddressLabel}>DESTINATION TREASURY WALLET</Text>
+                        <Text style={styles.depositAddressNetwork}>{currentWallet.network}</Text>
+                      </View>
+                      <View style={styles.depositAssetBadge}>
+                        <Text style={styles.depositAssetBadgeText}>{currentWallet.asset}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.depositAddressBox}>
+                      <Text style={styles.depositAddressString} selectable={true}>
+                        {currentWallet.address}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={[styles.depositCopyBtn, isCopied && styles.depositCopyBtnSuccess]}
+                      onPress={() => copyToClipboard(currentWallet.address, 'deposit_modal_addr')}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.depositCopyBtnText, isCopied && styles.depositCopyBtnTextSuccess]}>
+                        {isCopied ? '✓ Address Copied to Clipboard' : '📋 Copy Receiving Address'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {currentWallet.memo && (
+                      <View style={styles.depositMemoBox}>
+                        <Text style={styles.depositMemoLabel}>ROUTING MEMO / TAG:</Text>
+                        <Text style={styles.depositMemoValue}>{currentWallet.memo}</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.depositSecurityNotice}>
+                      <Text style={styles.depositSecurityText}>
+                        ⚠️ Send only <Text style={{ color: '#F0B90B', fontWeight: 'bold' }}>{currentWallet.asset}</Text> on <Text style={{ color: '#F0B90B', fontWeight: 'bold' }}>{currentWallet.network}</Text> to this receiving address.
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })()}
+
               <Text style={styles.fieldLabel}>Deposit Amount ($ USD Equivalent)</Text>
               <TextInput
                 style={styles.input}
@@ -1233,7 +1546,7 @@ export default function App() {
                 onPress={handleDepositSubmit}
                 disabled={modalLoading}
               >
-                {modalLoading ? <ActivityIndicator color="#070908" /> : <Text style={styles.goldBtnText}>Submit Deposit Receipt</Text>}
+                {modalLoading ? <ActivityIndicator color="#181A20" /> : <Text style={styles.goldBtnText}>Submit Deposit Receipt</Text>}
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -1259,12 +1572,35 @@ export default function App() {
                   <Text style={styles.fieldLabel}>Withdrawal Amount ($ USD)</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder={`Max: $${availableBal.toFixed(2)}`}
+                    placeholder={`Available: $${availableBal.toFixed(2)}`}
                     placeholderTextColor="#666"
                     keyboardType="numeric"
                     value={withdrawAmount}
                     onChangeText={setWithdrawAmount}
                   />
+
+                  {/* Quick Percentage Presets */}
+                  <View style={styles.withdrawPresetsRow}>
+                    {[25, 50, 75, 100].map((pct) => (
+                      <TouchableOpacity
+                        key={pct}
+                        style={styles.withdrawPresetBtn}
+                        onPress={() => {
+                          const amt = (availableBal * pct) / 100;
+                          setWithdrawAmount(amt > 0 ? amt.toFixed(2) : '0');
+                        }}
+                      >
+                        <Text style={styles.withdrawPresetText}>{pct === 100 ? 'MAX' : `${pct}%`}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {/* Institutional Subsidy Notice */}
+                  <View style={styles.subsidyNoticeBox}>
+                    <Text style={styles.subsidyNoticeText}>
+                      🛡️ <Text style={{ fontWeight: 'bold', color: '#0ECB81' }}>Zero Fee Protocol:</Text> 100% of blockchain network gas fees are covered by Heron Institutional Treasury.
+                    </Text>
+                  </View>
 
                   <Text style={styles.fieldLabel}>Destination Network</Text>
                   <View style={styles.assetPillRow}>
@@ -1284,7 +1620,7 @@ export default function App() {
                   <Text style={styles.fieldLabel}>Destination Wallet Address</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter recipient address..."
+                    placeholder="Enter recipient wallet address..."
                     placeholderTextColor="#666"
                     value={withdrawAddress}
                     onChangeText={setWithdrawAddress}
@@ -1295,7 +1631,7 @@ export default function App() {
                     onPress={handleRequestWithdrawOtp}
                     disabled={modalLoading}
                   >
-                    {modalLoading ? <ActivityIndicator color="#070908" /> : <Text style={styles.goldBtnText}>Verify & Request 2FA OTP →</Text>}
+                    {modalLoading ? <ActivityIndicator color="#181A20" /> : <Text style={styles.goldBtnText}>Verify & Request 2FA OTP →</Text>}
                   </TouchableOpacity>
                 </>
               ) : (
@@ -1303,7 +1639,7 @@ export default function App() {
                   <View style={styles.otpNotice}>
                     <Text style={styles.otpNoticeTitle}>Authorize Capital Release</Text>
                     <Text style={styles.otpNoticeBody}>
-                      Enter the 6-digit code sent to {currentUser.email}
+                      Enter the 6-digit authorization code dispatched to {currentUser.email}
                     </Text>
                     {withdrawDevOtp && (
                       <TouchableOpacity
@@ -1331,7 +1667,7 @@ export default function App() {
                     onPress={handleCompleteWithdrawal}
                     disabled={modalLoading}
                   >
-                    {modalLoading ? <ActivityIndicator color="#070908" /> : <Text style={styles.goldBtnText}>Authorize Disbursement</Text>}
+                    {modalLoading ? <ActivityIndicator color="#181A20" /> : <Text style={styles.goldBtnText}>Authorize Disbursement</Text>}
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1370,10 +1706,12 @@ export default function App() {
                 >
                   <View style={styles.planCardTop}>
                     <Text style={styles.planCardName}>{plan.name}</Text>
-                    <Text style={styles.planCardBadge}>{plan.badge}</Text>
+                    <View style={styles.planRateBadge}>
+                      <Text style={styles.planRateText}>+{(plan.rate * 100).toFixed(1)}% ROI</Text>
+                    </View>
                   </View>
                   <Text style={styles.planCardLimits}>
-                    Min: ${(typeof plan.min === 'number' ? plan.min : 100).toLocaleString()} • Max: {(plan.max === null || plan.max === undefined || plan.max === Infinity || plan.max >= 99999999) ? 'Uncapped' : `$${Number(plan.max).toLocaleString()}`}
+                    Min: ${(typeof plan.min === 'number' ? plan.min : 100).toLocaleString()} • Max: {(plan.max === null || plan.max === undefined || plan.max === Infinity || plan.max >= 99999999) ? 'Uncapped' : `$${Number(plan.max).toLocaleString()}`} • {plan.durationHours}h Lock
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -1381,19 +1719,90 @@ export default function App() {
               <Text style={styles.fieldLabel}>Allocation Amount ($ USD)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. 8000"
+                placeholder="e.g. 5000"
                 placeholderTextColor="#666"
                 keyboardType="numeric"
                 value={investAmount}
                 onChangeText={setInvestAmount}
               />
 
+              {/* Quick Amount Presets */}
+              <View style={styles.withdrawPresetsRow}>
+                {['500', '2500', '7500', '15000'].map((preset) => (
+                  <TouchableOpacity
+                    key={preset}
+                    style={styles.withdrawPresetBtn}
+                    onPress={() => setInvestAmount(preset)}
+                  >
+                    <Text style={styles.withdrawPresetText}>${parseInt(preset).toLocaleString()}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={styles.withdrawPresetBtn}
+                  onPress={() => setInvestAmount(availableBal.toFixed(0))}
+                >
+                  <Text style={styles.withdrawPresetText}>MAX</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Real-time Yield Calculation Breakdown */}
+              {(() => {
+                const currentPlan = plans.find(p => p.id === selectedPlanId) || plans[0];
+                const amt = parseFloat(investAmount) || 0;
+                const profit = currentPlan ? amt * currentPlan.rate : 0;
+                const totalPayout = amt + profit;
+                const isUnderMin = currentPlan && amt > 0 && amt < currentPlan.min;
+                const isOverMax = currentPlan && amt > 0 && currentPlan.max !== Infinity && amt > currentPlan.max;
+
+                return (
+                  <View style={styles.yieldCalculatorCard}>
+                    <Text style={styles.yieldCalcTitle}>PROMISSORY YIELD SIMULATION</Text>
+                    
+                    <View style={styles.yieldCalcRow}>
+                      <Text style={styles.yieldCalcLabel}>Principal Capital:</Text>
+                      <Text style={styles.yieldCalcVal}>${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+                    <View style={styles.yieldCalcRow}>
+                      <Text style={styles.yieldCalcLabel}>Programmatic Yield ({currentPlan ? `+${(currentPlan.rate * 100).toFixed(1)}%` : '0%'}):</Text>
+                      <Text style={[styles.yieldCalcVal, { color: '#F0B90B' }]}>+${profit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+                    <View style={styles.yieldCalcRow}>
+                      <Text style={styles.yieldCalcLabel}>Lock Duration:</Text>
+                      <Text style={styles.yieldCalcVal}>{currentPlan?.durationHours || 24} Hours</Text>
+                    </View>
+                    
+                    <View style={styles.yieldCalcDivider} />
+                    
+                    <View style={styles.yieldCalcRow}>
+                      <Text style={styles.yieldCalcTotalLabel}>Total Expected Payout:</Text>
+                      <Text style={styles.yieldCalcTotalVal}>${totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+
+                    {isUnderMin && (
+                      <View style={styles.tierWarningBox}>
+                        <Text style={styles.tierWarningText}>
+                          ⚠️ Minimum allocation for {currentPlan?.name} is ${currentPlan?.min.toLocaleString()}.
+                        </Text>
+                      </View>
+                    )}
+
+                    {isOverMax && (
+                      <View style={styles.tierWarningBox}>
+                        <Text style={styles.tierWarningText}>
+                          ⚠️ Maximum allocation for {currentPlan?.name} is ${currentPlan?.max.toLocaleString()}.
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })()}
+
               <TouchableOpacity
                 style={styles.goldBtnFull}
                 onPress={handleCreateInvestment}
                 disabled={modalLoading}
               >
-                {modalLoading ? <ActivityIndicator color="#070908" /> : <Text style={styles.goldBtnText}>Deploy Capital Contract</Text>}
+                {modalLoading ? <ActivityIndicator color="#181A20" /> : <Text style={styles.goldBtnText}>Deploy Capital Contract</Text>}
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -1437,13 +1846,13 @@ export default function App() {
                       <Text style={styles.notifTitle}>{n.title}</Text>
                       <View style={[
                         styles.notifTypeBadge,
-                        n.type === 'alert' && { backgroundColor: 'rgba(245,158,11,0.2)', borderColor: 'rgba(245,158,11,0.4)' },
-                        n.type === 'success' && { backgroundColor: 'rgba(40,209,124,0.2)', borderColor: 'rgba(40,209,124,0.4)' }
+                        n.type === 'alert' && { backgroundColor: 'rgba(240,185,11,0.2)', borderColor: 'rgba(240,185,11,0.4)' },
+                        n.type === 'success' && { backgroundColor: 'rgba(14,203,129,0.2)', borderColor: 'rgba(14,203,129,0.4)' }
                       ]}>
                         <Text style={[
                           styles.notifType,
-                          n.type === 'alert' && { color: '#f59e0b' },
-                          n.type === 'success' && { color: '#28d17c' }
+                          n.type === 'alert' && { color: '#F0B90B' },
+                          n.type === 'success' && { color: '#0ECB81' }
                         ]}>{n.type.toUpperCase()}</Text>
                       </View>
                     </View>
@@ -1469,14 +1878,14 @@ export default function App() {
         <View style={styles.modalOverlayCenter}>
           <View style={[
             styles.priorityPopUpCard,
-            priorityPopUpNotif?.type === 'alert' && { borderColor: '#f59e0b' },
-            priorityPopUpNotif?.type === 'success' && { borderColor: '#28d17c' }
+            priorityPopUpNotif?.type === 'alert' && { borderColor: '#F0B90B' },
+            priorityPopUpNotif?.type === 'success' && { borderColor: '#0ECB81' }
           ]}>
             <View style={styles.priorityPopUpHeader}>
               <View style={[
                 styles.priorityIconCircle,
-                priorityPopUpNotif?.type === 'alert' && { backgroundColor: 'rgba(245,158,11,0.2)', borderColor: '#f59e0b' },
-                priorityPopUpNotif?.type === 'success' && { backgroundColor: 'rgba(40,209,124,0.2)', borderColor: '#28d17c' }
+                priorityPopUpNotif?.type === 'alert' && { backgroundColor: 'rgba(240,185,11,0.2)', borderColor: '#F0B90B' },
+                priorityPopUpNotif?.type === 'success' && { backgroundColor: 'rgba(14,203,129,0.2)', borderColor: '#0ECB81' }
               ]}>
                 <Text style={styles.priorityIconText}>
                   {priorityPopUpNotif?.type === 'alert' ? '⚠️' : '🛡️'}
@@ -1500,7 +1909,7 @@ export default function App() {
 
             <View style={styles.priorityMetaRow}>
               <Text style={styles.prioritySender}>
-                From: <Text style={{ color: '#d4af37' }}>{priorityPopUpNotif?.sender || 'Chief Risk Officer'}</Text>
+                From: <Text style={{ color: '#F0B90B' }}>{priorityPopUpNotif?.sender || 'Chief Risk Officer'}</Text>
               </Text>
               <Text style={styles.priorityTime}>
                 {priorityPopUpNotif ? new Date(priorityPopUpNotif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
@@ -1562,11 +1971,11 @@ export default function App() {
                 </View>
                 <View style={styles.msgMetaItem}>
                   <Text style={styles.msgMetaLabel}>CATEGORY</Text>
-                  <Text style={[styles.msgMetaValue, { color: '#d4af37' }]}>{selectedDetailNotif?.type?.toUpperCase()}</Text>
+                  <Text style={[styles.msgMetaValue, { color: '#F0B90B' }]}>{selectedDetailNotif?.type?.toUpperCase()}</Text>
                 </View>
                 <View style={styles.msgMetaItem}>
                   <Text style={styles.msgMetaLabel}>STATUS</Text>
-                  <Text style={[styles.msgMetaValue, { color: '#28d17c' }]}>Verified & Logged</Text>
+                  <Text style={[styles.msgMetaValue, { color: '#0ECB81' }]}>Verified & Logged</Text>
                 </View>
               </View>
             </ScrollView>
@@ -1587,7 +1996,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: '#070908',
+    backgroundColor: '#181A20',
   },
   authScroll: {
     flexGrow: 1,
@@ -1595,7 +2004,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   authBox: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
@@ -1605,9 +2014,9 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 18,
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: 'rgba(240,185,11,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
+    borderColor: 'rgba(240,185,11,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -1616,7 +2025,7 @@ const styles = StyleSheet.create({
   logoTextBig: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   authBrandTitle: {
     fontSize: 18,
@@ -1627,7 +2036,7 @@ const styles = StyleSheet.create({
   },
   authBrandSub: {
     fontSize: 10,
-    color: '#d4af37',
+    color: '#F0B90B',
     textAlign: 'center',
     letterSpacing: 2,
     marginTop: 2,
@@ -1647,7 +2056,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   authToggleBtnActive: {
-    backgroundColor: 'rgba(212,175,55,0.2)',
+    backgroundColor: 'rgba(240,185,11,0.2)',
   },
   authToggleText: {
     fontSize: 12,
@@ -1655,7 +2064,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
   authToggleTextActive: {
-    color: '#d4af37',
+    color: '#F0B90B',
     fontWeight: 'bold',
   },
   formGroup: {
@@ -1684,10 +2093,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 8,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   goldBtn: {
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1696,20 +2105,20 @@ const styles = StyleSheet.create({
   goldBtnText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#070908',
+    color: '#181A20',
   },
   otpNotice: {
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    backgroundColor: 'rgba(240,185,11,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.25)',
+    borderColor: 'rgba(240,185,11,0.25)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   otpNoticeBox: {
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    backgroundColor: 'rgba(240,185,11,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
+    borderColor: 'rgba(240,185,11,0.3)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
@@ -1717,7 +2126,7 @@ const styles = StyleSheet.create({
   otpNoticeTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
     marginBottom: 4,
   },
   otpNoticeSub: {
@@ -1731,23 +2140,23 @@ const styles = StyleSheet.create({
   },
   devOtpBadge: {
     marginTop: 8,
-    backgroundColor: '#070908',
+    backgroundColor: '#181A20',
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#d4af37',
+    borderColor: '#F0B90B',
     alignSelf: 'flex-start',
   },
   devOtpText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#28d17c',
+    color: '#0ECB81',
     letterSpacing: 1,
   },
   devPill: {
     marginTop: 8,
-    backgroundColor: 'rgba(212,175,55,0.2)',
+    backgroundColor: 'rgba(240,185,11,0.2)',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 6,
@@ -1756,7 +2165,7 @@ const styles = StyleSheet.create({
   devPillText: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   backBtn: {
     marginTop: 12,
@@ -1783,7 +2192,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: '#070908',
+    backgroundColor: '#181A20',
   },
   brandRow: {
     flexDirection: 'row',
@@ -1794,16 +2203,16 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: 'rgba(240,185,11,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
+    borderColor: 'rgba(240,185,11,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoTextSmall: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   headerBrandTitle: {
     fontSize: 13,
@@ -1813,7 +2222,7 @@ const styles = StyleSheet.create({
   },
   headerBrandSub: {
     fontSize: 8,
-    color: '#d4af37',
+    color: '#F0B90B',
     letterSpacing: 1.5,
   },
   headerRightControls: {
@@ -1834,7 +2243,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -3,
     right: -3,
-    backgroundColor: '#ff5252',
+    backgroundColor: '#F6465D',
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -1851,16 +2260,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(212,175,55,0.2)',
+    backgroundColor: 'rgba(240,185,11,0.2)',
     borderWidth: 1,
-    borderColor: '#d4af37',
+    borderColor: '#F0B90B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   tickersBar: {
     borderBottomWidth: 1,
@@ -1905,15 +2314,15 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   navCard: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
+    borderColor: 'rgba(240,185,11,0.3)',
   },
   cardEyebrow: {
     fontSize: 10,
-    color: '#d4af37',
+    color: '#F0B90B',
     letterSpacing: 1,
     fontWeight: 'bold',
     marginBottom: 4,
@@ -1936,7 +2345,7 @@ const styles = StyleSheet.create({
   navSubValue: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#28d17c',
+    color: '#0ECB81',
   },
   actionRow: {
     flexDirection: 'row',
@@ -1944,7 +2353,7 @@ const styles = StyleSheet.create({
   },
   primaryActionBtn: {
     flex: 1,
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
@@ -1952,7 +2361,7 @@ const styles = StyleSheet.create({
   primaryActionText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#070908',
+    color: '#181A20',
   },
   secondaryActionBtn: {
     flex: 1,
@@ -1969,9 +2378,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   deployCard: {
-    backgroundColor: 'rgba(212,175,55,0.06)',
+    backgroundColor: 'rgba(240,185,11,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.2)',
+    borderColor: 'rgba(240,185,11,0.2)',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -1993,7 +2402,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   deployBtn: {
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
@@ -2001,7 +2410,7 @@ const styles = StyleSheet.create({
   deployBtnText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#070908',
+    color: '#181A20',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -2018,28 +2427,28 @@ const styles = StyleSheet.create({
   sectionLinkText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
-  mandateCard: {
-    backgroundColor: '#0f1412',
+  investmentCard: {
+    backgroundColor: '#1E2329',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  mandateHeader: {
+  investmentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  mandateName: {
+  investmentName: {
     fontSize: 15,
     fontWeight: 'bold',
     color: '#ffffff',
   },
   countdownBadge: {
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: 'rgba(240,185,11,0.15)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -2047,19 +2456,19 @@ const styles = StyleSheet.create({
   countdownText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
-  mandateGrid: {
+  investmentGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  mandateLabel: {
+  investmentLabel: {
     fontSize: 9,
     color: 'rgba(255,255,255,0.4)',
     marginBottom: 2,
   },
-  mandateVal: {
+  investmentVal: {
     fontSize: 15,
     fontWeight: 'bold',
     color: '#ffffff',
@@ -2072,7 +2481,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#28d17c',
+    backgroundColor: '#0ECB81',
   },
   pageTitle: {
     fontSize: 20,
@@ -2085,22 +2494,50 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 10,
   },
-  mandatesHeaderBox: {
-    backgroundColor: '#0f1412',
+  investmentsHeaderBox: {
+    backgroundColor: '#1E2329',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
+  investQuickStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  investQuickStat: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+  },
+  investQuickLabel: {
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  investQuickVal: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 2,
+  },
   goldBtnFull: {
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 12,
   },
   emptyCard: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -2114,17 +2551,27 @@ const styles = StyleSheet.create({
   emptyLink: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
     marginTop: 8,
   },
   statusPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: 'rgba(212,175,55,0.2)',
+    backgroundColor: 'rgba(240,185,11,0.2)',
   },
   statusCompleted: {
-    backgroundColor: 'rgba(40,209,124,0.2)',
+    backgroundColor: 'rgba(14,203,129,0.2)',
+  },
+  statusMatured: {
+    backgroundColor: 'rgba(240,185,11,0.25)',
+    borderWidth: 1,
+    borderColor: '#F0B90B',
+  },
+  statusCancelled: {
+    backgroundColor: 'rgba(246,70,93,0.25)',
+    borderWidth: 1,
+    borderColor: '#F6465D',
   },
   statusPillText: {
     fontSize: 9,
@@ -2142,7 +2589,7 @@ const styles = StyleSheet.create({
   },
   liquidityCard: {
     flex: 1,
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -2163,7 +2610,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
   },
   addressCard: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
@@ -2182,13 +2629,13 @@ const styles = StyleSheet.create({
   },
   assetBadge: {
     fontSize: 10,
-    color: '#d4af37',
+    color: '#F0B90B',
     fontWeight: 'bold',
   },
   addressString: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.7)',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     marginBottom: 10,
   },
   copyBtn: {
@@ -2199,15 +2646,15 @@ const styles = StyleSheet.create({
   },
   copyBtnText: {
     fontSize: 11,
-    color: '#d4af37',
+    color: '#F0B90B',
     fontWeight: '600',
   },
   referralCard: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
+    borderColor: 'rgba(240,185,11,0.3)',
     alignItems: 'center',
   },
   referralCodeText: {
@@ -2223,7 +2670,7 @@ const styles = StyleSheet.create({
   },
   refStatBox: {
     flex: 1,
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
@@ -2240,7 +2687,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   txCard: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
@@ -2277,7 +2724,7 @@ const styles = StyleSheet.create({
   txStatus: {
     fontSize: 9,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   txDate: {
     fontSize: 9,
@@ -2285,7 +2732,7 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: '#070908',
+    backgroundColor: '#181A20',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.08)',
     paddingVertical: 6,
@@ -2306,7 +2753,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   navLabelActive: {
-    color: '#d4af37',
+    color: '#F0B90B',
     fontWeight: 'bold',
   },
   // Modal Overlays
@@ -2323,7 +2770,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalContent: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -2331,7 +2778,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   modalSheet: {
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -2382,8 +2829,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   assetPillActive: {
-    backgroundColor: 'rgba(212,175,55,0.2)',
-    borderColor: '#d4af37',
+    backgroundColor: 'rgba(240,185,11,0.2)',
+    borderColor: '#F0B90B',
   },
   assetPillText: {
     fontSize: 10,
@@ -2391,7 +2838,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   assetPillTextActive: {
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   planCard: {
     backgroundColor: 'rgba(255,255,255,0.03)',
@@ -2402,8 +2849,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   planCardActive: {
-    borderColor: '#d4af37',
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderColor: '#F0B90B',
+    backgroundColor: 'rgba(240,185,11,0.08)',
   },
   planCardTop: {
     flexDirection: 'row',
@@ -2418,7 +2865,7 @@ const styles = StyleSheet.create({
   planCardBadge: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   planCardLimits: {
     fontSize: 10,
@@ -2435,8 +2882,8 @@ const styles = StyleSheet.create({
   },
   notifCardUnread: {
     borderLeftWidth: 3,
-    borderLeftColor: '#d4af37',
-    backgroundColor: 'rgba(212,175,55,0.05)',
+    borderLeftColor: '#F0B90B',
+    backgroundColor: 'rgba(240,185,11,0.05)',
   },
   notifTop: {
     flexDirection: 'row',
@@ -2453,7 +2900,7 @@ const styles = StyleSheet.create({
   notifType: {
     fontSize: 8,
     fontWeight: 'bold',
-    color: '#d4af37',
+    color: '#F0B90B',
     marginLeft: 6,
   },
   notifMsg: {
@@ -2471,8 +2918,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.1)',
+    borderColor: 'rgba(240,185,11,0.3)',
+    backgroundColor: 'rgba(240,185,11,0.1)',
   },
   notifFooterRow: {
     flexDirection: 'row',
@@ -2483,16 +2930,16 @@ const styles = StyleSheet.create({
   notifTapOpen: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#d4af37',
+    color: '#F0B90B',
   },
   // Modal 5: Priority Pop-Up Modal
   priorityPopUpCard: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#0c1210',
+    backgroundColor: '#1E2329',
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: '#d4af37',
+    borderColor: '#F0B90B',
     padding: 22,
     alignSelf: 'center',
     shadowColor: '#000000',
@@ -2512,9 +2959,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: 'rgba(240,185,11,0.15)',
     borderWidth: 1,
-    borderColor: '#d4af37',
+    borderColor: '#F0B90B',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2524,7 +2971,7 @@ const styles = StyleSheet.create({
   priorityBrandTag: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#d4af37',
+    color: '#F0B90B',
     letterSpacing: 1.5,
   },
   priorityPopUpTitle: {
@@ -2573,10 +3020,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     maxHeight: '82%',
-    backgroundColor: '#0c1210',
+    backgroundColor: '#1E2329',
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: 'rgba(212,175,55,0.5)',
+    borderColor: 'rgba(240,185,11,0.5)',
     padding: 22,
     alignSelf: 'center',
     shadowColor: '#000000',
@@ -2596,16 +3043,16 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: 'rgba(240,185,11,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
+    borderColor: 'rgba(240,185,11,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   msgBoxSubtitle: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#d4af37',
+    color: '#F0B90B',
     letterSpacing: 1.2,
   },
   msgBoxMainTitle: {
@@ -2682,18 +3129,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     alignItems: 'center',
   },
   modalGoldText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#070908',
+    color: '#181A20',
   },
   // --- Opening Splash Screen Styles ---
   splashContainer: {
     flex: 1,
-    backgroundColor: '#070908',
+    backgroundColor: '#181A20',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -2703,9 +3150,9 @@ const styles = StyleSheet.create({
     width: 320,
     height: 320,
     borderRadius: 160,
-    backgroundColor: 'rgba(212,175,55,0.06)',
+    backgroundColor: 'rgba(240,185,11,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.12)',
+    borderColor: 'rgba(240,185,11,0.12)',
   },
   splashCenterContent: {
     alignItems: 'center',
@@ -2720,12 +3167,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: 'rgba(240,185,11,0.15)',
     borderWidth: 2,
-    borderColor: '#d4af37',
+    borderColor: '#F0B90B',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#d4af37',
+    shadowColor: '#F0B90B',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 20,
@@ -2735,7 +3182,7 @@ const styles = StyleSheet.create({
     width: 78,
     height: 78,
     borderRadius: 39,
-    backgroundColor: '#0f1412',
+    backgroundColor: '#1E2329',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -2747,30 +3194,30 @@ const styles = StyleSheet.create({
   splashShieldBadge: {
     position: 'absolute',
     bottom: -6,
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#070908',
+    borderColor: '#181A20',
   },
   splashShieldBadgeText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#070908',
+    color: '#181A20',
     letterSpacing: 1,
   },
   splashBrandName: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#d4af37',
+    color: '#F0B90B',
     letterSpacing: 4,
     textAlign: 'center',
   },
   splashGoldLine: {
     width: 48,
     height: 2,
-    backgroundColor: 'rgba(212,175,55,0.5)',
+    backgroundColor: 'rgba(240,185,11,0.5)',
     marginVertical: 10,
     borderRadius: 1,
   },
@@ -2784,9 +3231,9 @@ const styles = StyleSheet.create({
   splashSecurityPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(40,209,124,0.08)',
+    backgroundColor: 'rgba(14,203,129,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(40,209,124,0.3)',
+    borderColor: 'rgba(14,203,129,0.3)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -2796,13 +3243,13 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#28d17c',
+    backgroundColor: '#0ECB81',
     marginRight: 8,
   },
   splashSecurityText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#28d17c',
+    color: '#0ECB81',
     letterSpacing: 1.2,
   },
   splashProgressBarTrack: {
@@ -2815,7 +3262,7 @@ const styles = StyleSheet.create({
   },
   splashProgressBarFill: {
     height: '100%',
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
     borderRadius: 2,
   },
   splashLoadingText: {
@@ -2852,16 +3299,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   connStatusOnline: {
-    backgroundColor: 'rgba(40,209,124,0.08)',
-    borderColor: 'rgba(40,209,124,0.3)',
+    backgroundColor: 'rgba(14,203,129,0.08)',
+    borderColor: 'rgba(14,203,129,0.3)',
   },
   connStatusOffline: {
-    backgroundColor: 'rgba(255,77,77,0.08)',
-    borderColor: 'rgba(255,77,77,0.3)',
+    backgroundColor: 'rgba(246,70,93,0.08)',
+    borderColor: 'rgba(246,70,93,0.3)',
   },
   connStatusPending: {
-    backgroundColor: 'rgba(212,175,55,0.08)',
-    borderColor: 'rgba(212,175,55,0.3)',
+    backgroundColor: 'rgba(240,185,11,0.08)',
+    borderColor: 'rgba(240,185,11,0.3)',
   },
   connDot: {
     width: 6,
@@ -2870,13 +3317,13 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   connDotOnline: {
-    backgroundColor: '#28d17c',
+    backgroundColor: '#0ECB81',
   },
   connDotOffline: {
-    backgroundColor: '#ff4d4d',
+    backgroundColor: '#F6465D',
   },
   connDotPending: {
-    backgroundColor: '#d4af37',
+    backgroundColor: '#F0B90B',
   },
   connStatusText: {
     fontSize: 10,
@@ -2901,6 +3348,455 @@ const styles = StyleSheet.create({
   presetBtnText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#d4af37',
+    color: '#F0B90B',
+  },
+  // --- Investment Filter Chips ---
+  filterChipScroll: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: '#F0B90B',
+    borderColor: '#F0B90B',
+  },
+  filterChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  filterChipTextActive: {
+    color: '#181A20',
+  },
+  // --- Enhanced Investment Card States ---
+  investmentCardMatured: {
+    borderColor: 'rgba(240,185,11,0.6)',
+    backgroundColor: 'rgba(240,185,11,0.04)',
+  },
+  investmentCardCancelled: {
+    borderColor: 'rgba(246,70,93,0.4)',
+    backgroundColor: 'rgba(246,70,93,0.04)',
+  },
+  maturedNoticeCard: {
+    backgroundColor: 'rgba(240,185,11,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(240,185,11,0.35)',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 8,
+  },
+  maturedNoticeTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    marginBottom: 2,
+  },
+  maturedNoticeText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 14,
+  },
+  cancellationNoticeCard: {
+    backgroundColor: 'rgba(246,70,93,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(246,70,93,0.35)',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 8,
+  },
+  cancellationNoticeTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F6465D',
+    marginBottom: 2,
+  },
+  cancellationNoticeReason: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.85)',
+    fontStyle: 'italic',
+    lineHeight: 14,
+  },
+  activeCountdownBox: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 10,
+    marginVertical: 8,
+  },
+  activeCountdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  activeCountdownLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  activeCountdownVal: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  activeVelocityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  activeVelocityLabel: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  activeVelocityVal: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#0ECB81',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  // --- Dynamic Deposit Receiving Address Card Styles ---
+  depositAddressCard: {
+    backgroundColor: 'rgba(240,185,11,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(240,185,11,0.25)',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+  },
+  depositAddressTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  depositAddressLabel: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#F0B90B',
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  depositAddressNetwork: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 2,
+  },
+  depositAssetBadge: {
+    backgroundColor: 'rgba(240,185,11,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(240,185,11,0.4)',
+  },
+  depositAssetBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  depositAddressBox: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    padding: 12,
+    marginBottom: 10,
+  },
+  depositAddressString: {
+    fontSize: 11,
+    color: '#ffffff',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    letterSpacing: 0.5,
+    lineHeight: 16,
+  },
+  depositCopyBtn: {
+    backgroundColor: '#F0B90B',
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  depositCopyBtnSuccess: {
+    backgroundColor: '#0ECB81',
+  },
+  depositCopyBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#181A20',
+  },
+  depositCopyBtnTextSuccess: {
+    color: '#ffffff',
+  },
+  depositMemoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+    gap: 6,
+  },
+  depositMemoLabel: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  depositMemoValue: {
+    fontSize: 10,
+    color: '#F0B90B',
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  depositSecurityNotice: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  depositSecurityText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 14,
+  },
+  // --- Affiliate & Referrals Enhanced Styles ---
+  refButtonRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+    marginTop: 8,
+  },
+  affiliateScheduleCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  affiliateScheduleTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  affiliateScheduleSub: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 12,
+  },
+  tierScheduleList: {
+    gap: 8,
+  },
+  tierScheduleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  tierScheduleName: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  tierScheduleRange: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  tierScheduleRateBadge: {
+    backgroundColor: 'rgba(240,185,11,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(240,185,11,0.3)',
+  },
+  tierScheduleRateText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  downlineCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  downlineItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+  downlineName: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  downlineEmail: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 1,
+  },
+  downlineDate: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  // --- Ledger TXID Styles ---
+  txHashRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 6,
+    borderRadius: 6,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  txHashText: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    flex: 1,
+    marginRight: 6,
+  },
+  txHashCopy: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  // --- Withdrawal Presets & Subsidy Styles ---
+  withdrawPresetsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 12,
+  },
+  withdrawPresetBtn: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  withdrawPresetText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  subsidyNoticeBox: {
+    backgroundColor: 'rgba(14,203,129,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(14,203,129,0.25)',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+  },
+  subsidyNoticeText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 14,
+  },
+  // --- Investment Modal Yield Calculator Styles ---
+  planRateBadge: {
+    backgroundColor: 'rgba(240,185,11,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(240,185,11,0.3)',
+  },
+  planRateText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  yieldCalculatorCard: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 12,
+    marginBottom: 14,
+  },
+  yieldCalcTitle: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#F0B90B',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  yieldCalcRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  yieldCalcLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  yieldCalcVal: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#ffffff',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  yieldCalcDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginVertical: 6,
+  },
+  yieldCalcTotalLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  yieldCalcTotalVal: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  tierWarningBox: {
+    backgroundColor: 'rgba(246,70,93,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(246,70,93,0.3)',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+  },
+  tierWarningText: {
+    fontSize: 10,
+    color: '#F6465D',
   },
 });

@@ -263,7 +263,78 @@ router.get('/investments', (_req: AuthRequest, res: Response) => {
   }
 });
 
-// 9. POST /api/admin/investments/:id/force-mature - Force Immediate Investment Maturity
+// 9. POST /api/admin/investments/:id/disburse - Disburse Payout for Matured or Active Investment
+router.post('/investments/:id/disburse', (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const investments = db.getAllInvestments();
+    const inv = investments.find((i) => i.id === id);
+
+    if (!inv) {
+      res.status(404).json({ error: 'Investment not found.' });
+      return;
+    }
+
+    if (inv.status === 'completed') {
+      res.status(400).json({ error: 'Investment payout has already been disbursed.' });
+      return;
+    }
+
+    if (inv.status === 'cancelled') {
+      res.status(400).json({ error: 'Cannot disburse a cancelled investment contract.' });
+      return;
+    }
+
+    const user = db.getUserById(inv.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Investor user record not found.' });
+      return;
+    }
+
+    // Complete investment and disburse total payout
+    db.completeInvestment(inv.id, 'Executive Treasury Desk');
+    const newBal = user.balance + inv.totalPayout;
+    db.updateUserBalance(user.id, newBal);
+
+    const randomHex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    const tx: Transaction = {
+      id: `tx_${uuidv4()}`,
+      userId: user.id,
+      type: 'yield_payout',
+      amount: inv.totalPayout,
+      asset: 'USD',
+      status: 'completed',
+      txHash: `0x${randomHex}`,
+      note: `Treasury Disbursement: ${inv.planName} Matured (Principal $${inv.amount.toLocaleString()} + Yield $${inv.expectedProfit.toLocaleString()})`,
+      createdAt: new Date().toISOString(),
+    };
+    db.createTransaction(tx);
+
+    // Dispatch priority celebration pop-up alert to user
+    db.createNotification({
+      id: `notif_${uuidv4()}`,
+      userId: user.id,
+      targetEmail: user.email,
+      title: `Investment Payout Disbursed: ${inv.planName}`,
+      message: `Your ${inv.planName} investment has been approved and disbursed! Total payout of $${inv.totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })} ($${inv.amount.toLocaleString()} principal + $${inv.expectedProfit.toLocaleString()} yield) has been credited to your available balance.`,
+      type: 'success',
+      sender: 'Executive Treasury Desk',
+      readBy: [],
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json({
+      message: `Investment payout of $${inv.totalPayout.toLocaleString()} successfully disbursed to ${user.email}.`,
+      investmentId: id,
+      totalPayout: inv.totalPayout,
+      newBalance: newBal,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to disburse investment payout.' });
+  }
+});
+
+// 9b. POST /api/admin/investments/:id/force-mature (Alias to disburse)
 router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -275,7 +346,7 @@ router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) =
       return;
     }
 
-    if (inv.status !== 'active') {
+    if (inv.status === 'completed' || inv.status === 'cancelled') {
       res.status(400).json({ error: 'Investment is already completed or cancelled.' });
       return;
     }
@@ -287,9 +358,11 @@ router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) =
     }
 
     // Complete investment and disburse total payout
-    db.completeInvestment(inv.id);
-    db.updateUserBalance(user.id, user.balance + inv.totalPayout);
+    db.completeInvestment(inv.id, 'Executive Override');
+    const newBal = user.balance + inv.totalPayout;
+    db.updateUserBalance(user.id, newBal);
 
+    const randomHex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
     const tx: Transaction = {
       id: `tx_${uuidv4()}`,
       userId: user.id,
@@ -297,19 +370,114 @@ router.post('/investments/:id/force-mature', (req: AuthRequest, res: Response) =
       amount: inv.totalPayout,
       asset: 'USD',
       status: 'completed',
-      txHash: `0x${Buffer.from(uuidv4()).toString('hex').slice(0, 64)}`,
+      txHash: `0x${randomHex}`,
       note: `Executive Early Settlement: ${inv.planName} matured (Principal $${inv.amount.toLocaleString()} + Yield $${inv.expectedProfit.toLocaleString()})`,
       createdAt: new Date().toISOString(),
     };
     db.createTransaction(tx);
 
+    // Dispatch priority celebration pop-up alert to user
+    db.createNotification({
+      id: `notif_${uuidv4()}`,
+      userId: user.id,
+      targetEmail: user.email,
+      title: `Investment Payout Disbursed: ${inv.planName}`,
+      message: `Executive settlement complete for ${inv.planName}. Payout of $${inv.totalPayout.toLocaleString('en-US', { minimumFractionDigits: 2 })} has been disbursed directly to your available balance.`,
+      type: 'success',
+      sender: 'Executive Treasury Desk',
+      readBy: [],
+      createdAt: new Date().toISOString(),
+    });
+
     res.json({
       message: 'Investment successfully force-matured and disbursed.',
       investmentId: id,
       totalPayout: inv.totalPayout,
+      newBalance: newBal,
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to force-mature investment.' });
+  }
+});
+
+// 9c. POST /api/admin/investments/:id/cancel - Cancel Investment for Breach of Rules
+router.post('/investments/:id/cancel', (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason, refundPrincipal = true } = req.body;
+    const investments = db.getAllInvestments();
+    const inv = investments.find((i) => i.id === id);
+
+    if (!inv) {
+      res.status(404).json({ error: 'Investment not found.' });
+      return;
+    }
+
+    if (inv.status === 'completed') {
+      res.status(400).json({ error: 'Cannot cancel an investment that is already completed and disbursed.' });
+      return;
+    }
+
+    if (inv.status === 'cancelled') {
+      res.status(400).json({ error: 'Investment is already cancelled.' });
+      return;
+    }
+
+    const user = db.getUserById(inv.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Investor user record not found.' });
+      return;
+    }
+
+    const breachReason = (reason && reason.trim()) || 'Breach of institutional investor terms and conditions';
+    
+    // Mark investment as cancelled
+    db.cancelInvestment(inv.id, breachReason);
+
+    let newBalance = user.balance;
+    if (refundPrincipal) {
+      newBalance += inv.amount;
+      db.updateUserBalance(user.id, newBalance);
+
+      const randomHex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      db.createTransaction({
+        id: `tx_${uuidv4()}`,
+        userId: user.id,
+        type: 'investment_refund',
+        amount: inv.amount,
+        asset: 'USD',
+        status: 'completed',
+        txHash: `0x${randomHex}`,
+        note: `Principal Refund (Investment Cancelled): ${breachReason}`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    // Dispatch HIGH-PRIORITY ALERT POP-UP to the user's dashboard
+    db.createNotification({
+      id: `notif_${uuidv4()}`,
+      userId: user.id,
+      targetEmail: user.email,
+      title: `Investment Terminated: ${inv.planName}`,
+      message: `Your ${inv.planName} investment contract (#${inv.id.slice(-8)}) was cancelled by Risk & Compliance.\n\nReason: "${breachReason}".\n\n${
+        refundPrincipal
+          ? `Your principal capital of $${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} has been refunded back to your available balance.`
+          : 'Principal capital is held pending compliance audit. Please contact the compliance desk for review.'
+      }`,
+      type: 'alert',
+      sender: 'Compliance & Risk Management',
+      readBy: [],
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json({
+      message: `Investment #${inv.id} cancelled. ${refundPrincipal ? 'Principal refunded to user.' : 'Principal held.'} Alert dispatched to investor.`,
+      investmentId: id,
+      newBalance,
+      cancellationReason: breachReason,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to cancel investment.' });
   }
 });
 

@@ -94,7 +94,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#060807] text-[#f3f0e8] overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-[#181A20] text-[#EAECEF] overflow-hidden">
       {/* Top Binance Live Ticker Tape */}
       <TickerBar />
 
@@ -154,11 +154,11 @@ export const App: React.FC = () => {
 
               {currentTab === 'deposit' && (
                 <div className="p-6 sm:p-8 rounded-2xl glass-card text-center space-y-4 max-w-md mx-auto my-6 sm:my-12">
-                  <h3 className="text-xl font-serif font-bold text-white">Multi-Asset Deposit Hub</h3>
-                  <p className="text-xs text-white/50">Deposit BTC, ETH, USDT (TRC-20/ERC-20), or SOL to fund your account.</p>
+                  <h3 className="text-xl font-sans font-bold text-[#EAECEF] tracking-tight">Multi-Asset Deposit Hub</h3>
+                  <p className="text-xs text-[#848E9C]">Deposit BTC, ETH, USDT (TRC-20/ERC-20), or SOL to fund your account.</p>
                   <button
                     onClick={() => setIsDepositOpen(true)}
-                    className="px-6 py-3 rounded-xl bg-gold hover:bg-gold-light text-[#0b0d0d] font-bold text-xs tracking-wider transition-all"
+                    className="px-6 py-3 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs tracking-wider transition-all shadow-md shadow-[#F0B90B]/10 active:scale-95"
                   >
                     Open Deposit Modal ↗
                   </button>
@@ -167,11 +167,11 @@ export const App: React.FC = () => {
 
               {currentTab === 'withdraw' && (
                 <div className="p-6 sm:p-8 rounded-2xl glass-card text-center space-y-4 max-w-md mx-auto my-6 sm:my-12">
-                  <h3 className="text-xl font-serif font-bold text-white">Automated Withdrawal Terminal</h3>
-                  <p className="text-xs text-white/50">Request instantaneous automated disbursement to your personal cold or hot wallet.</p>
+                  <h3 className="text-xl font-sans font-bold text-[#EAECEF] tracking-tight">Automated Withdrawal Terminal</h3>
+                  <p className="text-xs text-[#848E9C]">Request instantaneous automated disbursement to your personal cold or hot wallet.</p>
                   <button
                     onClick={() => setIsWithdrawOpen(true)}
-                    className="px-6 py-3 rounded-xl bg-gold hover:bg-gold-light text-[#0b0d0d] font-bold text-xs tracking-wider transition-all"
+                    className="px-6 py-3 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs tracking-wider transition-all shadow-md shadow-[#F0B90B]/10 active:scale-95"
                   >
                     Open Withdrawal Terminal ↗
                   </button>
@@ -191,51 +191,51 @@ export const App: React.FC = () => {
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#080b09]/95 backdrop-blur-xl border-t border-white/[0.08] flex items-center justify-around px-2 z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#181A20]/98 backdrop-blur-xl border-t border-[#2B313A] flex items-center justify-around px-2 z-40">
         <button
           onClick={() => setCurrentTab('overview')}
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            currentTab === 'overview' ? 'text-gold' : 'text-white/50 hover:text-white'
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg transition-all ${
+            currentTab === 'overview' ? 'text-[#F0B90B] font-semibold' : 'text-[#848E9C] hover:text-[#EAECEF]'
           }`}
         >
           <LayoutDashboard className="w-4 h-4" />
-          <span className="text-[10px] font-medium tracking-tight">Overview</span>
+          <span className="text-[10px] tracking-tight">Overview</span>
         </button>
 
         <button
           onClick={() => setCurrentTab('mandates')}
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            currentTab === 'mandates' ? 'text-gold' : 'text-white/50 hover:text-white'
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg transition-all ${
+            currentTab === 'mandates' ? 'text-[#F0B90B] font-semibold' : 'text-[#848E9C] hover:text-[#EAECEF]'
           }`}
         >
           <Timer className="w-4 h-4" />
-          <span className="text-[10px] font-medium tracking-tight">Investments</span>
+          <span className="text-[10px] tracking-tight">Investments</span>
         </button>
 
         <button
           onClick={() => setCurrentTab('invest')}
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            currentTab === 'invest' ? 'text-gold' : 'text-white/50 hover:text-white'
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg transition-all ${
+            currentTab === 'invest' ? 'text-[#F0B90B] font-semibold' : 'text-[#848E9C] hover:text-[#EAECEF]'
           }`}
         >
           <TrendingUp className="w-4 h-4" />
-          <span className="text-[10px] font-medium tracking-tight">Invest</span>
+          <span className="text-[10px] tracking-tight">Invest</span>
         </button>
 
         <button
           onClick={() => setIsDepositOpen(true)}
-          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-white/50 hover:text-white transition-all"
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg text-[#848E9C] hover:text-[#EAECEF] transition-all"
         >
-          <ArrowDownLeft className="w-4 h-4 text-gold" />
-          <span className="text-[10px] font-medium tracking-tight">Deposit</span>
+          <ArrowDownLeft className="w-4 h-4 text-[#F0B90B]" />
+          <span className="text-[10px] tracking-tight">Deposit</span>
         </button>
 
         <button
           onClick={() => setIsMobileSidebarOpen(true)}
-          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-white/50 hover:text-white transition-all"
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg text-[#848E9C] hover:text-[#EAECEF] transition-all"
         >
           <Menu className="w-4 h-4" />
-          <span className="text-[10px] font-medium tracking-tight">Menu</span>
+          <span className="text-[10px] tracking-tight">Menu</span>
         </button>
       </nav>
 

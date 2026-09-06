@@ -222,7 +222,183 @@ graph TD
    - Standardized bottom nav tab to "Investments", header cards to "Institutional Yield Investments", deploy modals to "Deploy Capital Investment" / "Select Investment Tier", and alerts to "Investment Deployed".
 5. **Backend Data & Route Contract Modernization (`backend/`)**:
    - Added `activeInvestmentsCount` in `AdminMetrics` and `db.getAdminMetrics()` with backward-compatible alias.
-   - Standardized administrative force-mature route responses and maturity notification titles ("Investment Matured").
+
+---
+
+### Phase 15: Admin Deposit Wallets Fix, Manual Investment Disbursement & Breach Cancellation Suite
+1. **Admin Portal Deposit Wallets Normalization**:
+   - Resolved blank page on the "Deposit Wallets" tab in `admin/src/components/DepositWalletsView.tsx`.
+   - Added robust dictionary-to-array payload normalization in `adminApi.getWallets()` so `Record<string, DepositAddressConfig>` maps seamlessly into structured config cards.
+   - Enhanced UI with instant clipboard copying, live address validation, network/asset editing, active/disabled toggling, and visual feedback toasts.
+2. **Admin Manual Disbursement Architecture for Matured Investments**:
+   - Refactored `backend/src/services/investmentEngine.ts` to transition expired investments from `active` to `matured` status instead of executing automated silent balance crediting.
+   - Built `POST /api/admin/investments/:id/disburse` in `backend/src/routes/admin.ts` to settle payouts (`Principal + Yield`), credit the investor's balance, create cryptographic transaction records (`0x...`), and dispatch high-priority `'success'` celebration pop-up alerts.
+   - Upgraded `admin/src/components/EscrowMandatesView.tsx` with dedicated "Matured Queue (Action Required)" badges and one-click "Disburse Payout" controls.
+3. **Institutional Breach of Rules Cancellation Suite**:
+   - Built `POST /api/admin/investments/:id/cancel` in `backend/src/routes/admin.ts` allowing administrators to terminate contracts for rule infractions (Multi-account/Sybil, AML discrepancies, high-frequency arbitrage, terms violation).
+   - Designed a comprehensive Cancellation Modal in `EscrowMandatesView.tsx` with selectable rule breach categories, custom notice inputs, and optional principal refund toggling.
+   - Wired high-priority `'alert'` notification generation that immediately triggers the centered warning modal on the investor's dashboard with the breach details.
+4. **Investor Web Dashboard & Mobile UI Modernization**:
+   - Updated `dashboard/src/components/MandatesView.tsx` with filter tabs (`All`, `Active`, `Matured`, `Settled`, `Cancelled`), glowing golden `Matured (Pending Release)` badges, and breach notice banners.
+   - Updated `mobile/App.tsx` and `mobile/src/types/index.ts` with distinct pill badges for `matured` and `cancelled` contracts.
+
+---
+
+### Phase 16: Dedicated Investor Portfolios Management Hub & Macro Escrow Separation
+1. **Dedicated Investor Portfolios Command Center (`admin/src/components/InvestorPortfoliosView.tsx`)**:
+   - Designed an institutional two-pane layout separating the user directory from their individual investment dossiers.
+   - **Left Column Directory**: Real-time searchable investor index with categorized status pills (`All`, `Active Investors`, `Matured Queue`, `Funded`, `Unfunded`), showing active contract count, total active capital, and liquid wallet balances.
+   - **Right Column Portfolio Hub**:
+     - Selected investor executive profile header with direct Balance Top-Up / Adjustment modal (`adminApi.adjustUserBalance`).
+     - Key financial KPIs: Available Liquid Balance, Active Capital Locked in Escrow, Lifetime Accrued Yield, and Disbursed Payouts.
+     - Granular investment plan contracts deck with filter chips (`All`, `Matured Queue`, `Active in Escrow`, `Settled`, `Cancelled`).
+     - Full operational action controls per contract: **Disburse Matured Payout** (with real-time state sync, transaction hash logging, and celebration notification dispatch), **Force Early Settlement**, and **Cancel Contract (Rule Breach)**.
+     - Rule Breach Modal featuring preset institutional violation templates (Multi-account/Sybil activity, AML discrepancies, ToS arbitrage violations, Regulatory disqualification), custom audit notes, and configurable Principal Refund toggle.
+2. **Macro Escrow Ledger Streamlining (`admin/src/components/EscrowMandatesView.tsx`)**:
+   - Removed destructive contract actions (early maturity / breach cancellation) from the mixed macro view to prevent accidental modifications across mixed investor accounts.
+   - Re-architected as a high-level macro platform escrow audit ledger with top-level aggregate KPIs: Active Locked in Escrow, Matured Settlement Queue, and Lifetime Disbursed Payouts.
+   - Added interactive deep-linking CTA (`"Manage in Investor Portfolio ↗"`) on each contract card and top navigation, allowing administrators to jump straight to the investor's dedicated management hub.
+3. **Cross-Tab Deep Linking (`admin/src/App.tsx` & `admin/src/components/UserManagementView.tsx`)**:
+   - Registered `investor_portfolios` in `AdminTab` navigation with `UserCheck` icon.
+   - Added quick-access "Plans ↗" button in the User Directory table (`UserManagementView.tsx`), immediately switching to `investor_portfolios` with the selected user loaded.
+
+---
+
+### Phase 17: Admin Deposit Wallets Smart Network Presets & Mobile Ecosystem Harmony
+1. **Admin Portal Deposit Wallets Smart Network Dropdown (`admin/src/components/DepositWalletsView.tsx`)**:
+   - Upgraded the Network Label field from a plain text input to a rich, asset-aware `<select>` dropdown.
+   - Categorized network presets dynamically based on the wallet's crypto asset (e.g. `USDT` -> `Tron (TRC-20)`, `Ethereum (ERC-20)`, `BNB Smart Chain (BEP-20)`, `Solana SPL`, `Polygon (PoS)`, `Arbitrum One`, `Optimism`, `Base`, `Avalanche C-Chain`, `TON`; `BTC` -> `Bitcoin Native SegWit`, `Legacy`, `Taproot`, `Lightning`, `BEP-20`; `ETH` -> `Ethereum Mainnet`, `Arbitrum One`, `Optimism`, `Base`, `Polygon`, `BEP-20`; `SOL` -> `Solana SPL`, `Solana Native`).
+   - Added an intuitive `✎ Custom / Other Network Label...` option with an automatic inline text input allowing administrators to enter custom network labels while maintaining 1-click preset convenience.
+2. **Mobile App Inbound Deposit Treasury Card (`mobile/App.tsx`)**:
+   - Enhanced the mobile Deposit Modal to dynamically resolve and display the official receiving treasury address from `depositAddresses` corresponding to the chosen asset.
+   - Built a 1-tap `Copy Receiving Address` button with live visual feedback, network verification tag, optional routing memo indicator, and enterprise security instructions matching the web dashboard experience.
+3. **Mobile App Investment Status Harmonization & Compliance Alerts (`mobile/App.tsx`)**:
+   - Added horizontal status filter chips (`All`, `Active`, `Matured`, `Settled`, `Cancelled`) in the mobile Investments tab.
+   - Integrated golden glowing `MATURED (QUEUED)` status cards and informative notices for contracts awaiting administrative payout disbursement.
+   - Integrated rose `CANCELLED` compliance notice cards displaying the exact breach reason (`cancellationReason`).
+   - Integrated live countdown timers and progressive yield indicators for active timelocked contracts.
+
+---
+
+### Phase 18: Ecosystem-Wide True-Weight Typography & Faux-Bold Smudge Elimination
+1. **Root Cause Analysis (RCA)**:
+   - Diagnosed that `Instrument Serif` only supplies weight 400 (`wght@400`). When components like `Navbar.tsx` (`<h1>Portfolio Intelligence</h1>`), `OverviewView.tsx`, and `MandatesView.tsx` applied `font-bold` (`700`/`800`), browsers applied artificial faux-bold stroke expansions, smudging and distorting glyph outlines.
+   - In addition, Windows/Chromium rendering of heavy `backdrop-filter: blur(...)` containers without GPU compositing layers bled into typography rendering.
+2. **Google Fonts & Variable Font Coverage**:
+   - Upgraded font imports across `dashboard/index.html`, `web/index.html`, and `admin/index.html` to load full font weight ranges for `Cinzel` (500..900), `Playfair Display` (400..900), `Plus Jakarta Sans` (400..800), `Inter` (300..800), and `JetBrains Mono` (400..700).
+3. **Tailwind & CSS Typography Architecture**:
+   - Configured `dashboard/tailwind.config.js` and `admin/tailwind.config.js` with structured font stacks: `serif: ['"Playfair Display"', 'Cinzel', 'Georgia', 'serif']` and `sans: ['"Plus Jakarta Sans"', 'Inter', ...]`.
+   - Defined unified CSS variables in `web/src/index.css` (`--font-serif`, `--font-sans`, `--font-mono`) and replaced unweighted declarations with true-weight variable references.
+   - Added GPU layer promotion (`will-change: transform`, `transform: translateZ(0)`) and container stacking isolation (`isolation: isolate`) in `dashboard/src/index.css`.
+4. **Mobile Typography Stability (`mobile/App.tsx`)**:
+   - Replaced legacy font strings (`'Courier'`) with platform-safe monospaces (`Platform.OS === 'ios' ? 'Menlo' : 'monospace'`) and confirmed robust typography rendering without clipping across all screens.
+5. **Universal Build & Typecheck Verification**:
+   - Executed full compilation suite across all 5 sub-projects: `dashboard` (0 errors), `admin` (0 errors), `web` (0 errors), `backend` (0 errors), `mobile` (0 errors).
+
+---
+
+### Phase 19: Dashboard & Admin Transition to High-Tech Geometric Sans-Serif
+1. **Design Philosophy & Visual Alignment**:
+   - Transitioned all real-time financial dashboards, metric cards, navigation elements, action modals, and admin operational desks from serif to high-tech geometric sans-serif (`Plus Jakarta Sans` / `Inter`).
+   - Replaced narrow, condensed serif headings ("Portfolio Intelligence", "Active Investments", "Deploy Institutional Capital", "Institutional Affiliate Network", "Cryptographic Audit Ledger", "Disburse Liquidity", etc.) with ultra-clean `font-sans font-bold tracking-tight text-white` headers.
+2. **Dashboard UI Refactoring**:
+   - `Navbar.tsx`: Modernized main header and breadcrumbs.
+   - `Sidebar.tsx`: Modernized brand title, subtitle, and Available Liquidity balance widget.
+   - `OverviewView.tsx`: Upgraded Net Asset Value, 4 key performance indicator cards, Programmatic Return Horizons, and Live Compounding cards.
+   - `MandatesView.tsx` & `NewInvestmentView.tsx`: Upgraded plan cards, yield percentages, investment inputs, duration schedules, and presets.
+   - `DepositModal.tsx` & `WithdrawModal.tsx`: Modernized headers, inputs, and fee previews.
+   - `AuthModal.tsx`: Modernized logo, titles, and verification OTP previews.
+   - `ReferralsView.tsx`: Modernized tier commission architecture and affiliate statistics.
+   - `LedgerView.tsx`: Modernized audit ledger header and amount rows.
+   - `NotificationCenter.tsx`: Modernized high-priority dispatch and message box modals.
+   - `AssetAllocationChart.tsx`: Fixed tooltip overlap and z-index positioning (`wrapperStyle={{ zIndex: 100, pointerEvents: 'none' }}`).
+3. **Admin Portal Refactoring**:
+   - `AdminNavbar.tsx`: Modernized executive clearance header and user profile name.
+   - `AdminLogin.tsx`: Modernized portal headline and login card header.
+   - `UserManagementView.tsx`: Upgraded investor directory header, user row names, and balance top-up modal.
+   - `TransactionDeskView.tsx`: Upgraded settlement desk header.
+   - `PlanConfigView.tsx`: Upgraded tier parameter header, plan cards, and configuration modal.
+   - `EscrowMandatesView.tsx`: Upgraded escrow ledger header, KPI cards, and settled audit table.
+   - `NotificationsDeskView.tsx`: Upgraded communications desk header.
+   - `InvestorPortfoliosView.tsx`: Upgraded investor dossier, 4 metric cards, plan items, and adjustment/cancellation modals.
+   - `ExecutiveMetricsView.tsx`: Upgraded institutional liquidity NAV, core stat cards, inflow/outflow ratios, and live Binance ticker header.
+   - `DepositWalletsView.tsx`: Upgraded receiving wallets header.
+4. **Build & Quality Assurance Suite**:
+   - Executed `npm run build` on `dashboard/` (Exit Code 0).
+   - Executed `npm run build` on `admin/` (Exit Code 0).
+   - Executed `npm run build` on `web/` (Exit Code 0).
+
+---
+
+### Phase 20: Mobile App Full Feature Synchronization & Architecture Parity
+1. **100% Terminology Harmonization (`mobile/App.tsx`)**:
+   - Retired all legacy "mandate" nomenclature across navigation tab types (`type NavTab = 'overview' | 'investments' | 'liquidity' | 'referrals' | 'ledger'`), active tab routing, and component style definitions (`investmentCard`, `investmentsHeaderBox`, `investmentGrid`, `investmentVal`, `investmentCardMatured`, `investmentCardCancelled`).
+2. **Inbound Multi-Asset Deposit Screen Upgrade**:
+   - Integrated dynamic receiving treasury address card with real-time asset matching, 1-tap clipboard copy button, routing memo/tag display, and strict network safety notices.
+3. **Outbound 2FA Capital Release Screen Upgrade**:
+   - Added 1-touch percentage allocation buttons (`25%`, `50%`, `75%`, `MAX`) based on available liquidity.
+   - Added Institutional Subsidy notice confirming 100% network gas fee waiver by Heron Capital treasury.
+   - Retained 2-Step OTP email verification pipeline with Dev OTP autofill badge for seamless testing.
+4. **Investment Deployment Modal & Real-Time Yield Calculator**:
+   - Embedded dynamic promissory yield simulation breakdown calculating Principal, Programmatic Yield (+4.5% to +22.5%), Lock Duration (24h to 96h), Expected Net Profit ($), Total Expected Payout ($), and projected maturity timestamps.
+   - Added quick allocation preset buttons (`$500`, `$2,500`, `$7,500`, `$15,000`, `MAX`).
+   - Added in-line minimum and maximum tier constraint alerts.
+5. **Active Timelock Contracts & Algorithmic Yield Velocity**:
+   - Added live yield velocity indicator displaying real-time accrued profit (`+$X.XX accrued`) and hourly velocity rate (`+$X.XX/hr`).
+   - Integrated Matured Queued notice cards ("✨ 100% Maturity Completed — Queued for executive disbursement") and Cancelled breach reason cards.
+6. **4-Tier Partner Affiliate Screen**:
+   - Added 1-tap referral code and referral link copying.
+   - Added 4-Tier Commission Architecture schedule card (Tier 1: 8.0%, Tier 2: 16.0%, Tier 3: 24.0%, Tier 4: 30.0%).
+   - Added downline network directory and commission earnings ledger.
+7. **Cryptographic Audit Ledger with Category Filtering**:
+   - Added category filter chips (`All`, `Deposits`, `Withdrawals`, `Yield`, `Affiliate`).
+   - Added blockchain transaction hash display with 1-tap copy button and formatted amounts (+ for credits, - for debits).
+8. **Universal Build & Typecheck Verification**:
+   - Executed `npx tsc --noEmit` on `mobile/` (Exit Code 0).
+   - Executed `npm run build` on `dashboard/` (Exit Code 0).
+   - Executed `npm run build` on `admin/` (Exit Code 0).
+   - Executed `npm run build` on `web/` (Exit Code 0).
+
+### Phase 9: Binance Pro Visual Theme, Texture, & 2x UI Transformation (Full Ecosystem)
+1. **Design System & Token Standardization**:
+   - Defined strict Binance Pro tokens:
+     - Gunmetal base: `#181A20`
+     - Charcoal surface: `#1E2329`
+     - Elevated border: `#2B313A` & `#363D47`
+     - Binance Gold/Yellow: `#F0B90B` (Hover `#FCD535`, Dark `#C99400`)
+     - High-contrast text: `#EAECEF` (Primary), `#848E9C` (Secondary), `#5E6673` (Tertiary)
+     - Financial indicators: `#0ECB81` (Profit green), `#F6465D` (Loss coral red)
+2. **Investor Dashboard Refactoring (`dashboard/`)**:
+   - Updated `tailwind.config.js` and `index.css` with Binance palette, glass panels, inputs, and `.btn-binance`.
+   - Updated root shell in `App.tsx` and all 12 component files: `TickerBar.tsx`, `Sidebar.tsx`, `Navbar.tsx`, `OverviewView.tsx`, `PortfolioYieldChart.tsx`, `AssetAllocationChart.tsx`, `MandatesView.tsx`, `NewInvestmentView.tsx`, `ReferralsView.tsx`, `LedgerView.tsx`, `DepositModal.tsx`, `WithdrawModal.tsx`, `NotificationCenter.tsx`.
+3. **Executive Admin Desk Refactoring (`admin/`)**:
+   - Updated `tailwind.config.js`, `index.css`, `App.tsx`, and all 9 admin components: `AdminNavbar.tsx`, `AdminSidebar.tsx`, `AdminLogin.tsx`, `ExecutiveMetricsView.tsx`, `DepositWalletsView.tsx`, `InvestorPortfoliosView.tsx`, `EscrowMandatesView.tsx`, `UserManagementView.tsx`, `NotificationsDeskView.tsx`, `TransactionDeskView.tsx`, `PlanConfigView.tsx`.
+4. **Marketing Web Platform Refactoring (`web/` & HTML files)**:
+   - Updated `web/src/index.css` and root `assets/css/style.css` to Binance Pro dark theme tokens, interactive yield calculator styles, pricing grid, and mobile app dialog styles.
+5. **Cross-Platform Mobile App Refactoring (`mobile/App.tsx`)**:
+   - Transformed all React Native styles, modals, splash screen, and component definitions to the Binance Pro palette.
+6. **Full-Ecosystem Verification**:
+   - `dashboard/`: `npx tsc && vite build` (Exit Code 0)
+   - `admin/`: `tsc && vite build` (Exit Code 0)
+   - `web/`: `tsc -b && vite build` (Exit Code 0)
+   - `mobile/`: `npx tsc --noEmit` (Exit Code 0)
+
+### Phase 10: Luxury Web Restoration with Custom Cursor & Elevated Binance Pro Ecosystem
+1. **Web App Luxury Theme Restoration (`web/` & `assets/css/style.css`)**:
+   - Reverted `web/` to the editorial luxury style: warm paper background (`#f3f0e8`), rich dark ink (`#0b0d0d`), antique gold accents (`#d6a84f`), and classical serif typography (`Playfair Display`, `Instrument Serif`).
+   - Retained and elevated Binance Pro dark theme for `dashboard/`, `admin/`, and `mobile/`.
+2. **Interactive Lerp Physics Custom Cursor (`web/src/components/CustomCursor.tsx`)**:
+   - Implemented 60fps `requestAnimationFrame` lerping cursor tracking the mouse pointer smoothly with zero DOM lag.
+   - Configured active hover targeting for all interactive elements (`a`, `button`, `input`, `textarea`, `select`, `.btn`, `.plan-card`, `.price-card`, `.story-card`, `.portrait`, `.ticker`, `.nav-menu-toggle`, `.calc-preset-btn`).
+   - Integrated with graceful fallback on mobile touch devices (`(pointer: fine)` detection).
+3. **Elevated UI Polish in Dashboard, Admin, and Mobile**:
+   - Polished Binance Pro dark surfaces, glowing borders on hover, trading badges, micro-animations, and institutional typography.
+4. **Universal Build & Typecheck Verification**:
+   - `web/`: `npm run build` (Exit Code 0)
+   - `dashboard/`: `npm run build` (Exit Code 0)
+   - `admin/`: `npm run build` (Exit Code 0)
+   - `mobile/`: `npx tsc --noEmit` (Exit Code 0)
+   - `backend/`: `npx tsc --noEmit` (Exit Code 0)
 
 ---
 

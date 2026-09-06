@@ -135,12 +135,32 @@ class AdminApiService {
   }
 
   public async getInvestments(): Promise<Investment[]> {
-    return this.request<Investment[]>('/admin/investments');
+    const res = await this.request<any>('/admin/investments');
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.investments)) return res.investments;
+    return [];
+  }
+
+  public async disburseInvestment(id: string): Promise<{ message: string; totalPayout: number; newBalance?: number }> {
+    return this.request<{ message: string; totalPayout: number; newBalance?: number }>(`/admin/investments/${id}/disburse`, {
+      method: 'POST',
+    });
   }
 
   public async forceMatureInvestment(id: string): Promise<{ message: string; totalPayout: number }> {
     return this.request<{ message: string; totalPayout: number }>(`/admin/investments/${id}/force-mature`, {
       method: 'POST',
+    });
+  }
+
+  public async cancelInvestment(
+    id: string,
+    reason: string,
+    refundPrincipal: boolean = true
+  ): Promise<{ message: string; investment: Investment; newBalance?: number }> {
+    return this.request<{ message: string; investment: Investment; newBalance?: number }>(`/admin/investments/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason, refundPrincipal }),
     });
   }
 
@@ -156,7 +176,22 @@ class AdminApiService {
   }
 
   public async getWallets(): Promise<DepositAddressConfig[]> {
-    return this.request<DepositAddressConfig[]>('/admin/wallets');
+    const res = await this.request<any>('/admin/wallets');
+    if (Array.isArray(res)) return res;
+    if (res && typeof res === 'object') {
+      const target = res.addresses || res;
+      if (Array.isArray(target)) return target;
+      return Object.entries(target).map(([key, val]: [string, any]) => ({
+        key: val?.key || key,
+        asset: val?.asset || 'USDT',
+        network: val?.network || key,
+        address: val?.address || '',
+        memo: val?.memo,
+        isActive: val?.isActive !== undefined ? val.isActive : true,
+        updatedAt: val?.updatedAt || new Date().toISOString(),
+      }));
+    }
+    return [];
   }
 
   public async updateWallet(

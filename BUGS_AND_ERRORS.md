@@ -36,6 +36,11 @@ This document is the **single source of truth** for all errors reported, bugs id
 15. [BUG-015: Mobile Pop-Up Modal Bottom-Sheet Anchor Misalignment](#bug-015-mobile-pop-up-modal-bottom-sheet-anchor-misalignment)
 16. [BUG-016: Investor Dashboard Plan Deployment Navigation & Undefined State Crash](#bug-016-investor-dashboard-plan-deployment-navigation--undefined-state-crash)
 17. [BUG-017: JSON Serialization Null 'max' Runtime Crash in Plan Tier Formatting & Limit Validation](#bug-017-json-serialization-null-max-runtime-crash-in-plan-tier-formatting--limit-validation)
+18. [BUG-018: Admin Portal Deposit Wallets Blank View Crash on Dictionary Response](#bug-018-admin-portal-deposit-wallets-blank-view-crash-on-dictionary-response)
+19. [BUG-019: TypeScript Strict Mode Unused Symbol Compilation Blocker in Admin Build](#bug-019-typescript-strict-mode-unused-symbol-compilation-blocker-in-admin-build)
+20. [BUG-020: React Native Text Component Prop Type Mismatch (`selectTextOnFocus` vs `selectable`)](#bug-020-react-native-text-component-prop-type-mismatch-selecttextonfocus-vs-selectable)
+21. [BUG-021: Faux-Bold Font Distortion & Text Smudging in Serif Headers](#bug-021-faux-bold-font-distortion--text-smudging-in-serif-headers)
+22. [BUG-022: Condensed Serif Typography Misalignment on Institutional Dashboards & Desks](#bug-022-condensed-serif-typography-misalignment-on-institutional-dashboards--desks)
 
 ---
 
@@ -349,3 +354,126 @@ This document is the **single source of truth** for all errors reported, bugs id
   - Safeguarded plan limit displays in `mobile/App.tsx` and `admin/src/components/PlanConfigView.tsx`.
 - **Regression Prevention Rule**:
   - *Always remember that `Infinity` serializes to `null` in JSON. Never invoke `.toLocaleString()` on numeric fields without verifying `typeof x === 'number' && !isNaN(x)` and handling `isUncapped(x)`.*
+
+---
+
+### BUG-018: Admin Portal Deposit Wallets Blank View Crash on Dictionary Response
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `admin/src/components/DepositWalletsView.tsx` & `admin/src/services/api.ts`
+- **Symptom**: When navigating to the "Deposit Wallets" tab in the Admin Operations Portal, the screen rendered completely blank with no error banners or wallet configurations visible.
+- **Root Cause**:
+  - The backend `db.getDepositAddresses()` returns a key-value dictionary object `Record<string, DepositAddressConfig>` (e.g. `{ BTC: {...}, ETH: {...} }`).
+  - In `adminApi.getWallets()`, the API service requested `DepositAddressConfig[]` directly without normalizing the dictionary payload to an array.
+  - In `DepositWalletsView.tsx`, `fetchWallets()` called `data.forEach(...)` on the returned dictionary object. In JavaScript, invoking `.forEach` on a non-array object throws an uncaught `TypeError: data.forEach is not a function`, terminating execution in the `catch` block and leaving the wallets state array empty (`[]`). Because `wallets.length === 0`, `wallets.map(...)` rendered nothing, presenting a completely blank page.
+- **Exact Resolution**:
+  - In `admin/src/services/api.ts`, added robust dictionary-to-array normalization in `getWallets()`:
+    ```typescript
+    public async getWallets(): Promise<DepositAddressConfig[]> {
+      const res = await this.request<any>('/admin/wallets');
+      if (Array.isArray(res)) return res;
+      if (res && typeof res === 'object') {
+        const target = res.addresses || res;
+        if (Array.isArray(target)) return target;
+        return Object.entries(target).map(([key, val]: [string, any]) => ({
+          key: val?.key || key,
+          asset: val?.asset || 'USDT',
+          network: val?.network || key,
+          address: val?.address || '',
+          memo: val?.memo,
+          isActive: val?.isActive !== undefined ? val.isActive : true,
+          updatedAt: val?.updatedAt || new Date().toISOString(),
+        }));
+      }
+      return [];
+    }
+    ```
+  - In `admin/src/components/DepositWalletsView.tsx`, safeguarded `fetchWallets()` to always ensure `list` is a valid array of configs before constructing the editing state map.
+- **Regression Prevention Rule**:
+  - *Never assume backend endpoints returning records or configurations return Arrays. Always normalize dictionaries using `Array.isArray(data) ? data : Object.values(data || {})` or `Object.entries(data).map(...)` in both API services and view components.*
+
+---
+
+### BUG-019: TypeScript Strict Mode Unused Symbol Compilation Blocker in Admin Build
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `admin/src/components/EscrowMandatesView.tsx` & `admin/src/components/InvestorPortfoliosView.tsx`
+- **Symptom**: Running `npm run build` in `admin/` failed with code 1 due to `TS6133: '...' is declared but its value is never read`.
+- **Root Cause**:
+  - `tsconfig.json` in `admin/` enforces `noUnusedLocals: true` and `noUnusedParameters: true`.
+  - Residual unused icon imports from `lucide-react` (`AlertTriangle`, `ArrowRight`, `TrendingUp`, `Lock`, `Wallet`, `Check`, `Sliders`, `Sparkles`, `ExternalLink`) and unused handler parameter declarations caused compilation halts during Vite's `tsc` stage.
+- **Exact Resolution**:
+  - Pruned all unused icons from `InvestorPortfoliosView.tsx` and `EscrowMandatesView.tsx`.
+  - Wired `onRefreshInvestments` to an interactive manual refresh button (`RefreshCw`) in `EscrowMandatesView.tsx`.
+  - Verified `npm run build` passes with zero warnings or errors across the entire codebase.
+- **Regression Prevention Rule**:
+  - *Always run `npm run build` after editing components in any frontend subproject (`admin`, `dashboard`, `web`) to ensure strict TypeScript compilation passes cleanly before completing tasks.*
+
+---
+
+### BUG-020: React Native Text Component Prop Type Mismatch (`selectTextOnFocus` vs `selectable`)
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `mobile/App.tsx`
+- **Symptom**: Typechecking `mobile/` with `npx tsc --noEmit` failed with error `TS2769: Property 'selectTextOnFocus' does not exist on type 'IntrinsicAttributes & ... & Readonly<TextProps>'`.
+- **Root Cause**:
+  - `selectTextOnFocus` is a prop exclusive to React Native's `<TextInput>` component. When applied to `<Text>`, TypeScript throws a type overload error because `<Text>` only accepts `selectable={true}` for text selection and clipboard copying.
+- **Exact Resolution**:
+  - Replaced `selectTextOnFocus` with `selectable={true}` on the destination address text wrapper inside the mobile Deposit Modal.
+  - Verified `npx tsc --noEmit` in `mobile/` exits with code 0.
+- **Regression Prevention Rule**:
+  - *In React Native, use `selectable={true}` on `<Text>` components to enable user selection and copying, reserving `selectTextOnFocus` strictly for `<TextInput>` elements.*
+
+---
+
+### BUG-021: Faux-Bold Font Distortion & Text Smudging in Serif Headers
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `dashboard/`, `web/`, `admin/`, `mobile/`
+- **Symptom**: Headings such as "Portfolio Intelligence" in the Investor Dashboard, NAV balance metrics, and marketing headers appeared distorted, smudged, or blurry with synthetic stroke artifacts rather than crisp luxury typography.
+- **Root Cause**:
+  1. `dashboard/index.html` and `web/index.html` were importing `Instrument Serif:ital@0;1` which strictly provides normal font weight (`400`).
+  2. Frontend components (e.g. `Navbar.tsx`, `OverviewView.tsx`, `MandatesView.tsx`, `NewInvestmentView.tsx`) applied `font-serif font-bold` or weights `600`/`700`/`800`.
+  3. When a browser encounters a bold weight request for a font family that lacks true bold glyph definitions, it applies an algorithmic "faux-bold" / synthetic stroke expansion. This creates irregular outline warping, blurred character glyphs, and distorted kerning.
+  4. On Windows/Chromium engines, CSS `backdrop-filter: blur(...)` containers without dedicated GPU compositing layers exacerbate font rendering artifacts.
+- **Exact Resolution**:
+  - Upgraded Google Fonts imports across `dashboard/index.html`, `web/index.html`, and `admin/index.html` to load full font weight ranges:
+    - `Cinzel:wght@500..900`
+    - `Playfair Display:ital,wght@0,400..900;1,400..900`
+    - `Plus Jakarta Sans:wght@400..800`
+    - `Inter:wght@300..800`
+    - `JetBrains Mono:wght@400..700`
+  - Configured Tailwind CSS (`dashboard/tailwind.config.js`, `admin/tailwind.config.js`) and Web CSS variables (`web/src/index.css`) to use true-weight serif stacks:
+    - `serif: ['"Playfair Display"', 'Cinzel', 'Georgia', 'serif']`
+    - `sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif']`
+    - `mono: ['"JetBrains Mono"', 'Menlo', 'monospace']`
+  - Added hardware compositing acceleration in `dashboard/src/index.css` (`will-change: transform`, `transform: translateZ(0)`, `isolation: isolate` on glass containers) to isolate blur filters from text glyph rendering.
+  - Replaced hardcoded font strings in `mobile/App.tsx` with platform-safe monospaces (`Platform.OS === 'ios' ? 'Menlo' : 'monospace'`).
+- **Regression Prevention Rule**:
+  - *Never apply `font-bold` or `fontWeight: '600'/'700'/'800'` to font families that only provide `wght@400`. Always ensure Google Fonts imports include the full variable weight spectrum `400..900` or specify a font stack whose primary serif supports true bold weights (e.g. `Playfair Display`).*
+
+---
+
+### BUG-022: Condensed Serif Typography Misalignment on Institutional Dashboards & Desks
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `dashboard/` and `admin/` UI components (`Navbar.tsx`, `Sidebar.tsx`, `OverviewView.tsx`, `MandatesView.tsx`, `NewInvestmentView.tsx`, `DepositModal.tsx`, `WithdrawModal.tsx`, `AuthModal.tsx`, `ReferralsView.tsx`, `LedgerView.tsx`, `NotificationCenter.tsx`, `AssetAllocationChart.tsx`, `InvestorPortfoliosView.tsx`, `ExecutiveMetricsView.tsx`, etc.)
+- **Symptom**: Navigation titles ("Portfolio Intelligence"), modal headers, balance widgets, and statistic cards had an outdated, narrow, or skinny appearance because they were inheriting serif typography instead of modern institutional geometric sans-serif fonts found on premier digital asset platforms (Coinbase Prime, Stripe, Linear).
+- **Root Cause**:
+  1. Component JSX explicitly applied `font-serif` on UI navigation headers, numbers, and input fields.
+  2. In high-density financial dashboards, serif fonts reduce readability on smaller screen sizes and lack the crisp, high-tech punch required for digital wealth management.
+  3. `AssetAllocationChart.tsx` tooltip lacked z-index containment and pointer-events isolation, leading to visual collisions with underlying donut segments.
+  4. `NewInvestmentView.tsx` range slider input had an unclosed tag leading to a TypeScript parse error during production build.
+- **Exact Resolution**:
+  - Removed all `Instrument Serif` references and replaced all `font-serif` occurrences across `dashboard/src/` and `admin/src/` with `font-sans font-bold / font-extrabold tracking-tight` (`Plus Jakarta Sans` + `Inter`).
+  - Added `wrapperStyle={{ zIndex: 100, pointerEvents: 'none' }}` to `AssetAllocationChart.tsx` tooltip.
+  - Closed the range slider input tag in `NewInvestmentView.tsx`.
+  - Configured `admin/tailwind.config.js` to prioritize `"Plus Jakarta Sans"` for display titles.
+  - Verified `npm run build` passes with zero errors across all packages.
+- **Regression Prevention Rule**:
+  - *Always use `font-sans` with tight tracking (`tracking-tight font-bold`) for dashboard navigation, metric displays, action cards, and operational desk views. Reserve serif fonts solely for editorial marketing prose if desired, never on real-time financial UI controls.*
+
+---
+
+### BUG-023: Duplicate Function Signature Syntax Error in NotificationCenter.tsx
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `dashboard/src/components/NotificationCenter.tsx`
+- **Symptom**: `npm run build` failed with `TS1005: '}' expected` at line 478.
+- **Root Cause**: An accidental duplicate declaration of `const getNotificationIcon` was present at line 140 before the switch statement of the first definition was terminated.
+- **Exact Resolution**: Removed the duplicate unclosed helper signature and retained the complete typed `getNotificationIcon` switch block. Verified `npm run build` succeeds cleanly with exit code 0.
+- **Regression Prevention Rule**: *Always execute full `npm run build` / `tsc` verification after modifying TypeScript components.*

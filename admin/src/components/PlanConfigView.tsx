@@ -94,20 +94,20 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-gold" />
+          <h2 className="font-sans text-xl font-bold text-[#EAECEF] flex items-center gap-2 tracking-tight">
+            <Sliders className="w-5 h-5 text-[#F0B90B]" />
             Institutional Investment Tier Parameters ({planList.length} Tiers)
           </h2>
-          <p className="text-xs text-white/50 font-mono">
+          <p className="text-xs text-[#848E9C] font-mono">
             Calibrate smart contract yield rates, lockup durations, minimum allocations, and partner affiliate incentives.
           </p>
         </div>
 
         <button
           onClick={handleManualRefresh}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/80 hover:text-white text-xs font-mono transition-all self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-[#848E9C] hover:text-[#EAECEF] text-xs font-mono transition-all self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-gold' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#F0B90B]' : ''}`} />
           <span>Refresh Parameters</span>
         </button>
       </div>
@@ -119,81 +119,81 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
             key={plan.id}
             className={`p-6 rounded-2xl glass-panel space-y-4 border transition-all ${
               plan.id === 'premium'
-                ? 'border-gold/40 shadow-lg shadow-gold/5'
-                : 'border-white/[0.08] hover:border-white/[0.15]'
+                ? 'border-[#F0B90B]/50 shadow-lg shadow-[#F0B90B]/5 bg-[#1E2329]'
+                : 'border-[#2B313A] hover:border-[#F0B90B]/40 bg-[#1E2329]'
             }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono text-gold uppercase tracking-wider font-bold">
+                  <span className="text-[10px] font-mono text-[#F0B90B] uppercase tracking-wider font-bold">
                     Tier ID: {plan.id}
                   </span>
                   {plan.badge && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/30">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F0B90B]/10 text-[#F0B90B] border border-[#F0B90B]/30">
                       {plan.badge}
                     </span>
                   )}
                 </div>
-                <h3 className="font-serif text-xl font-bold text-white mt-1">{plan.name}</h3>
+                <h3 className="font-sans text-xl font-bold text-[#EAECEF] mt-1 tracking-tight">{plan.name}</h3>
               </div>
               <button
                 onClick={() => startEdit(plan)}
-                className="px-3.5 py-1.5 rounded-xl bg-gold/15 hover:bg-gold/25 text-gold border border-gold/30 text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3.5 py-1.5 rounded-xl bg-[#F0B90B]/15 hover:bg-[#F0B90B]/25 text-[#F0B90B] border border-[#F0B90B]/30 text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-sm"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 Configure
               </button>
             </div>
 
-            <p className="text-xs text-white/60 leading-relaxed font-sans">{plan.description}</p>
+            <p className="text-xs text-[#848E9C] leading-relaxed font-sans">{plan.description}</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 text-xs font-mono">
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                <div className="text-[10px] text-white/40 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-[#181A20]/80 border border-[#2B313A]">
+                <div className="text-[10px] text-[#848E9C] flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-[#0ECB81]" />
                   <span>Fixed Yield</span>
                 </div>
-                <div className="text-emerald-glow font-bold text-base mt-0.5">
+                <div className="text-[#0ECB81] font-bold text-base mt-0.5">
                   {(plan.rate * 100).toFixed(1)}%
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                <div className="text-[10px] text-white/40 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-gold" />
+              <div className="p-3 rounded-xl bg-[#181A20]/80 border border-[#2B313A]">
+                <div className="text-[10px] text-[#848E9C] flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-[#F0B90B]" />
                   <span>Cycle Duration</span>
                 </div>
-                <div className="text-white font-bold text-base mt-0.5">{plan.durationHours} Hours</div>
+                <div className="text-[#EAECEF] font-bold text-base mt-0.5">{plan.durationHours} Hours</div>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                <div className="text-[10px] text-white/40 flex items-center gap-1">
+              <div className="p-3 rounded-xl bg-[#181A20]/80 border border-[#2B313A]">
+                <div className="text-[10px] text-[#848E9C] flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-sky-400" />
                   <span>Min Allocation</span>
                 </div>
-                <div className="text-white font-bold text-sm mt-0.5">
+                <div className="text-[#EAECEF] font-bold text-sm mt-0.5">
                   ${plan.min.toLocaleString()}
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                <div className="text-[10px] text-white/40 flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-amber-400" />
+              <div className="p-3 rounded-xl bg-[#181A20]/80 border border-[#2B313A]">
+                <div className="text-[10px] text-[#848E9C] flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-[#F0B90B]" />
                   <span>Max Allocation</span>
                 </div>
-                <div className="text-white font-bold text-sm mt-0.5">
+                <div className="text-[#EAECEF] font-bold text-sm mt-0.5">
                   {(plan.max === null || plan.max === undefined || plan.max === Infinity || plan.max >= 99999999) ? 'Uncapped' : `$${Number(plan.max).toLocaleString()}`}
                 </div>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-white/50">
+            <div className="pt-2 border-t border-[#2B313A] flex items-center justify-between text-[11px] font-mono text-[#848E9C]">
               <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-gold" />
-                <span>Affiliate Commission: <strong className="text-gold">{((plan.referralRate || 0.08) * 100).toFixed(0)}%</strong></span>
+                <Users className="w-3.5 h-3.5 text-[#F0B90B]" />
+                <span>Affiliate Commission: <strong className="text-[#F0B90B]">{((plan.referralRate || 0.08) * 100).toFixed(0)}%</strong></span>
               </span>
-              <span className="text-emerald-400 font-bold">Active in Dashboard</span>
+              <span className="text-[#0ECB81] font-bold">Active in Dashboard</span>
             </div>
           </div>
         ))}
@@ -201,20 +201,20 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
 
       {/* Edit Plan Modal */}
       {editingPlan && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-lg p-6 rounded-2xl border border-gold/30 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
-                <Sliders className="w-5 h-5 text-gold" />
+        <div className="fixed inset-0 bg-[#181A20]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-panel w-full max-w-lg p-6 rounded-2xl border border-[#F0B90B]/30 shadow-2xl space-y-4 bg-[#1E2329]">
+            <div className="flex items-center justify-between border-b border-[#2B313A] pb-3">
+              <h3 className="font-sans text-lg font-bold text-[#EAECEF] flex items-center gap-2 tracking-tight">
+                <Sliders className="w-5 h-5 text-[#F0B90B]" />
                 Configure Investment Plan: {editingPlan.name}
               </h3>
-              <button onClick={() => setEditingPlan(null)} className="text-white/40 hover:text-white">
+              <button onClick={() => setEditingPlan(null)} className="text-[#848E9C] hover:text-[#EAECEF]">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {successMsg && (
-              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 font-mono">
+              <div className="p-3 rounded-xl bg-[#0ECB81]/10 border border-[#0ECB81]/30 text-[#0ECB81] text-xs flex items-center gap-2 font-mono">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{successMsg}</span>
               </div>
@@ -223,7 +223,7 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-white/60 mb-1">
+                  <label className="block text-xs font-mono text-[#848E9C] mb-1">
                     Fixed Return Rate (% Return)
                   </label>
                   <input
@@ -232,12 +232,12 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                     required
                     value={formRate}
                     onChange={(e) => setFormRate(parseFloat(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-emerald-glow font-bold"
+                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-[#0ECB81] font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-white/60 mb-1">
+                  <label className="block text-xs font-mono text-[#848E9C] mb-1">
                     Cycle Duration (Hours)
                   </label>
                   <input
@@ -245,14 +245,14 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                     required
                     value={formDuration}
                     onChange={(e) => setFormDuration(parseInt(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-white font-bold"
+                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-[#EAECEF] font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-white/60 mb-1">
+                  <label className="block text-xs font-mono text-[#848E9C] mb-1">
                     Min Deposit ($ USD)
                   </label>
                   <input
@@ -260,12 +260,12 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                     required
                     value={formMin}
                     onChange={(e) => setFormMin(parseFloat(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-white"
+                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-[#EAECEF]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-white/60 mb-1">
+                  <label className="block text-xs font-mono text-[#848E9C] mb-1">
                     Max Deposit ($ USD)
                   </label>
                   <input
@@ -273,14 +273,14 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                     required
                     value={formMax}
                     onChange={(e) => setFormMax(parseFloat(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-white"
+                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-[#EAECEF]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-white/60 mb-1">
+                  <label className="block text-xs font-mono text-[#848E9C] mb-1">
                     Affiliate Commission (% of deposit)
                   </label>
                   <input
@@ -289,12 +289,12 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                     required
                     value={formReferralRate}
                     onChange={(e) => setFormReferralRate(parseFloat(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-gold"
+                    className="w-full px-3.5 py-2 rounded-xl glass-input text-sm font-mono text-[#F0B90B] font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-white/60 mb-1">
+                  <label className="block text-xs font-mono text-[#848E9C] mb-1">
                     Badge Pill Text
                   </label>
                   <input
@@ -303,18 +303,18 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                     value={formBadge}
                     onChange={(e) => setFormBadge(e.target.value)}
                     placeholder="e.g. 72h • 15.5%"
-                    className="w-full px-3.5 py-2 rounded-xl glass-input text-xs font-mono text-white"
+                    className="w-full px-3.5 py-2 rounded-xl glass-input text-xs font-mono text-[#EAECEF]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-white/60 mb-1">Plan Description</label>
+                <label className="block text-xs font-mono text-[#848E9C] mb-1">Plan Description</label>
                 <textarea
                   rows={3}
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl glass-input text-xs text-white"
+                  className="w-full px-3.5 py-2 rounded-xl glass-input text-xs text-[#EAECEF]"
                 />
               </div>
 
@@ -322,14 +322,14 @@ export const PlanConfigView: React.FC<PlanConfigViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditingPlan(null)}
-                  className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white text-xs font-mono"
+                  className="px-4 py-2 rounded-xl bg-[#2B313A] hover:bg-[#363D47] text-[#848E9C] hover:text-[#EAECEF] text-xs font-mono transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-gold hover:bg-gold-light text-[#0b0d0d] text-xs font-mono font-bold shadow-lg shadow-gold/20 flex items-center gap-1.5 disabled:opacity-50"
+                  className="btn-binance px-5 py-2 rounded-xl text-xs font-mono font-bold shadow-lg shadow-[#F0B90B]/10 flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>{saving ? 'Updating Tier...' : 'Save Parameters'}</span>

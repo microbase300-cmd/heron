@@ -81,24 +81,24 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="relative w-full max-w-lg rounded-2xl glass-card-featured border-gold/40 p-6 sm:p-8 shadow-2xl shadow-black max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-lg rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 sm:p-8 shadow-2xl shadow-black max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.05] transition-all"
+          className="absolute top-5 right-5 p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
+          <div className="w-10 h-10 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B]">
             <ArrowDownLeft className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-serif text-xl font-bold text-white">Deposit Digital Assets</h3>
-            <p className="text-xs text-white/50 font-mono">Platform cold-custody receiving desk</p>
+            <h3 className="font-sans text-xl font-bold text-[#EAECEF] tracking-tight">Deposit Digital Assets</h3>
+            <p className="text-xs text-[#848E9C] font-mono">Platform cold-custody receiving desk</p>
           </div>
         </div>
 
@@ -106,14 +106,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({
           <div
             className={`mb-5 p-3 rounded-xl text-xs flex items-center gap-2.5 ${
               feedback.type === 'success'
-                ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300'
-                : 'bg-rose-950/60 border border-rose-500/40 text-rose-300'
+                ? 'bg-[#0ECB81]/15 border border-[#0ECB81]/30 text-[#0ECB81]'
+                : 'bg-[#F6465D]/15 border border-[#F6465D]/30 text-[#F6465D]'
             }`}
           >
             {feedback.type === 'success' ? (
-              <Clock className="w-4 h-4 shrink-0 text-emerald-400" />
+              <Clock className="w-4 h-4 shrink-0 text-[#0ECB81]" />
             ) : (
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#F6465D]" />
             )}
             <span>{feedback.message}</span>
           </div>
@@ -121,7 +121,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
 
         {/* Asset Selector */}
         <div className="space-y-2 mb-5">
-          <label className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
+          <label className="text-[11px] font-mono text-[#848E9C] uppercase tracking-wider">
             Select Asset & Receiving Network
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -132,32 +132,32 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 onClick={() => setSelectedKey(a.key)}
                 className={`p-2.5 rounded-xl text-left border text-xs transition-all ${
                   selectedKey === a.key
-                    ? 'bg-gold/15 border-gold text-white font-semibold shadow-sm'
-                    : 'bg-white/[0.02] border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.04]'
+                    ? 'bg-[#F0B90B]/15 border-[#F0B90B] text-[#EAECEF] font-semibold shadow-sm'
+                    : 'bg-[#181A20] border-[#2B313A] text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#242A32]'
                 }`}
               >
-                <div className="font-bold text-white text-xs">{a.name}</div>
-                <div className="text-[10px] text-gold font-mono truncate">{a.network}</div>
+                <div className="font-bold text-[#EAECEF] text-xs">{a.name}</div>
+                <div className="text-[10px] text-[#F0B90B] font-mono truncate">{a.network}</div>
               </button>
             ))}
           </div>
         </div>
 
         {/* QR Code & Address Display */}
-        <div className="p-4 rounded-xl bg-black/60 border border-white/[0.08] space-y-3 mb-5">
+        <div className="p-4 rounded-xl bg-[#181A20] border border-[#2B313A] space-y-3 mb-5">
           <div>
-            <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-mono text-[#848E9C] uppercase tracking-widest mb-1">
               {currentNetwork} Receiving Address
             </div>
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] font-mono text-xs text-white">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E2329] border border-[#2B313A] font-mono text-xs text-[#EAECEF]">
               <span className="truncate pr-2 select-all">{currentAddress}</span>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="shrink-0 p-1.5 rounded-md hover:bg-white/[0.08] text-gold hover:text-gold-light transition-all flex items-center gap-1 text-[11px]"
+                className="shrink-0 p-1.5 rounded-md hover:bg-[#2B313A] text-[#F0B90B] hover:text-[#FCD535] transition-all flex items-center gap-1 text-[11px] font-bold"
                 title="Copy Address"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-glow" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#0ECB81]" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
@@ -165,9 +165,9 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         </div>
 
         {/* Form to Submit Inbound Deposit Proof */}
-        <form onSubmit={handleSubmitDeposit} className="space-y-4 pt-2 border-t border-white/[0.08]">
+        <form onSubmit={handleSubmitDeposit} className="space-y-4 pt-2 border-t border-[#2B313A]">
           <div>
-            <label className="block text-xs font-mono text-white/60 mb-1">
+            <label className="block text-xs font-mono text-[#848E9C] mb-1">
               Deposit Amount ($ USD)
             </label>
             <input
@@ -177,12 +177,12 @@ export const DepositModal: React.FC<DepositModalProps> = ({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 5000.00"
-              className="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-mono"
+              className="w-full px-4 py-2.5 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#EAECEF] focus:border-[#F0B90B] focus:outline-none text-sm font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-white/60 mb-1">
+            <label className="block text-xs font-mono text-[#848E9C] mb-1">
               Blockchain Transaction Hash / Reference (Optional)
             </label>
             <input
@@ -190,19 +190,19 @@ export const DepositModal: React.FC<DepositModalProps> = ({
               value={txHash}
               onChange={(e) => setTxHash(e.target.value)}
               placeholder="0x... or TRC20 TxID"
-              className="w-full px-4 py-2.5 rounded-xl glass-input text-xs font-mono"
+              className="w-full px-4 py-2.5 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#EAECEF] focus:border-[#F0B90B] focus:outline-none text-xs font-mono"
             />
           </div>
 
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-[11px] font-mono text-white/50 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-glow shrink-0" />
+          <div className="p-3 rounded-xl bg-[#181A20] border border-[#2B313A] text-[11px] font-mono text-[#848E9C] flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#0ECB81] shrink-0" />
             <span>Incoming deposits are verified by the settlement officer and credited upon 1 confirmation.</span>
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3.5 rounded-xl bg-gold hover:bg-gold-light text-[#0b0d0d] font-bold text-xs font-mono uppercase tracking-wider transition-all shadow-lg shadow-gold/20 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs font-mono uppercase tracking-wider transition-all shadow-md shadow-[#F0B90B]/15 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
           >
             <Send className="w-4 h-4" />
             <span>{isSubmitting ? 'Submitting Receipt...' : 'Notify Settlement Desk ↗'}</span>

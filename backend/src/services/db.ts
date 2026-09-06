@@ -500,19 +500,48 @@ class DatabaseService {
     return this.data.investments.filter(i => i.status === 'active');
   }
 
+  getEscrowInvestments(): Investment[] {
+    return this.data.investments.filter(i => i.status === 'active' || i.status === 'matured');
+  }
+
   createInvestment(investment: Investment): Investment {
     this.data.investments.push(investment);
     this.save();
     return investment;
   }
 
-  completeInvestment(investmentId: string): void {
+  matureInvestment(investmentId: string): Investment | null {
+    const inv = this.data.investments.find(i => i.id === investmentId);
+    if (inv && inv.status === 'active') {
+      inv.status = 'matured';
+      this.save();
+      return inv;
+    }
+    return inv || null;
+  }
+
+  completeInvestment(investmentId: string, disbursedBy?: string): Investment | null {
     const inv = this.data.investments.find(i => i.id === investmentId);
     if (inv) {
       inv.status = 'completed';
       inv.completedAt = new Date().toISOString();
+      if (disbursedBy) inv.disbursedBy = disbursedBy;
       this.save();
+      return inv;
     }
+    return null;
+  }
+
+  cancelInvestment(investmentId: string, reason?: string): Investment | null {
+    const inv = this.data.investments.find(i => i.id === investmentId);
+    if (inv && inv.status !== 'completed' && inv.status !== 'cancelled') {
+      inv.status = 'cancelled';
+      inv.cancelledAt = new Date().toISOString();
+      inv.cancellationReason = reason || 'Breach of investment terms and conditions';
+      this.save();
+      return inv;
+    }
+    return null;
   }
 
   // --- Transactions ---
@@ -677,7 +706,7 @@ class DatabaseService {
   getAdminMetrics(): AdminMetrics {
     const totalUsers = this.data.users.filter(u => u.role !== 'admin').length;
     const totalPlatformNAV = this.data.users.reduce((acc, u) => acc + (u.balance || 0), 0);
-    const activeInvestments = this.data.investments.filter(i => i.status === 'active');
+    const activeInvestments = this.data.investments.filter(i => i.status === 'active' || i.status === 'matured');
     const totalLockedInEscrow = activeInvestments.reduce((acc, i) => acc + (i.amount || 0), 0);
     const totalYieldDisbursed = this.data.transactions
       .filter(t => t.type === 'yield_payout' && t.status === 'completed')

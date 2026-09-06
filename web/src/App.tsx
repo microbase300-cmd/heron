@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import MobileAppModal from './components/MobileAppModal'
 import LegalModal, { type LegalDocType } from './components/LegalModal'
+import CustomCursor from './components/CustomCursor'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -311,6 +312,7 @@ export default function PublicLayout() {
 
   return (
     <>
+      <CustomCursor />
       <ScrollToTop />
       <Navbar />
 

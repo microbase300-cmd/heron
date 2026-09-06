@@ -52,14 +52,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="flex flex-col justify-between h-full select-none">
       <div>
         {/* Brand Header */}
-        <div className="p-5 md:p-6 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="p-5 md:p-6 border-b border-[#2B313A] flex items-center justify-between">
           <a href="http://localhost:3000" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg border border-gold/40 bg-gold/10 flex items-center justify-center text-gold font-serif text-lg font-bold shadow-lg shadow-gold/10">
+            <div className="w-9 h-9 rounded-lg bg-[#F0B90B] flex items-center justify-center text-[#181A20] font-sans text-lg font-black shadow-md shadow-[#F0B90B]/20">
               H
             </div>
             <div>
-              <div className="font-extrabold tracking-widest text-xs text-white">HERON ASSETS</div>
-              <div className="text-[10px] tracking-widest uppercase text-gold font-mono">Institutional Web3</div>
+              <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans">HERON ASSETS</div>
+              <div className="text-[9px] tracking-wider uppercase text-[#F0B90B] font-sans font-bold mt-0.5">Binance Pro Engine</div>
             </div>
           </a>
 
@@ -67,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] md:hidden transition-all"
+              className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] md:hidden transition-all"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -77,12 +77,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Balance Quick Widget */}
         {user && (
-          <div className="px-4 py-3.5 mx-3 my-3 md:mx-4 md:my-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-gold/20 transition-all">
-            <div className="flex items-center justify-between text-[11px] text-white/50 uppercase font-mono mb-1">
+          <div className="px-4 py-3.5 mx-3 my-3 md:mx-4 md:my-4 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/40 transition-all">
+            <div className="flex items-center justify-between text-[11px] text-[#848E9C] uppercase font-mono mb-1">
               <span>Available Liquidity</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-glow animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-pulse"></span>
             </div>
-            <div className="text-xl font-serif font-bold text-white tracking-tight">
+            <div className="text-lg font-sans font-bold text-[#EAECEF] tracking-tight">
               ${user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="mt-2.5 flex items-center gap-2">
@@ -91,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onOpenDeposit();
                   if (onClose) onClose();
                 }}
-                className="w-full py-1.5 px-3 rounded-lg bg-gold hover:bg-gold-light text-[#0b0d0d] text-xs font-semibold tracking-wide transition-all shadow-md shadow-gold/20 flex items-center justify-center gap-1.5"
+                className="w-full py-1.5 px-3 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] text-xs font-bold tracking-wide transition-all shadow-md shadow-[#F0B90B]/15 flex items-center justify-center gap-1.5 active:scale-95"
               >
                 <ArrowDownLeft className="w-3.5 h-3.5" />
                 Deposit
@@ -109,21 +109,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium transition-all ${
                   active 
-                    ? 'bg-gold/15 text-gold border border-gold/30 shadow-md shadow-gold/5' 
-                    : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                    ? 'bg-[#F0B90B]/10 text-[#F0B90B] border-l-2 border-l-[#F0B90B] font-semibold' 
+                    : 'text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#1E2329]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${active ? 'text-gold' : 'text-white/50'}`} />
+                  <Icon className={`w-4 h-4 ${active ? 'text-[#F0B90B]' : 'text-[#848E9C]'}`} />
                   <span className="tracking-wide">{item.label}</span>
                 </div>
                 {item.badge && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold uppercase ${
                     active 
-                      ? 'bg-gold text-[#0b0d0d]' 
-                      : 'bg-white/[0.06] text-gold border border-gold/20'
+                      ? 'bg-[#F0B90B] text-[#181A20]' 
+                      : 'bg-[#2B313A] text-[#848E9C] border border-[#363D47]'
                   }`}>
                     {item.badge}
                   </span>
@@ -135,10 +135,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Footer Area */}
-      <div className="p-4 border-t border-white/[0.08] space-y-2.5">
+      <div className="p-4 border-t border-[#2B313A] space-y-2.5">
         <a 
           href="http://localhost:3000" 
-          className="flex items-center justify-between p-2 rounded-xl text-xs text-white/50 hover:text-gold hover:bg-white/[0.03] transition-all group"
+          className="flex items-center justify-between p-2 rounded-lg text-xs text-[#848E9C] hover:text-[#F0B90B] hover:bg-[#1E2329] transition-all group"
         >
           <div className="flex items-center gap-2.5">
             <ExternalLink className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
@@ -148,15 +148,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </a>
 
         {user && (
-          <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] px-2">
+          <div className="flex items-center justify-between pt-2 border-t border-[#2B313A] px-2">
             <div className="overflow-hidden pr-2">
-              <div className="text-xs font-semibold text-white truncate">{user.name}</div>
-              <div className="text-[10px] text-white/40 font-mono truncate">{user.email}</div>
+              <div className="text-xs font-semibold text-[#EAECEF] truncate">{user.name}</div>
+              <div className="text-[10px] text-[#848E9C] font-mono truncate">{user.email}</div>
             </div>
             <button 
               onClick={onLogout}
               title="Sign Out"
-              className="p-1.5 rounded-lg text-white/40 hover:text-rose-400 hover:bg-white/[0.04] transition-all"
+              className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#F6465D] hover:bg-[#2B313A] transition-all"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -169,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       {/* Desktop Sidebar (hidden on mobile) */}
-      <aside className="hidden md:flex w-64 bg-[#080b09] border-r border-white/[0.08] flex-col justify-between shrink-0 h-full z-20">
+      <aside className="hidden md:flex w-64 bg-[#181A20] border-r border-[#2B313A] flex-col justify-between shrink-0 h-full z-20">
         {content}
       </aside>
 
@@ -182,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onClose}
           />
           {/* Drawer container */}
-          <aside className="relative w-4/5 max-w-xs bg-[#080b09] border-r border-gold/20 h-full flex flex-col z-50 shadow-2xl animate-in slide-in-from-left duration-200">
+          <aside className="relative w-4/5 max-w-xs bg-[#181A20] border-r border-[#2B313A] h-full flex flex-col z-50 shadow-2xl animate-in slide-in-from-left duration-200">
             {content}
           </aside>
         </div>

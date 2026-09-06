@@ -18,10 +18,10 @@ router.get('/summary', requireAuth, (req: AuthRequest, res: Response): void => {
   const investments = db.getInvestmentsByUserId(userId);
   const transactions = db.getTransactionsByUserId(userId);
 
-  const activeInvestments = investments.filter(i => i.status === 'active');
+  const activeInvestments = investments.filter(i => i.status === 'active' || i.status === 'matured');
   const lockedInInvestments = activeInvestments.reduce((sum, i) => sum + i.amount, 0);
   const totalProfitAccrued = investments
-    .filter(i => i.status === 'completed')
+    .filter(i => i.status === 'completed' || i.status === 'matured')
     .reduce((sum, i) => sum + i.expectedProfit, 0);
 
   const totalDeposited = transactions

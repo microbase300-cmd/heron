@@ -145,46 +145,46 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-            <Bell className="w-5 h-5 text-gold" />
+          <h2 className="font-sans text-xl font-bold text-[#EAECEF] flex items-center gap-2 tracking-tight">
+            <Bell className="w-5 h-5 text-[#F0B90B]" />
             Executive Communications & Notification Center
           </h2>
-          <p className="text-xs text-white/50 font-mono">
+          <p className="text-xs text-[#848E9C] font-mono">
             Broadcast platform-wide updates or dispatch encrypted direct messages to client dashboards.
           </p>
         </div>
 
         <button
           onClick={fetchAllData}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/80 hover:text-white text-xs font-mono transition-all self-start sm:self-auto"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-[#848E9C] hover:text-[#EAECEF] text-xs font-mono transition-all self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-gold' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#F0B90B]' : ''}`} />
           <span>Refresh Ledger</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Compose Form */}
-        <div className="lg:col-span-5 glass-panel p-5 rounded-2xl border border-white/[0.08] space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
-            <Send className="w-4 h-4 text-gold" />
-            <h3 className="text-sm font-semibold text-white">Compose Dispatch</h3>
+        <div className="lg:col-span-5 glass-panel p-5 rounded-xl border border-[#2B313A] bg-[#1E2329] space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-[#2B313A]">
+            <Send className="w-4 h-4 text-[#F0B90B]" />
+            <h3 className="text-sm font-semibold text-[#EAECEF]">Compose Dispatch</h3>
           </div>
 
           <form onSubmit={handleSend} className="space-y-4">
             {/* Recipient Audience Selector */}
             <div>
-              <label className="block text-[11px] font-mono text-white/50 mb-1.5">
+              <label className="block text-[11px] font-mono text-[#848E9C] mb-1.5">
                 Target Audience
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setRecipientType('broadcast')}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-mono transition-all border ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-mono transition-all border ${
                     recipientType === 'broadcast'
-                      ? 'bg-gold/20 text-gold border-gold/40 font-bold'
-                      : 'bg-white/[0.03] text-white/60 border-white/[0.06] hover:text-white'
+                      ? 'bg-[#F0B90B]/15 text-[#F0B90B] border-[#F0B90B]/40 font-bold'
+                      : 'bg-[#2B313A] text-[#848E9C] border-[#363D47] hover:text-[#EAECEF]'
                   }`}
                 >
                   <Megaphone className="w-3.5 h-3.5" />
@@ -194,10 +194,10 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                 <button
                   type="button"
                   onClick={() => setRecipientType('direct')}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-mono transition-all border ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-mono transition-all border ${
                     recipientType === 'direct'
-                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-bold'
-                      : 'bg-white/[0.03] text-white/60 border-white/[0.06] hover:text-white'
+                      ? 'bg-[#387bf0]/20 text-[#387bf0] border-[#387bf0]/40 font-bold'
+                      : 'bg-[#2B313A] text-[#848E9C] border-[#363D47] hover:text-[#EAECEF]'
                   }`}
                 >
                   <Mail className="w-3.5 h-3.5" />
@@ -208,9 +208,9 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
 
             {/* Direct Investor Selection Area */}
             {recipientType === 'direct' && (
-              <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/30 space-y-3">
+              <div className="p-3.5 rounded-xl bg-[#2B313A]/60 border border-[#387bf0]/30 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-cyan-300 font-bold flex items-center gap-1">
+                  <span className="text-[11px] font-mono text-[#387bf0] font-bold flex items-center gap-1">
                     <UserIcon className="w-3.5 h-3.5" />
                     Target Investor ({activeInvestors.length} Registered)
                   </span>
@@ -218,21 +218,21 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                     <button
                       type="button"
                       onClick={() => setUserSelectMode('picker')}
-                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'picker' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-white/40 hover:text-white'}`}
+                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'picker' ? 'bg-[#387bf0]/30 text-[#387bf0] font-bold' : 'text-[#848E9C] hover:text-[#EAECEF]'}`}
                     >
                       Cards
                     </button>
                     <button
                       type="button"
                       onClick={() => setUserSelectMode('dropdown')}
-                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'dropdown' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-white/40 hover:text-white'}`}
+                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'dropdown' ? 'bg-[#387bf0]/30 text-[#387bf0] font-bold' : 'text-[#848E9C] hover:text-[#EAECEF]'}`}
                     >
                       Dropdown
                     </button>
                     <button
                       type="button"
                       onClick={() => setUserSelectMode('manual')}
-                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'manual' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-white/40 hover:text-white'}`}
+                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'manual' ? 'bg-[#387bf0]/30 text-[#387bf0] font-bold' : 'text-[#848E9C] hover:text-[#EAECEF]'}`}
                     >
                       Manual
                     </button>
@@ -241,21 +241,21 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
 
                 {/* Selected User Header Banner */}
                 {selectedUserEmail ? (
-                  <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between">
+                  <div className="p-2.5 rounded-lg bg-[#0ECB81]/10 border border-[#0ECB81]/30 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-[#0ECB81]/20 border border-[#0ECB81]/40 flex items-center justify-center text-[#0ECB81] font-bold text-xs">
                         {selectedInvestor ? (selectedInvestor.name ? selectedInvestor.name[0].toUpperCase() : 'U') : '@'}
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-[#EAECEF] flex items-center gap-1.5">
                           <span>{selectedInvestor?.name || 'Target Investor'}</span>
                           {selectedInvestor && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-gold/10 text-gold border border-gold/20">
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30">
                               ${(selectedInvestor.balance ?? 0).toLocaleString()}
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] font-mono text-emerald-300 truncate max-w-[200px]">
+                        <div className="text-[10px] font-mono text-[#0ECB81] truncate max-w-[200px]">
                           {selectedUserEmail}
                         </div>
                       </div>
@@ -264,7 +264,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                     <button
                       type="button"
                       onClick={() => setSelectedUserEmail('')}
-                      className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all text-[11px] font-mono flex items-center gap-1"
+                      className="p-1 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all text-[11px] font-mono flex items-center gap-1"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -280,23 +280,23 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                         value={investorSearch}
                         onChange={(e) => setInvestorSearch(e.target.value)}
                         placeholder="Search investor by name, email, or ID..."
-                        className="w-full pl-8 pr-8 py-1.5 rounded-lg glass-input text-xs font-mono text-white"
+                        className="w-full pl-8 pr-8 py-1.5 rounded-lg glass-input text-xs font-mono text-[#EAECEF] bg-[#2B313A] border-[#363D47]"
                       />
-                      <Search className="w-3 h-3 text-white/40 absolute left-2.5" />
+                      <Search className="w-3 h-3 text-[#848E9C] absolute left-2.5" />
                       {investorSearch && (
                         <button
                           type="button"
                           onClick={() => setInvestorSearch('')}
-                          className="absolute right-2.5 text-white/40 hover:text-white text-xs"
+                          className="absolute right-2.5 text-[#848E9C] hover:text-[#EAECEF] text-xs"
                         >
                           ✕
                         </button>
                       )}
                     </div>
 
-                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-cyan-500/20">
+                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-[#363D47]">
                       {filteredInvestors.length === 0 ? (
-                        <div className="p-4 text-center text-xs font-mono text-white/40 bg-white/[0.02] rounded-lg">
+                        <div className="p-4 text-center text-xs font-mono text-[#848E9C] bg-[#2B313A]/40 rounded-lg">
                           No matching investors found. Tap 'Manual' to type an address.
                         </div>
                       ) : (
@@ -307,35 +307,35 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                               key={u.id}
                               type="button"
                               onClick={() => setSelectedUserEmail(u.email)}
-                              className={`w-full p-2 rounded-xl text-left transition-all flex items-center justify-between border ${
+                              className={`w-full p-2 rounded-lg text-left transition-all flex items-center justify-between border ${
                                 isSelected
-                                  ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-sm shadow-cyan-500/20'
-                                  : 'bg-white/[0.03] border-white/[0.06] hover:border-cyan-500/30 text-white/80 hover:text-white'
+                                  ? 'bg-[#387bf0]/20 border-[#387bf0] text-white shadow-sm shadow-[#387bf0]/20'
+                                  : 'bg-[#2B313A] border-[#363D47] hover:border-[#387bf0]/40 text-[#848E9C] hover:text-[#EAECEF]'
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate">
-                                <div className="w-6 h-6 rounded-lg bg-white/[0.08] flex items-center justify-center text-[10px] font-bold text-gold shrink-0">
+                                <div className="w-6 h-6 rounded-lg bg-[#181A20] flex items-center justify-center text-[10px] font-bold text-[#F0B90B] shrink-0">
                                   {u.name ? u.name[0].toUpperCase() : 'U'}
                                 </div>
                                 <div className="truncate">
-                                  <div className="text-xs font-semibold text-white truncate flex items-center gap-1.5">
+                                  <div className="text-xs font-semibold text-[#EAECEF] truncate flex items-center gap-1.5">
                                     <span>{u.name}</span>
-                                    <span className="text-[10px] font-mono text-gold/80 font-normal">
+                                    <span className="text-[10px] font-mono text-[#F0B90B] font-normal">
                                       ${(u.balance ?? 0).toLocaleString()}
                                     </span>
                                   </div>
-                                  <div className="text-[10px] font-mono text-white/50 truncate">
+                                  <div className="text-[10px] font-mono text-[#848E9C] truncate">
                                     {u.email}
                                   </div>
                                 </div>
                               </div>
 
                               {isSelected ? (
-                                <span className="p-1 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
+                                <span className="p-1 rounded-full bg-[#0ECB81]/20 text-[#0ECB81] shrink-0">
                                   <Check className="w-3.5 h-3.5" />
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.05] text-white/50 shrink-0 hover:text-cyan-300">
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#181A20] text-[#848E9C] shrink-0 hover:text-[#387bf0]">
                                   Select
                                 </span>
                               )}
@@ -354,19 +354,19 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                       <select
                         value={selectedUserEmail}
                         onChange={(e) => setSelectedUserEmail(e.target.value)}
-                        className="w-full glass-input text-xs font-mono py-2 pl-3 pr-8 text-white rounded-xl bg-[#0c1412] border-cyan-500/40 appearance-none cursor-pointer"
+                        className="w-full glass-input text-xs font-mono py-2 pl-3 pr-8 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47] appearance-none cursor-pointer"
                         required={recipientType === 'direct'}
                       >
-                        <option value="" className="bg-[#0b1210] text-white/60">
+                        <option value="" className="bg-[#1E2329] text-[#848E9C]">
                           -- Choose Investor ({activeInvestors.length} available) --
                         </option>
                         {activeInvestors.map((u) => (
-                          <option key={u.id} value={u.email} className="bg-[#0b1210] text-white py-2">
+                          <option key={u.id} value={u.email} className="bg-[#1E2329] text-[#EAECEF] py-2">
                             {u.name} • {u.email} (Bal: ${(u.balance ?? 0).toLocaleString()})
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-3 pointer-events-none" />
+                      <ChevronDown className="w-4 h-4 text-[#848E9C] absolute right-3 top-3 pointer-events-none" />
                     </div>
                   </div>
                 )}
@@ -379,7 +379,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                       value={selectedUserEmail}
                       onChange={(e) => setSelectedUserEmail(e.target.value)}
                       placeholder="e.g. investor@vanceholdings.com"
-                      className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl bg-[#0c1412] border-cyan-500/40"
+                      className="w-full glass-input text-xs font-mono py-2 px-3 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47]"
                       required={recipientType === 'direct'}
                     />
                   </div>
@@ -389,15 +389,15 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
 
             {/* Alert Priority / Type */}
             <div>
-              <label className="block text-[11px] font-mono text-white/50 mb-1.5">
+              <label className="block text-[11px] font-mono text-[#848E9C] mb-1.5">
                 Priority & Tone
               </label>
               <div className="grid grid-cols-4 gap-1.5">
                 {[
-                  { id: 'announcement', label: 'Broadcast', color: 'text-gold' },
-                  { id: 'info', label: 'Info', color: 'text-cyan-400' },
-                  { id: 'alert', label: 'Alert', color: 'text-amber-400' },
-                  { id: 'success', label: 'Success', color: 'text-emerald-400' },
+                  { id: 'announcement', label: 'Broadcast', color: 'text-[#F0B90B]' },
+                  { id: 'info', label: 'Info', color: 'text-[#387bf0]' },
+                  { id: 'alert', label: 'Alert', color: 'text-[#F0B90B]' },
+                  { id: 'success', label: 'Success', color: 'text-[#0ECB81]' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -405,8 +405,8 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                     onClick={() => setType(item.id as any)}
                     className={`py-1.5 px-2 rounded-lg text-[11px] font-mono capitalize transition-all border ${
                       type === item.id
-                        ? 'bg-white/[0.1] border-white/30 font-bold ' + item.color
-                        : 'bg-white/[0.02] border-white/[0.05] text-white/50 hover:text-white'
+                        ? 'bg-[#2B313A] border-[#F0B90B]/50 font-bold ' + item.color
+                        : 'bg-[#2B313A]/50 border-[#363D47] text-[#848E9C] hover:text-[#EAECEF]'
                     }`}
                   >
                     {item.label}
@@ -417,7 +417,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
 
             {/* Sender Name */}
             <div>
-              <label className="block text-[11px] font-mono text-white/50 mb-1">
+              <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                 Sender Signature
               </label>
               <input
@@ -425,13 +425,13 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                 value={sender}
                 onChange={(e) => setSender(e.target.value)}
                 placeholder="e.g. Chief Risk Officer"
-                className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
+                className="w-full glass-input text-xs font-mono py-2 px-3 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47]"
               />
             </div>
 
             {/* Title */}
             <div>
-              <label className="block text-[11px] font-mono text-white/50 mb-1">
+              <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                 Notification Headline
               </label>
               <input
@@ -439,14 +439,14 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Settlement Confirmation & Security Notice"
-                className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
+                className="w-full glass-input text-xs font-mono py-2 px-3 text-[#EAECEF] rounded-lg bg-[#2B313A] border-[#363D47]"
                 required
               />
             </div>
 
             {/* Message Body */}
             <div>
-              <label className="block text-[11px] font-mono text-white/50 mb-1">
+              <label className="block text-[11px] font-mono text-[#848E9C] mb-1">
                 Detailed Message Content
               </label>
               <textarea
@@ -454,7 +454,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Compose the announcement or direct message to the user..."
                 rows={4}
-                className="w-full glass-input text-xs font-sans py-2 px-3 text-white rounded-xl resize-none text-white"
+                className="w-full glass-input text-xs font-sans py-2 px-3 rounded-lg resize-none text-[#EAECEF] bg-[#2B313A] border-[#363D47]"
                 required
               />
             </div>
@@ -462,16 +462,16 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
             {/* Feedback Alert */}
             {feedback && (
               <div
-                className={`p-3 rounded-xl text-xs font-mono flex items-center gap-2 ${
+                className={`p-3 rounded-lg text-xs font-mono flex items-center gap-2 ${
                   feedback.type === 'success'
-                    ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                    ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                    : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
                 }`}
               >
                 {feedback.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0ECB81]" />
                 ) : (
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-[#F6465D]" />
                 )}
                 <span>{feedback.message}</span>
               </div>
@@ -481,7 +481,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
             <button
               type="submit"
               disabled={sending}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] font-mono font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-gold/20 disabled:opacity-50 transition-all"
+              className="w-full py-2.5 rounded-lg btn-binance font-mono font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#F0B90B]/20 disabled:opacity-50 transition-all"
             >
               <Send className="w-4 h-4" />
               <span>{sending ? 'Transmitting Dispatch...' : 'Dispatch Message Now'}</span>
@@ -490,67 +490,67 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
         </div>
 
         {/* Right: Message Outbox History */}
-        <div className="lg:col-span-7 glass-panel p-5 rounded-2xl border border-white/[0.08] space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+        <div className="lg:col-span-7 glass-panel p-5 rounded-xl border border-[#2B313A] bg-[#1E2329] space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#2B313A]">
             <div className="flex items-center gap-2">
-              <Megaphone className="w-4 h-4 text-gold" />
-              <h3 className="text-sm font-semibold text-white">Platform Dispatch Ledger</h3>
+              <Megaphone className="w-4 h-4 text-[#F0B90B]" />
+              <h3 className="text-sm font-semibold text-[#EAECEF]">Platform Dispatch Ledger</h3>
             </div>
-            <span className="text-xs font-mono text-white/50">{notifications.length} dispatched</span>
+            <span className="text-xs font-mono text-[#848E9C]">{notifications.length} dispatched</span>
           </div>
 
-          <div className="max-h-[560px] overflow-y-auto space-y-3 pr-1 scrollbar-thin scrollbar-thumb-white/10">
+          <div className="max-h-[560px] overflow-y-auto space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#363D47]">
             {loading ? (
-              <div className="p-8 text-center text-white/40 font-mono text-xs">
+              <div className="p-8 text-center text-[#848E9C] font-mono text-xs">
                 Loading communication history...
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-white/40 font-mono text-xs">
+              <div className="p-8 text-center text-[#848E9C] font-mono text-xs">
                 No notification broadcasts sent yet.
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all space-y-2.5"
+                  className="p-4 rounded-lg bg-[#2B313A] border border-[#363D47] hover:border-[#F0B90B]/30 transition-all space-y-2.5"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span
                         className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
                           n.type === 'announcement'
-                            ? 'bg-gold/20 text-gold border border-gold/30'
+                            ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30'
                             : n.type === 'alert'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30'
                             : n.type === 'success'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                            ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                            : 'bg-[#387bf0]/15 text-[#387bf0] border border-[#387bf0]/30'
                         }`}
                       >
                         {n.type}
                       </span>
 
                       {n.targetEmail ? (
-                        <span className="text-[11px] font-mono text-cyan-300 flex items-center gap-1 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-500/30">
+                        <span className="text-[11px] font-mono text-[#387bf0] flex items-center gap-1 bg-[#387bf0]/10 px-2 py-0.5 rounded border border-[#387bf0]/30">
                           <UserIcon className="w-3 h-3" />
                           {n.targetEmail}
                         </span>
                       ) : (
-                        <span className="text-[11px] font-mono text-white/70 flex items-center gap-1 bg-white/[0.05] px-2 py-0.5 rounded border border-white/[0.08]">
-                          <Users className="w-3 h-3 text-gold" />
+                        <span className="text-[11px] font-mono text-[#EAECEF] flex items-center gap-1 bg-[#181A20] px-2 py-0.5 rounded border border-[#363D47]">
+                          <Users className="w-3 h-3 text-[#F0B90B]" />
                           All Platform Investors
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-white/40">
+                      <span className="text-[10px] font-mono text-[#848E9C]">
                         {new Date(n.createdAt).toLocaleString()}
                       </span>
                       <button
                         onClick={() => handleDelete(n.id)}
                         disabled={deletingId === n.id}
-                        className="p-1 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                        className="p-1 rounded-lg text-[#848E9C] hover:text-[#F6465D] hover:bg-[#F6465D]/10 transition-all"
                         title="Delete notification"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -559,12 +559,12 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-white mb-1">{n.title}</h4>
-                    <p className="text-xs text-white/70 leading-relaxed font-sans">{n.message}</p>
+                    <h4 className="text-xs font-bold text-[#EAECEF] mb-1">{n.title}</h4>
+                    <p className="text-xs text-[#848E9C] leading-relaxed font-sans">{n.message}</p>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-white/40 pt-1 border-t border-white/[0.04]">
-                    <span>Sender: <strong className="text-white/70">{n.sender}</strong></span>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#848E9C] pt-1 border-t border-[#363D47]">
+                    <span>Sender: <strong className="text-[#EAECEF]">{n.sender}</strong></span>
                     <span>Read by: {n.readBy?.length || 0} user{n.readBy?.length === 1 ? '' : 's'}</span>
                   </div>
                 </div>
@@ -576,3 +576,4 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
     </div>
   );
 };
+

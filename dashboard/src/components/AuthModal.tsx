@@ -94,10 +94,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
       <div className="relative w-full max-w-md rounded-2xl glass-card-featured border-gold/40 p-8 shadow-2xl shadow-black">
         {/* Logo */}
         <div className="text-center space-y-2 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/40 flex items-center justify-center text-gold font-serif text-2xl font-bold mx-auto shadow-lg shadow-gold/15">
+          <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/40 flex items-center justify-center text-gold font-sans text-2xl font-black mx-auto shadow-lg shadow-gold/15">
             H
           </div>
-          <h3 className="font-serif text-2xl font-bold text-white tracking-tight">
+          <h3 className="font-sans text-2xl font-bold text-white tracking-tight">
             {mode === 'login' ? 'Client Access' : registerStep === 'otp' ? 'Security Verification' : 'Create Investor Account'}
           </h3>
           <p className="text-xs text-white/50 font-mono">
@@ -265,7 +265,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
           <form onSubmit={handleCompleteRegistration} className="space-y-4">
             <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center space-y-1">
               <div className="text-[11px] font-mono text-white/50">Verification Code Sent To:</div>
-              <div className="text-xs font-serif font-bold text-gold">{email}</div>
+              <div className="text-xs font-sans font-bold text-gold">{email}</div>
               {devOtp && (
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-mono">
                   <span>Security Code:</span>
