@@ -1,11 +1,11 @@
 {
-  "name": "hexon-dashboard",
+  "name": "heron-dashboard",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npx tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

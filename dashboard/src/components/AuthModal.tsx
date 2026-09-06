@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, User as UserIcon, Sparkles, AlertCircle, KeyRound, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, User as UserIcon, AlertCircle, KeyRound, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
@@ -84,19 +84,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
       onSuccess(res.user);
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.login('alex.vance@vanceholdings.com', 'Heron2026!');
-      onSuccess(res.user);
-    } catch (err: any) {
-      setError(err.message || 'Demo access failed');
     } finally {
       setLoading(false);
     }
@@ -281,7 +268,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
               <div className="text-xs font-serif font-bold text-gold">{email}</div>
               {devOtp && (
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-mono">
-                  <span>Demo Code:</span>
+                  <span>Security Code:</span>
                   <strong>{devOtp}</strong>
                 </div>
               )}
@@ -323,20 +310,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
             </div>
           </form>
         )}
-
-        {/* Instant Demo Account Button */}
-        <div className="mt-6 pt-4 border-t border-white/[0.08] text-center space-y-2">
-          <div className="text-[11px] font-mono text-white/40">Looking to review the platform immediately?</div>
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] hover:border-gold/40 text-gold text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>One-Click Institutional Demo Login</span>
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -40,7 +40,7 @@ export const App: React.FC = () => {
         const meRes = await api.getMe();
         setUser(meRes.user);
       } catch {
-        // If not logged in, prompt auth modal or allow demo
+        // If not logged in, prompt auth modal
         setIsAuthOpen(true);
       }
     };

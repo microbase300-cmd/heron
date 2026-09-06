@@ -29,6 +29,8 @@ This document is the **single source of truth** for all errors reported, bugs id
 8. [BUG-008: Git Index Pollution from Build Artifacts & Node Modules](#bug-008-git-index-pollution-from-build-artifacts--node-modules)
 9. [BUG-009: Missing Brand Identity Onboarding Animation](#bug-009-missing-brand-identity-onboarding-animation)
 10. [BUG-010: Zero-Balance Account Initialization Inconsistency](#bug-010-zero-balance-account-initialization-inconsistency)
+11. [BUG-011: TypeScript Compilation Execution Discrepancy (`tsc` vs `npx tsc`)](#bug-011-typescript-compilation-execution-discrepancy-tsc-vs-npx-tsc)
+12. [BUG-012: Residual Demo Banners & Autofill Buttons Compromising Production Presentation](#bug-012-residual-demo-banners--autofill-buttons-compromising-production-presentation)
 
 ---
 
@@ -221,3 +223,30 @@ This document is the **single source of truth** for all errors reported, bugs id
     ```
 - **Regression Prevention Rule**:
   - *Never assign initial positive balances to newly created user wallets. All capital inflows must originate from verified deposit approvals.*
+
+---
+
+### BUG-011: TypeScript Compilation Execution Discrepancy (`tsc` vs `npx tsc`)
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `backend/package.json` & `dashboard/package.json`
+- **Symptom**: Running `npm run build` in backend and dashboard threw `'tsc' is not recognized as an internal or external command` or invoked deprecated npm `tsc` wrapper.
+- **Root Cause**: Windows shell execution failed to locate the local `node_modules/.bin/tsc` without explicit npm package resolution.
+- **Exact Resolution**:
+  - Configured `scripts.build` to invoke `npx tsc` with local project dependencies.
+  - Ran `npm install` in `dashboard/` and `backend/` to ensure all `@types/react` and TypeScript compiler headers are locally linked.
+- **Regression Prevention Rule**:
+  - *Ensure TypeScript build scripts cleanly resolve against project-local TypeScript binaries.*
+
+---
+
+### BUG-012: Residual Demo Banners & Autofill Buttons Compromising Production Presentation
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `admin/src/components/AdminLogin.tsx`, `dashboard/src/components/AuthModal.tsx`, `mobile/App.tsx`
+- **Symptom**: Public-facing web and mobile screens displayed "Fill Demo Account", "One-Click Demo Login", and prefilled default root credentials.
+- **Root Cause**: Development scaffolding remained active in frontend components.
+- **Exact Resolution**:
+  - Removed all demo login buttons, demo reminders, and auto-fill helper tags from UI screens.
+  - Moved all test credentials to a dedicated documentation matrix: [`TESTING_CREDENTIALS.md`](./TESTING_CREDENTIALS.md).
+  - Renamed user-facing OTP badges from "DEV OTP CODE" to institutional "🛡️ Security Passcode".
+- **Regression Prevention Rule**:
+  - *Never hardcode demo credentials, one-click test logins, or dev badges into production customer-facing UI components.*

@@ -23,6 +23,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.0] - 2026-09-06
+### Added
+- Created dedicated [`TESTING_CREDENTIALS.md`](./TESTING_CREDENTIALS.md) detailing credentials, roles, and verification procedures for Admin and Investor testing.
+- Created `CHANGELOG.md`, `BUGS_AND_ERRORS.md`, and `IMPLEMENTATION_HISTORY.md` for continuous error-free maintenance and regression prevention.
+
+### Changed
+- Standardized package naming across sub-projects: `heron-backend`, `heron-dashboard`, `heron-web`, `heron-admin`.
+- Purged all public-facing demo hints, one-click demo login buttons, and test badges from `admin/`, `dashboard/`, and `mobile/` to reach true institutional production polish.
+- Replaced pre-filled executive credentials in `admin/src/components/AdminLogin.tsx` with standard secure login inputs.
+- Normalized OTP security code UI badges to institutional design (`🛡️ Passcode:` / `Security Code:`).
+
+### Fixed
+- Fixed TypeScript compile script configuration across `backend/` and `dashboard/` to ensure deterministic builds.
+- Cleaned variable and user identifier naming in `backend/src/services/db.ts` to standard production schemas.
+
+---
+
 ## [1.0.0] - 2026-09-05
 **Git Commit**: `4bede3a`  
 **Repository**: [https://github.com/microbase300-cmd/heron.git](https://github.com/microbase300-cmd/heron.git)  

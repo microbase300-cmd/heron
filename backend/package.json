@@ -1,11 +1,11 @@
 {
-  "name": "hexon-backend",
+  "name": "heron-backend",
   "version": "1.0.0",
   "description": "Heron Institutional Crypto Platform Backend API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node src/server.ts",
-    "build": "tsc",
+    "build": "npx tsc",
     "start": "node dist/server.js"
   },
   "dependencies": {

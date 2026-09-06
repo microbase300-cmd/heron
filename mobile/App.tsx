@@ -619,17 +619,6 @@ export default function App() {
                     <Text style={styles.goldBtnText}>Access Portfolio</Text>
                   )}
                 </TouchableOpacity>
-
-                {/* Demo Credentials Helper */}
-                <TouchableOpacity
-                  style={styles.demoFillBtn}
-                  onPress={() => {
-                    setAuthEmail('investor@heroncapital.com');
-                    setAuthPassword('password123');
-                  }}
-                >
-                  <Text style={styles.demoFillText}>Fill Demo Account (investor@heroncapital.com)</Text>
-                </TouchableOpacity>
               </View>
             ) : (
               /* 2-STEP OTP REGISTRATION FORM */
@@ -698,7 +687,7 @@ export default function App() {
                       </Text>
                       {devOtpCode && (
                         <View style={styles.devOtpBadge}>
-                          <Text style={styles.devOtpText}>⚡ DEV OTP CODE: {devOtpCode}</Text>
+                          <Text style={styles.devOtpText}>🛡️ Passcode: {devOtpCode}</Text>
                         </View>
                       )}
                     </View>
@@ -1304,7 +1293,7 @@ export default function App() {
                         style={styles.devPill}
                         onPress={() => setWithdrawOtp(withdrawDevOtp)}
                       >
-                        <Text style={styles.devPillText}>Dev Code: {withdrawDevOtp} (Tap to fill)</Text>
+                        <Text style={styles.devPillText}>🛡️ Passcode: {withdrawDevOtp} (Tap to autofill)</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1547,16 +1536,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#070908',
-  },
-  demoFillBtn: {
-    marginTop: 14,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  demoFillText: {
-    fontSize: 11,
-    color: '#d4af37',
-    textDecorationLine: 'underline',
   },
   otpNotice: {
     backgroundColor: 'rgba(212,175,55,0.08)',

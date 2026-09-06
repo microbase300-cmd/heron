@@ -141,6 +141,18 @@ graph TD
 
 ---
 
+### Phase 8: Production Polish, Demo Elimination & Staging Verification
+1. **Public-Facing Cleanliness**:
+   - Removed all visible "demo" references, one-click demo login buttons, and default credentials reminders across Web Dashboard, Admin Desk, and Mobile App.
+   - Standardized security verification UI: Replaced "DEV OTP CODE" labels with institutional "🛡️ Security Passcode" badges.
+2. **Dedicated Test Access Architecture**:
+   - Created [`TESTING_CREDENTIALS.md`](./TESTING_CREDENTIALS.md) cataloging executive and investor test profiles with dedicated balances and roles.
+3. **Multi-Project Build & Typecheck Standardization**:
+   - Standardized package names: `heron-backend`, `heron-dashboard`, `heron-web`, `heron-admin`.
+   - Verified 100% clean typecheck and production builds across all 5 sub-projects.
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services

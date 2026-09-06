@@ -17,7 +17,7 @@
       "email": "investor@heronassets.com",
       "name": "Alexander Sterling",
       "passwordHash": "$2a$10$s.jCimbuHB3TQwMko5JjDuCmkh65wAXmfcRwlevbzMLOqX6bY5aoC",
-      "balance": 14511.25,
+      "balance": 23751.25,
       "referralCode": "HERON-8821",
       "referredBy": null,
       "createdAt": "2026-08-29T17:18:13.156Z",
@@ -164,10 +164,10 @@
       "durationHours": 72,
       "expectedProfit": 1240,
       "totalPayout": 9240,
-      "status": "active",
+      "status": "completed",
       "startedAt": "2026-09-02T21:18:13.156Z",
       "expiresAt": "2026-09-05T21:18:13.156Z",
-      "completedAt": null
+      "completedAt": "2026-09-05T21:43:57.300Z"
     },
     {
       "id": "inv_std_4120",
@@ -288,6 +288,17 @@
       "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
       "note": "Deposit via TRC-20 Smart Contract",
       "createdAt": "2026-08-30T17:18:13.156Z"
+    },
+    {
+      "id": "tx_6419c863-d7a0-4a4a-91d9-643f591bc843",
+      "userId": "usr_demo_882194",
+      "type": "yield_payout",
+      "amount": 9240,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0xa74289179deeb29657a4dbb275e264a00ff11719b9258d9ced03228b95001566",
+      "note": "Premium Plan Matured: Principal $8,000 + Yield $1,240",
+      "createdAt": "2026-09-05T21:43:57.411Z"
     }
   ],
   "referralCommissions": [

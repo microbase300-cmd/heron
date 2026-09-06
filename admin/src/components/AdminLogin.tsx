@@ -8,8 +8,8 @@ interface AdminLoginProps {
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess }) => {
-  const [email, setEmail] = useState('admin@heronassets.com');
-  const [password, setPassword] = useState('Heron2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,11 +112,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess }) => {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Credentials Reminder */}
-          <div className="mt-6 pt-4 border-t border-white/[0.08] text-[11px] font-mono text-white/40 text-center">
-            Default Root: <span className="text-white/70">admin@heronassets.com</span> • <span className="text-gold">Heron2026!</span>
-          </div>
         </div>
       </div>
     </div>

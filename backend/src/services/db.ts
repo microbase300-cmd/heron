@@ -170,13 +170,13 @@ class DatabaseService {
       adminUser.passwordHash = defaultPasswordHash;
     }
 
-    // 2. Ensure demo investor exists
-    const demoEmail = 'alex.vance@vanceholdings.com';
-    let demoUser = schema.users.find(u => u.email.toLowerCase() === demoEmail);
-    if (!demoUser) {
-      demoUser = {
-        id: 'usr_demo_vance',
-        email: demoEmail,
+    // 2. Ensure primary investor exists
+    const primaryEmail = 'alex.vance@vanceholdings.com';
+    let primaryUser = schema.users.find(u => u.email.toLowerCase() === primaryEmail);
+    if (!primaryUser) {
+      primaryUser = {
+        id: 'usr_investor_vance',
+        email: primaryEmail,
         name: 'Alexander Vance',
         passwordHash: defaultPasswordHash,
         role: 'user',
@@ -186,7 +186,7 @@ class DatabaseService {
         status: 'active',
         createdAt: new Date().toISOString()
       };
-      schema.users.push(demoUser);
+      schema.users.push(primaryUser);
     }
 
     // 3. Ensure all users have roles and statuses
@@ -236,14 +236,14 @@ class DatabaseService {
 
   private seedInitial(): DatabaseSchema {
     const salt = bcrypt.genSaltSync(10);
-    const demoPasswordHash = bcrypt.hashSync('Heron2026!', salt);
+    const initialPasswordHash = bcrypt.hashSync('Heron2026!', salt);
 
     const now = Date.now();
     const adminUser: User = {
       id: 'usr_admin_001',
       email: 'admin@heronassets.com',
       name: 'Chief Risk Officer',
-      passwordHash: demoPasswordHash,
+      passwordHash: initialPasswordHash,
       role: 'admin',
       balance: 0.00,
       referralCode: 'HERON-ADMIN',
@@ -252,11 +252,11 @@ class DatabaseService {
       createdAt: new Date(now - 86400000 * 10).toISOString()
     };
 
-    const demoUser: User = {
-      id: 'usr_demo_882194',
+    const initialInvestor: User = {
+      id: 'usr_investor_001',
       email: 'investor@heronassets.com',
       name: 'Alexander Sterling',
-      passwordHash: demoPasswordHash,
+      passwordHash: initialPasswordHash,
       role: 'user',
       balance: 14500.00,
       referralCode: 'HERON-8821',
@@ -269,7 +269,7 @@ class DatabaseService {
       id: 'usr_downline_49201',
       email: 'clara.vance@genevacapital.ch',
       name: 'Clara Vance',
-      passwordHash: demoPasswordHash,
+      passwordHash: initialPasswordHash,
       role: 'user',
       balance: 3200.00,
       referralCode: 'CLARA-9921',
@@ -280,7 +280,7 @@ class DatabaseService {
 
     const activeInvestment: Investment = {
       id: 'inv_prem_9381',
-      userId: demoUser.id,
+      userId: initialInvestor.id,
       planId: 'premium',
       planName: 'Premium Plan',
       amount: 8000.00,
@@ -296,7 +296,7 @@ class DatabaseService {
 
     const completedInvestment: Investment = {
       id: 'inv_std_4120',
-      userId: demoUser.id,
+      userId: initialInvestor.id,
       planId: 'standard',
       planName: 'Standard Plan',
       amount: 3000.00,
@@ -313,7 +313,7 @@ class DatabaseService {
     const transactions: Transaction[] = [
       {
         id: 'tx_dep_109284',
-        userId: demoUser.id,
+        userId: initialInvestor.id,
         type: 'deposit',
         amount: 25000.00,
         asset: 'USDT',
@@ -324,7 +324,7 @@ class DatabaseService {
       },
       {
         id: 'tx_inv_lock_01',
-        userId: demoUser.id,
+        userId: initialInvestor.id,
         type: 'investment_lock',
         amount: 3000.00,
         asset: 'USD',
@@ -335,7 +335,7 @@ class DatabaseService {
       },
       {
         id: 'tx_yield_01',
-        userId: demoUser.id,
+        userId: initialInvestor.id,
         type: 'yield_payout',
         amount: 3285.00,
         asset: 'USD',
@@ -346,7 +346,7 @@ class DatabaseService {
       },
       {
         id: 'tx_inv_lock_02',
-        userId: demoUser.id,
+        userId: initialInvestor.id,
         type: 'investment_lock',
         amount: 8000.00,
         asset: 'USD',
@@ -357,7 +357,7 @@ class DatabaseService {
       },
       {
         id: 'tx_ref_01',
-        userId: demoUser.id,
+        userId: initialInvestor.id,
         type: 'referral_bonus',
         amount: 320.00,
         asset: 'USD',
@@ -371,7 +371,7 @@ class DatabaseService {
     const referralCommissions: ReferralCommission[] = [
       {
         id: 'ref_comm_101',
-        referrerId: demoUser.id,
+        referrerId: initialInvestor.id,
         referredUserId: referrerUser.id,
         referredUserEmail: referrerUser.email,
         planId: 'standard',
@@ -383,7 +383,7 @@ class DatabaseService {
     ];
 
     return {
-      users: [adminUser, demoUser, referrerUser],
+      users: [adminUser, initialInvestor, referrerUser],
       refreshTokens: [],
       investments: [activeInvestment, completedInvestment],
       transactions,
