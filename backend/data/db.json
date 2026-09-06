@@ -200,6 +200,13 @@
       "tokenHash": "2343139f0a6bda6bddee2e33b409005c30350fde0a8855032519a5bc1d1a5f50",
       "expiresAt": "2026-09-13T10:54:57.431Z",
       "createdAt": "2026-09-06T10:54:57.431Z"
+    },
+    {
+      "id": "rft_a89e1336-f47e-451a-be0f-72bf29ac6990",
+      "userId": "usr_demo_vance",
+      "tokenHash": "bd8fb19f62fb2ea83195a63071c14253088520df7870f798b63253cfd44ed514",
+      "expiresAt": "2026-09-13T11:12:05.785Z",
+      "createdAt": "2026-09-06T11:12:05.785Z"
     }
   ],
   "investments": [
@@ -481,7 +488,9 @@
       "message": "Your withdrawal request of $1,000.00 USDT (TRC-20) has been approved and dispatched to your destination wallet.",
       "type": "success",
       "sender": "Settlement Treasury Desk",
-      "readBy": [],
+      "readBy": [
+        "usr_demo_vance"
+      ],
       "createdAt": "2026-09-06T10:12:35.618Z"
     },
     {

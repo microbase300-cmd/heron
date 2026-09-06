@@ -185,6 +185,21 @@ graph TD
 
 ---
 
+### Phase 12: Plan Deployment Architecture & Navigation Hardening
+1. **Deterministic Plan Tier Fallbacks & State Machine**:
+   - Exported `DEFAULT_PLANS` in `dashboard/src/types/index.ts` encompassing all 4 institutional tiers (`amateur`, `standard`, `premium`, `retirement`).
+   - Initialized `plans` in `dashboard/src/App.tsx` with `DEFAULT_PLANS` to eliminate empty-state render races.
+   - Normalized `api.getPlans()` in `dashboard/src/services/api.ts` with array/envelope adapters and fallback safeguards.
+   - Integrated `api.getPlans()` into `refreshData()` in `dashboard/src/App.tsx` for real-time parameter sync.
+2. **Defensive Component Rendering in `NewInvestmentView.tsx`**:
+   - Upgraded `NewInvestmentView.tsx` with `effectivePlans = (plans && plans.length > 0) ? plans : DEFAULT_PLANS` and safe fallback variables (`planName`, `planDuration`, `planRate`, `planReferralRate`).
+   - Prevented runtime `TypeError` crashes when accessing plan attributes during initial render cycles.
+   - Verified seamless plan switching, capital range validation, and automatic transition to `mandates` view upon investment creation.
+3. **Backend Configuration Persistence**:
+   - Added automated initialization of `schema.planConfigs` in `backend/src/services/db.ts` migration and getter handlers.
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services

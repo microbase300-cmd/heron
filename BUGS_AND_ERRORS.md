@@ -34,6 +34,7 @@ This document is the **single source of truth** for all errors reported, bugs id
 13. [BUG-013: Admin Broadcast & Direct Messaging Investor Dropdown List Empty / Unrendered](#bug-013-admin-broadcast--direct-messaging-investor-dropdown-list-empty--unrendered)
 14. [BUG-014: High-Priority Message Visibility & Notification Detail Accessibility](#bug-014-high-priority-message-visibility--notification-detail-accessibility)
 15. [BUG-015: Mobile Pop-Up Modal Bottom-Sheet Anchor Misalignment](#bug-015-mobile-pop-up-modal-bottom-sheet-anchor-misalignment)
+16. [BUG-016: Investor Dashboard Plan Deployment Navigation & Undefined State Crash](#bug-016-investor-dashboard-plan-deployment-navigation--undefined-state-crash)
 
 ---
 
@@ -302,3 +303,24 @@ This document is the **single source of truth** for all errors reported, bugs id
   - Reinforced Web Dashboard modal overlay centering with `z-[99999]` and `mx-auto my-auto`.
 - **Regression Prevention Rule**:
   - *Never reuse bottom-drawer modal overlays for alert/pop-up dialogs. Always use dedicated centered overlay styles (`justifyContent: 'center'`, `alignItems: 'center'`).*
+
+---
+
+### BUG-016: Investor Dashboard Plan Deployment Navigation & Undefined State Crash
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `dashboard/src/App.tsx`, `dashboard/src/components/NewInvestmentView.tsx`, `dashboard/src/services/api.ts`, and `backend/src/services/db.ts`
+- **Symptom**: In the Investor Web Dashboard, clicking "Open Mandate" from the Sidebar/Overview or clicking "Deploy Capital Into Plans ↗" in the Active Mandates empty state failed to open the plan deployment screen, preventing investors from selecting or activating investment plans.
+- **Root Cause**:
+  1. `dashboard/src/App.tsx` initialized `const [plans, setPlans] = useState<PlanConfig[]>([])` with an empty array.
+  2. When the user navigated to the `'invest'` tab, `<NewInvestmentView plans={plans} ... />` rendered. Inside the component, `const selectedPlan = plans.find(p => p.id === selectedPlanId) || plans[0]` evaluated to `undefined` because `plans` was `[]`.
+  3. The component's JSX accessed `selectedPlan.name`, `selectedPlan.durationHours`, and `selectedPlan.referralRate` directly during render, triggering fatal runtime errors (`TypeError: Cannot read properties of undefined (reading 'name')`) that crashed the React component tree and blocked rendering.
+  4. `dashboard/src/services/api.ts` lacked a fallback default plans array if `/api/invest/plans` had network latency, was unauthenticated during initialization, or returned a non-standard response envelope.
+  5. `refreshData()` in `App.tsx` did not include `api.getPlans()`, so any initial fetch failure left `plans` empty permanently.
+- **Exact Resolution**:
+  - Exported deterministic `DEFAULT_PLANS` containing all 4 institutional tiers (`Amateur 24h`, `Standard 48h`, `Premium 72h`, `Retirement 96h`) in `dashboard/src/types/index.ts`.
+  - Initialized `plans` in `dashboard/src/App.tsx` with `DEFAULT_PLANS` and added `api.getPlans()` to `refreshData()` for live background parameter synchronization.
+  - Normalized `api.getPlans()` in `dashboard/src/services/api.ts` to handle array payloads, object envelopes, and network errors gracefully with `DEFAULT_PLANS` fallback.
+  - In `dashboard/src/components/NewInvestmentView.tsx`, defined `effectivePlans = (plans && plans.length > 0) ? plans : DEFAULT_PLANS` and safely resolved `selectedPlan` with fallback variables (`planName`, `planDuration`, `planRate`, `planReferralRate`), rendering `effectivePlans.map(...)` without runtime crashes.
+  - Hardened `backend/src/services/db.ts` to auto-initialize and validate `schema.planConfigs` on startup.
+- **Regression Prevention Rule**:
+  - *Never access sub-properties on plan or model objects without guaranteed fallback arrays (`effectivePlans = plans?.length ? plans : DEFAULT_PLANS`) and safe fallback defaults.*

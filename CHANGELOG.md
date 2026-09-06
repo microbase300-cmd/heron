@@ -23,6 +23,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.4] - 2026-09-06
+### Fixed
+- **Open Mandate View & Plan Deployment Activation Workflow**:
+  - Eliminated fatal render-phase `TypeError: Cannot read properties of undefined (reading 'name')` by providing deterministic `DEFAULT_PLANS` initial state and fallback resolution in `dashboard/src/components/NewInvestmentView.tsx`.
+  - Normalized `api.getPlans()` response envelope in `dashboard/src/services/api.ts` to seamlessly handle array payloads, `{ plans: [...] }` envelopes, and network delays with standard tier fallbacks.
+  - Linked `api.getPlans()` directly into `refreshData()` in `dashboard/src/App.tsx`, guaranteeing continuous live rate and parameter synchronization.
+  - Verified all entry points ("Open Mandate" in Sidebar, "New Mandate" in Navbar, "Open Mandate ↗" in Overview, and "Deploy Capital Into Plans ↗" in Mandates empty state) reliably switch to and render the interactive plan deployment view.
+  - Hardened backend persistence in `backend/src/services/db.ts` to auto-initialize and validate `schema.planConfigs` on startup.
+
+---
+
 ## [1.1.3] - 2026-09-06
 ### Added
 - **Real-Time Deposit & Withdrawal Confirmation Pop-Ups**:

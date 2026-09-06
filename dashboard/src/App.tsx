@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from './services/api';
-import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData } from './types';
+import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, DEFAULT_PLANS } from './types';
 import { TickerBar } from './components/TickerBar';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
@@ -17,7 +17,7 @@ import { LayoutDashboard, Timer, TrendingUp, ArrowDownLeft, Menu } from 'lucide-
 export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [currentTab, setCurrentTab] = useState('overview');
-  const [plans, setPlans] = useState<PlanConfig[]>([]);
+  const [plans, setPlans] = useState<PlanConfig[]>(DEFAULT_PLANS);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [summary, setSummary] = useState<WalletSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -34,7 +34,9 @@ export const App: React.FC = () => {
       try {
         // Load plans
         const pRes = await api.getPlans();
-        setPlans(pRes.plans);
+        if (pRes?.plans && pRes.plans.length > 0) {
+          setPlans(pRes.plans);
+        }
 
         // Check if existing token
         const meRes = await api.getMe();
@@ -51,18 +53,22 @@ export const App: React.FC = () => {
   const refreshData = async () => {
     if (!user) return;
     try {
-      const [sum, invs, txs, refs, me] = await Promise.all([
+      const [sum, invs, txs, refs, me, pRes] = await Promise.all([
         api.getWalletSummary(),
         api.getMyInvestments(),
         api.getTransactions(),
         api.getReferralData(),
-        api.getMe()
+        api.getMe(),
+        api.getPlans()
       ]);
       setSummary(sum);
       setInvestments(invs.investments);
       setTransactions(txs.transactions);
       setReferralData(refs);
       setUser(me.user);
+      if (pRes?.plans && pRes.plans.length > 0) {
+        setPlans(pRes.plans);
+      }
     } catch (err) {
       console.error('Error refreshing dashboard data:', err);
     }

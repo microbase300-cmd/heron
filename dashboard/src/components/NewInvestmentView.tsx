@@ -1,6 +1,6 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ShieldCheck, Check, Sparkles, AlertCircle, ArrowRight, Wallet, Lock } from 'lucide-react';
-import { PlanConfig, PlanId, User } from '../types';
+import { PlanConfig, PlanId, User, DEFAULT_PLANS } from '../types';
 import { api } from '../services/api';
 
 interface NewInvestmentViewProps {
@@ -22,7 +22,9 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const selectedPlan = plans.find(p => p.id === selectedPlanId) || plans[0];
+  // Guarantee non-empty plan array fallback
+  const effectivePlans = plans && plans.length > 0 ? plans : DEFAULT_PLANS;
+  const selectedPlan = effectivePlans.find(p => p.id === selectedPlanId) || effectivePlans[0] || DEFAULT_PLANS[0];
 
   // Auto-switch plan when amount changes or adjust amount when plan clicked
   const handleSelectPlan = (p: PlanConfig) => {
@@ -35,7 +37,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
   const handleAmountChange = (val: number) => {
     setAmount(val);
     // Find matching tier automatically
-    for (const p of plans) {
+    for (const p of effectivePlans) {
       if (val >= p.min && (p.max === Infinity || val <= p.max)) {
         setSelectedPlanId(p.id);
         break;
@@ -43,9 +45,14 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
     }
   };
 
-  const expectedProfit = Number((amount * (selectedPlan?.rate || 0)).toFixed(2));
+  const planRate = selectedPlan?.rate || 0.095;
+  const planReferralRate = selectedPlan?.referralRate || 0.16;
+  const planName = selectedPlan?.name || 'Selected Plan';
+  const planDuration = selectedPlan?.durationHours || 48;
+
+  const expectedProfit = Number((amount * planRate).toFixed(2));
   const totalPayout = Number((amount + expectedProfit).toFixed(2));
-  const referralBonus = Number((amount * (selectedPlan?.referralRate || 0)).toFixed(2));
+  const referralBonus = Number((amount * planReferralRate).toFixed(2));
 
   const availableBalance = user?.balance ?? 0;
   const isInsufficient = amount > availableBalance;
@@ -108,7 +115,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
 
       {/* 4 Plan Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {plans.map(p => {
+        {effectivePlans.map(p => {
           const isSelected = selectedPlanId === p.id;
           const isFeatured = p.id === 'premium';
 
@@ -268,7 +275,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <span className="text-xs font-mono uppercase text-white/50">Projected Return Schedule</span>
               <span className="text-xs font-mono font-bold text-gold px-2.5 py-0.5 rounded-full bg-gold/10 border border-gold/30">
-                {selectedPlan.name} • {selectedPlan.durationHours}h
+                {planName} • {planDuration}h
               </span>
             </div>
 
@@ -297,7 +304,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
               <div>
                 <div className="text-[10px] text-white/40 font-mono uppercase">Referral Payout Capacity</div>
                 <div className="text-base font-serif font-bold text-white/70 mt-0.5">
-                  ${referralBonus.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({(selectedPlan.referralRate * 100).toFixed(0)}%)
+                  ${referralBonus.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({(planReferralRate * 100).toFixed(0)}%)
                 </div>
               </div>
             </div>
@@ -318,7 +325,7 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  <span>Deploy ${amount.toLocaleString()} into {selectedPlan.name} ↗</span>
+                  <span>Deploy ${amount.toLocaleString()} into {planName} ↗</span>
                 </>
               )}
             </button>

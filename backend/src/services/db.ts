@@ -201,7 +201,12 @@ class DatabaseService {
       schema.depositAddresses = DEFAULT_DEPOSIT_ADDRESSES;
     }
 
-    // 5. Ensure initial welcoming broadcast notification exists
+    // 5. Ensure institutional plan configurations exist
+    if (!schema.planConfigs || Object.keys(schema.planConfigs).length === 0) {
+      schema.planConfigs = { ...PLANS };
+    }
+
+    // 6. Ensure initial welcoming broadcast notification exists
     if (!schema.notifications || schema.notifications.length === 0) {
       schema.notifications = [
         {
@@ -553,7 +558,11 @@ class DatabaseService {
 
   // --- Plan Configs ---
   getPlanConfigs(): Record<PlanId, PlanConfig> {
-    return this.data.planConfigs || PLANS;
+    if (!this.data.planConfigs || Object.keys(this.data.planConfigs).length === 0) {
+      this.data.planConfigs = { ...PLANS };
+      this.save();
+    }
+    return this.data.planConfigs;
   }
 
   updatePlanConfig(planId: PlanId, updates: Partial<PlanConfig>): PlanConfig {

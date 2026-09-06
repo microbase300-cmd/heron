@@ -1,4 +1,4 @@
-import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig } from '../types';
+import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig, DEFAULT_PLANS } from '../types';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -76,7 +76,16 @@ class ApiService {
 
   // Investments
   async getPlans(): Promise<{ plans: PlanConfig[] }> {
-    return this.request<{ plans: PlanConfig[] }>('/invest/plans');
+    try {
+      const res = await this.request<any>('/invest/plans');
+      const plansArray = Array.isArray(res) ? res : Array.isArray(res?.plans) ? res.plans : [];
+      if (plansArray.length > 0) {
+        return { plans: plansArray };
+      }
+    } catch (e) {
+      console.warn('Could not load remote plans, utilizing standard institutional fallback tiers:', e);
+    }
+    return { plans: DEFAULT_PLANS };
   }
 
   async getMyInvestments(): Promise<{ investments: Investment[] }> {
