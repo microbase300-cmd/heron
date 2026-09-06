@@ -4,7 +4,7 @@
       "id": "usr_admin_001",
       "email": "admin@heronassets.com",
       "name": "Chief Risk Officer",
-      "passwordHash": "$2a$10$w8gGkTras5i8sYZFLBfZBuxH6sTefEvq75M3fhh3S6LVmpDEhhgni",
+      "passwordHash": "$2a$10$wWoB5Auj1sOsbrHmR4J5guO0MC7ywzwjI1NC6TKKYCk9i35Ya47yi",
       "role": "admin",
       "balance": 0,
       "referralCode": "HERON-ADMIN",
@@ -66,7 +66,7 @@
       "name": "Alexander Vance",
       "passwordHash": "$2a$10$ocMSmylYDV60zjJ5iQiBj.0QaDS85exUeBB8e.OqohOMbJ7q0L6Jm",
       "role": "user",
-      "balance": 45000,
+      "balance": 44000,
       "referralCode": "HERON-VANCE",
       "referredBy": null,
       "status": "active",
@@ -151,6 +151,27 @@
       "tokenHash": "f2590404517688fbc7ee7903d1ca8421c84c634a5667a5e4896ee709565dc147",
       "expiresAt": "2026-09-12T04:10:57.563Z",
       "createdAt": "2026-09-05T04:10:57.563Z"
+    },
+    {
+      "id": "rft_d16ecae0-23d2-4d27-8f07-51c938940050",
+      "userId": "usr_demo_vance",
+      "tokenHash": "75da4c22effb93a7f0ffc3b0b26d1f9de4f4121f8635a7558c03b42195c3a7a1",
+      "expiresAt": "2026-09-13T10:07:10.488Z",
+      "createdAt": "2026-09-06T10:07:10.493Z"
+    },
+    {
+      "id": "rft_a47eb992-28f9-4bcc-87eb-b9d9fadc5052",
+      "userId": "usr_admin_001",
+      "tokenHash": "624e6f992ee9d665b63bbaa8ec576770ecbf7154e40e35b32fb73ecc1b6a8915",
+      "expiresAt": "2026-09-13T10:12:13.998Z",
+      "createdAt": "2026-09-06T10:12:13.998Z"
+    },
+    {
+      "id": "rft_f97d8bbf-71b2-484e-8bbe-01291fda7459",
+      "userId": "usr_admin_001",
+      "tokenHash": "fb4bffb951ecb808aac1c1b656647939444b93329a8891d4540e5529a4d30c5b",
+      "expiresAt": "2026-09-13T10:17:28.409Z",
+      "createdAt": "2026-09-06T10:17:28.409Z"
     }
   ],
   "investments": [
@@ -201,6 +222,28 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_685cffe1-f22a-457d-9d7e-4c2db0d4187b",
+      "userId": "usr_demo_vance",
+      "type": "withdrawal",
+      "amount": 1000,
+      "asset": "USDT (TRC-20)",
+      "status": "completed",
+      "txHash": "0xa95326dbbb546be826c6a4f57ca11396e75b9fc24e3c93d6c0e5ecfa09565111",
+      "note": "Pending withdrawal of $1,000 to aqqqqq...qqq2 (USDT (TRC-20))",
+      "createdAt": "2026-09-06T10:08:50.524Z"
+    },
+    {
+      "id": "tx_6419c863-d7a0-4a4a-91d9-643f591bc843",
+      "userId": "usr_demo_882194",
+      "type": "yield_payout",
+      "amount": 9240,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0xa74289179deeb29657a4dbb275e264a00ff11719b9258d9ced03228b95001566",
+      "note": "Premium Plan Matured: Principal $8,000 + Yield $1,240",
+      "createdAt": "2026-09-05T21:43:57.411Z"
+    },
     {
       "id": "tx_f19c9deb-e671-4e92-a03f-73b03f4db2b3",
       "userId": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
@@ -288,17 +331,6 @@
       "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
       "note": "Deposit via TRC-20 Smart Contract",
       "createdAt": "2026-08-30T17:18:13.156Z"
-    },
-    {
-      "id": "tx_6419c863-d7a0-4a4a-91d9-643f591bc843",
-      "userId": "usr_demo_882194",
-      "type": "yield_payout",
-      "amount": 9240,
-      "asset": "USD",
-      "status": "completed",
-      "txHash": "0xa74289179deeb29657a4dbb275e264a00ff11719b9258d9ced03228b95001566",
-      "note": "Premium Plan Matured: Principal $8,000 + Yield $1,240",
-      "createdAt": "2026-09-05T21:43:57.411Z"
     }
   ],
   "referralCommissions": [
@@ -365,6 +397,28 @@
     }
   },
   "notifications": [
+    {
+      "id": "notif_33e26ffd-7ba5-4f4f-87f6-843e40b618be",
+      "userId": "usr_demo_882194",
+      "targetEmail": "investor@heronassets.com",
+      "title": "Direct Portfolio Settlement Notice",
+      "message": "Your institutional liquidity deposit has been validated and confirmed by the Executive Risk Desk.",
+      "type": "success",
+      "sender": "Chief Risk Officer",
+      "readBy": [],
+      "createdAt": "2026-09-06T10:17:28.428Z"
+    },
+    {
+      "id": "notif_90b7a2f1-3b16-4b79-8cc8-b93f1ee015e6",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Withdrawal Disbursement Authorized: $1,000 USDT (TRC-20)",
+      "message": "Your withdrawal request of $1,000.00 USDT (TRC-20) has been approved and dispatched to your destination wallet.",
+      "type": "success",
+      "sender": "Settlement Treasury Desk",
+      "readBy": [],
+      "createdAt": "2026-09-06T10:12:35.618Z"
+    },
     {
       "id": "notif_welcome_01",
       "userId": null,

@@ -11,7 +11,9 @@ import {
   Users, 
   User as UserIcon,
   Search,
-  Check
+  Check,
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { NotificationMessage, AdminUser } from '../types';
 import { adminApi } from '../services/api';
@@ -22,14 +24,14 @@ interface NotificationsDeskViewProps {
 
 export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ users: initialUsers }) => {
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
-  const [investorList, setInvestorList] = useState<AdminUser[]>(initialUsers || []);
+  const [investorList, setInvestorList] = useState<AdminUser[]>(Array.isArray(initialUsers) ? initialUsers : []);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Form state
   const [recipientType, setRecipientType] = useState<'broadcast' | 'direct'>('broadcast');
-  const [userSelectMode, setUserSelectMode] = useState<'dropdown' | 'manual'>('dropdown');
+  const [userSelectMode, setUserSelectMode] = useState<'picker' | 'dropdown' | 'manual'>('picker');
   const [selectedUserEmail, setSelectedUserEmail] = useState('');
   const [investorSearch, setInvestorSearch] = useState('');
   const [title, setTitle] = useState('');
@@ -46,10 +48,10 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
         adminApi.getUsers(),
       ]);
 
-      if (notifs.status === 'fulfilled') {
+      if (notifs.status === 'fulfilled' && Array.isArray(notifs.value)) {
         setNotifications(notifs.value);
       }
-      if (userDirectory.status === 'fulfilled') {
+      if (userDirectory.status === 'fulfilled' && Array.isArray(userDirectory.value)) {
         setInvestorList(userDirectory.value);
       }
     } catch (err) {
@@ -64,20 +66,28 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
   }, []);
 
   useEffect(() => {
-    if (initialUsers && initialUsers.length > 0) {
+    if (initialUsers && Array.isArray(initialUsers) && initialUsers.length > 0) {
       setInvestorList(initialUsers);
     }
   }, [initialUsers]);
 
-  const activeInvestors = investorList.filter(u => u.role !== 'admin');
-  const filteredInvestors = activeInvestors.filter(u => {
-    const term = investorSearch.toLowerCase();
+  // Safe normalized investor pool
+  const rawUsers = Array.isArray(investorList) && investorList.length > 0 ? investorList : (Array.isArray(initialUsers) ? initialUsers : []);
+  const nonAdminInvestors = rawUsers.filter(u => (u.role || '').toLowerCase() !== 'admin');
+  const activeInvestors = nonAdminInvestors.length > 0 ? nonAdminInvestors : rawUsers;
+
+  const filteredInvestors = activeInvestors.filter((u) => {
+    const term = (investorSearch || '').trim().toLowerCase();
+    if (!term) return true;
     return (
-      u.name.toLowerCase().includes(term) ||
-      u.email.toLowerCase().includes(term) ||
-      u.id.toLowerCase().includes(term)
+      (u.name || '').toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.id || '').toLowerCase().includes(term) ||
+      (u.referralCode || '').toLowerCase().includes(term)
     );
   });
+
+  const selectedInvestor = activeInvestors.find(u => u.email.toLowerCase() === selectedUserEmail.toLowerCase());
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +115,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
       setFeedback({ message: res.message || 'Notification dispatched successfully!', type: 'success' });
       setTitle('');
       setMessage('');
-      if (recipientType === 'direct' && userSelectMode === 'dropdown') {
+      if (recipientType === 'direct') {
         setSelectedUserEmail('');
       }
       await fetchAllData();
@@ -202,72 +212,176 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono text-cyan-300 font-bold flex items-center gap-1">
                     <UserIcon className="w-3.5 h-3.5" />
-                    Target Investor Selection ({activeInvestors.length} Available)
+                    Target Investor ({activeInvestors.length} Registered)
                   </span>
                   <div className="flex items-center gap-1 text-[10px] font-mono">
                     <button
                       type="button"
-                      onClick={() => setUserSelectMode('dropdown')}
-                      className={`px-2 py-0.5 rounded ${userSelectMode === 'dropdown' ? 'bg-cyan-500/30 text-cyan-200' : 'text-white/40'}`}
+                      onClick={() => setUserSelectMode('picker')}
+                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'picker' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-white/40 hover:text-white'}`}
                     >
-                      Picker
+                      Cards
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserSelectMode('dropdown')}
+                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'dropdown' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-white/40 hover:text-white'}`}
+                    >
+                      Dropdown
                     </button>
                     <button
                       type="button"
                       onClick={() => setUserSelectMode('manual')}
-                      className={`px-2 py-0.5 rounded ${userSelectMode === 'manual' ? 'bg-cyan-500/30 text-cyan-200' : 'text-white/40'}`}
+                      className={`px-2 py-0.5 rounded transition-all ${userSelectMode === 'manual' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-white/40 hover:text-white'}`}
                     >
-                      Manual Email
+                      Manual
                     </button>
                   </div>
                 </div>
 
-                {userSelectMode === 'dropdown' ? (
+                {/* Selected User Header Banner */}
+                {selectedUserEmail ? (
+                  <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xs">
+                        {selectedInvestor ? (selectedInvestor.name ? selectedInvestor.name[0].toUpperCase() : 'U') : '@'}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span>{selectedInvestor?.name || 'Target Investor'}</span>
+                          {selectedInvestor && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-gold/10 text-gold border border-gold/20">
+                              ${(selectedInvestor.balance ?? 0).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] font-mono text-emerald-300 truncate max-w-[200px]">
+                          {selectedUserEmail}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedUserEmail('')}
+                      className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all text-[11px] font-mono flex items-center gap-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : null}
+
+                {/* MODE 1: Visual Interactive Investor Picker Cards */}
+                {userSelectMode === 'picker' && (
                   <div className="space-y-2">
-                    {/* Search filter for investor picker */}
-                    <div className="relative">
+                    <div className="relative flex items-center">
                       <input
                         type="text"
                         value={investorSearch}
                         onChange={(e) => setInvestorSearch(e.target.value)}
-                        placeholder="Search investor by name or email..."
-                        className="w-full pl-8 pr-3 py-1.5 rounded-lg glass-input text-xs font-mono text-white"
+                        placeholder="Search investor by name, email, or ID..."
+                        className="w-full pl-8 pr-8 py-1.5 rounded-lg glass-input text-xs font-mono text-white"
                       />
-                      <Search className="w-3 h-3 text-white/40 absolute left-2.5 top-2.5" />
+                      <Search className="w-3 h-3 text-white/40 absolute left-2.5" />
+                      {investorSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setInvestorSearch('')}
+                          className="absolute right-2.5 text-white/40 hover:text-white text-xs"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
 
-                    {/* Investor Dropdown */}
-                    <select
-                      value={selectedUserEmail}
-                      onChange={(e) => setSelectedUserEmail(e.target.value)}
-                      className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl bg-[#0c1412] border-cyan-500/40"
-                      required={recipientType === 'direct'}
-                    >
-                      <option value="">-- Choose Investor ({filteredInvestors.length} shown) --</option>
-                      {filteredInvestors.map((u) => (
-                        <option key={u.id} value={u.email}>
-                          {u.name} • {u.email} (Bal: ${u.balance.toLocaleString()})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-cyan-500/20">
+                      {filteredInvestors.length === 0 ? (
+                        <div className="p-4 text-center text-xs font-mono text-white/40 bg-white/[0.02] rounded-lg">
+                          No matching investors found. Tap 'Manual' to type an address.
+                        </div>
+                      ) : (
+                        filteredInvestors.map((u) => {
+                          const isSelected = selectedUserEmail.toLowerCase() === u.email.toLowerCase();
+                          return (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => setSelectedUserEmail(u.email)}
+                              className={`w-full p-2 rounded-xl text-left transition-all flex items-center justify-between border ${
+                                isSelected
+                                  ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-sm shadow-cyan-500/20'
+                                  : 'bg-white/[0.03] border-white/[0.06] hover:border-cyan-500/30 text-white/80 hover:text-white'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <div className="w-6 h-6 rounded-lg bg-white/[0.08] flex items-center justify-center text-[10px] font-bold text-gold shrink-0">
+                                  {u.name ? u.name[0].toUpperCase() : 'U'}
+                                </div>
+                                <div className="truncate">
+                                  <div className="text-xs font-semibold text-white truncate flex items-center gap-1.5">
+                                    <span>{u.name}</span>
+                                    <span className="text-[10px] font-mono text-gold/80 font-normal">
+                                      ${(u.balance ?? 0).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] font-mono text-white/50 truncate">
+                                    {u.email}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {isSelected ? (
+                                <span className="p-1 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
+                                  <Check className="w-3.5 h-3.5" />
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.05] text-white/50 shrink-0 hover:text-cyan-300">
+                                  Select
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                ) : (
+                )}
+
+                {/* MODE 2: Dropdown Select List */}
+                {userSelectMode === 'dropdown' && (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <select
+                        value={selectedUserEmail}
+                        onChange={(e) => setSelectedUserEmail(e.target.value)}
+                        className="w-full glass-input text-xs font-mono py-2 pl-3 pr-8 text-white rounded-xl bg-[#0c1412] border-cyan-500/40 appearance-none cursor-pointer"
+                        required={recipientType === 'direct'}
+                      >
+                        <option value="" className="bg-[#0b1210] text-white/60">
+                          -- Choose Investor ({activeInvestors.length} available) --
+                        </option>
+                        {activeInvestors.map((u) => (
+                          <option key={u.id} value={u.email} className="bg-[#0b1210] text-white py-2">
+                            {u.name} • {u.email} (Bal: ${(u.balance ?? 0).toLocaleString()})
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-3 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+
+                {/* MODE 3: Manual Direct Email Input */}
+                {userSelectMode === 'manual' && (
                   <div>
                     <input
                       type="email"
                       value={selectedUserEmail}
                       onChange={(e) => setSelectedUserEmail(e.target.value)}
-                      placeholder="e.g. investor@example.com"
-                      className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
+                      placeholder="e.g. investor@vanceholdings.com"
+                      className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl bg-[#0c1412] border-cyan-500/40"
                       required={recipientType === 'direct'}
                     />
-                  </div>
-                )}
-
-                {selectedUserEmail && (
-                  <div className="text-[11px] font-mono text-emerald-300 flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    <span>Recipient Set: <strong>{selectedUserEmail}</strong></span>
                   </div>
                 )}
               </div>
@@ -324,7 +438,7 @@ export const NotificationsDeskView: React.FC<NotificationsDeskViewProps> = ({ us
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Settlement Confirmation & Security Alert"
+                placeholder="e.g. Settlement Confirmation & Security Notice"
                 className="w-full glass-input text-xs font-mono py-2 px-3 text-white rounded-xl"
                 required
               />

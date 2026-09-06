@@ -93,7 +93,10 @@ class AdminApiService {
   }
 
   public async getUsers(): Promise<AdminUser[]> {
-    return this.request<AdminUser[]>('/admin/users');
+    const res = await this.request<any>('/admin/users');
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.users)) return res.users;
+    return [];
   }
 
   public async adjustUserBalance(
@@ -167,7 +170,10 @@ class AdminApiService {
   }
 
   public async getNotifications(): Promise<NotificationMessage[]> {
-    return this.request<NotificationMessage[]>('/admin/notifications');
+    const res = await this.request<any>('/admin/notifications');
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.notifications)) return res.notifications;
+    return [];
   }
 
   public async sendNotification(payload: {

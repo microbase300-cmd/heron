@@ -23,6 +23,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.1] - 2026-09-06
+### Fixed
+- **Admin Direct Messaging Investor Dropdown**: Upgraded `NotificationsDeskView.tsx` with:
+  - Multi-mode investor selector (Interactive Quick-Select Cards, Native Styled Dropdown, and Manual Input).
+  - Real-time investor search filter covering names, emails, user IDs, and referral codes.
+  - Array response normalization in `adminApi.getUsers()` and `adminApi.getNotifications()`.
+  - Selected recipient confirmation card with instant clear/change controls.
+  - High-contrast option styling for dark-theme browser dropdown compatibility.
+
+---
+
 ## [1.1.0] - 2026-09-06
 ### Added
 - Created dedicated [`TESTING_CREDENTIALS.md`](./TESTING_CREDENTIALS.md) detailing credentials, roles, and verification procedures for Admin and Investor testing.

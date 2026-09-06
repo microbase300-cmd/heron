@@ -153,6 +153,14 @@ graph TD
 
 ---
 
+### Phase 9: Administrative Communications & Recipient Picker Upgrade
+1. **Interactive Investor Selection Desk**:
+   - Replaced fragile native dropdown in `NotificationsDeskView.tsx` with a multi-mode selection system (Interactive Cards, Styled Dropdown, and Manual Entry).
+   - Added live search filter and selected recipient confirmation badge.
+   - Normalized API array handling in `adminApi.getUsers()` and `adminApi.getNotifications()`.
+
+---
+
 ## 3. Standard Operational Commands
 
 ### Launching All Services

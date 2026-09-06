@@ -31,6 +31,7 @@ This document is the **single source of truth** for all errors reported, bugs id
 10. [BUG-010: Zero-Balance Account Initialization Inconsistency](#bug-010-zero-balance-account-initialization-inconsistency)
 11. [BUG-011: TypeScript Compilation Execution Discrepancy (`tsc` vs `npx tsc`)](#bug-011-typescript-compilation-execution-discrepancy-tsc-vs-npx-tsc)
 12. [BUG-012: Residual Demo Banners & Autofill Buttons Compromising Production Presentation](#bug-012-residual-demo-banners--autofill-buttons-compromising-production-presentation)
+13. [BUG-013: Admin Broadcast & Direct Messaging Investor Dropdown List Empty / Unrendered](#bug-013-admin-broadcast--direct-messaging-investor-dropdown-list-empty--unrendered)
 
 ---
 
@@ -250,3 +251,23 @@ This document is the **single source of truth** for all errors reported, bugs id
   - Renamed user-facing OTP badges from "DEV OTP CODE" to institutional "🛡️ Security Passcode".
 - **Regression Prevention Rule**:
   - *Never hardcode demo credentials, one-click test logins, or dev badges into production customer-facing UI components.*
+
+---
+
+### BUG-013: Admin Broadcast & Direct Messaging Investor Dropdown List Empty / Unrendered
+- **Status**: ✅ Resolved (Permanent Fix)
+- **Module**: `admin/src/components/NotificationsDeskView.tsx` & `admin/src/services/api.ts`
+- **Symptom**: In the administrative "Broadcasts & Messages" tab, selecting "Direct to Investor" showed an empty dropdown when clicking the investor selector.
+- **Root Cause**:
+  1. `adminApi.getUsers()` lacked array normalization fallback if the backend payload wrapped users or returned non-standard envelopes.
+  2. The select dropdown had unstyled `<option>` elements that rendered invisible or black-on-black on certain OS/browser dark mode implementations.
+  3. When `initialUsers` had not yet settled or had filtering applied before data arrived, the select list defaulted to 0 items.
+- **Exact Resolution**:
+  - Normalized `getUsers()` and `getNotifications()` in `admin/src/services/api.ts` with `Array.isArray(res) ? res : Array.isArray(res?.users) ? res.users : []`.
+  - Built a multi-mode recipient selector in `NotificationsDeskView.tsx`:
+    - **Interactive Quick-Select Cards**: Scrollable list with user avatar, full name, email, and live balance badge with 1-click selection.
+    - **Enhanced Native Dropdown**: Explicitly styled with dark background `<option className="bg-[#0b1210] text-white py-2">` and safe balance formatting `(u.balance ?? 0).toLocaleString()`.
+    - **Manual Direct Entry**: For sending to unlisted/custom email addresses.
+  - Added instant search filtering and selected recipient confirmation card.
+- **Regression Prevention Rule**:
+  - *Always provide both visual card pickers and explicitly styled dropdown options for administrator user selections.*
