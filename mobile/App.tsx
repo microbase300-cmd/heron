@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  Clipboard,
   Platform,
   RefreshControl,
   Animated,
@@ -22,6 +21,7 @@ import {
   Pressable,
   KeyboardAvoidingView
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
 import {
@@ -619,7 +619,7 @@ export default function App() {
   };
 
   const copyToClipboard = (text: string, key: string) => {
-    Clipboard.setString(text);
+    Clipboard.setStringAsync(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
   };
@@ -631,21 +631,6 @@ export default function App() {
     const s = diff % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
-
-  // Periodic health check to show live status badge
-  useEffect(() => {
-    let mounted = true;
-    const checkApi = async () => {
-      const res = await mobileApi.checkHealth();
-      if (mounted) setBackendOnline(res.online);
-    };
-    checkApi();
-    const poll = setInterval(checkApi, 5000);
-    return () => {
-      mounted = false;
-      clearInterval(poll);
-    };
-  }, [customApiUrl]);
 
   // --------------------------------------------------------------------------
   // RENDER: Opening Splash Screen
@@ -669,28 +654,6 @@ export default function App() {
             </View>
             <Text style={styles.authBrandTitle}>HERON DIGITAL CAPITAL</Text>
             <Text style={styles.authBrandSub}>INSTITUTIONAL CRYPTO WEALTH</Text>
-
-            {/* Live Connection Status Pill */}
-            <TouchableOpacity
-              style={[
-                styles.connStatusPill,
-                backendOnline === true ? styles.connStatusOnline : backendOnline === false ? styles.connStatusOffline : styles.connStatusPending
-              ]}
-              onPress={() => setShowConfigModal(true)}
-              activeOpacity={0.8}
-            >
-              <View style={[
-                styles.connDot,
-                backendOnline === true ? styles.connDotOnline : backendOnline === false ? styles.connDotOffline : styles.connDotPending
-              ]} />
-              <Text style={styles.connStatusText}>
-                {backendOnline === true
-                  ? `Live API: ${mobileApi.getBaseUrl().replace(/^https?:\/\//, '')}`
-                  : backendOnline === false
-                  ? `Cannot Reach API (Tap to Configure)`
-                  : `Connecting to ${mobileApi.getBaseUrl().replace(/^https?:\/\//, '')}...`}
-              </Text>
-            </TouchableOpacity>
 
             {/* Toggle Login / Register */}
             <View style={styles.authToggleRow}>

@@ -7,6 +7,12 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#070908",
+    "icon": "./assets/heron_logo.jpg",
+    "splash": {
+      "image": "./assets/heron_logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#181A20"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.heron.mobile"
@@ -15,16 +21,29 @@
       "package": "com.heron.mobile",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/heron_logo.jpg",
         "backgroundColor": "#181A20"
       }
     },
-    "androidNavigationBar": {
-      "visible": "immersive",
-      "barStyle": "light-content",
-      "backgroundColor": "#181A20"
-    },
+    "plugins": [
+      [
+        "expo-navigation-bar",
+        {
+          "position": "relative",
+          "visibility": "visible",
+          "behavior": "inset-swipe",
+          "backgroundColor": "#181A20",
+          "barStyle": "light-content"
+        }
+      ]
+    ],
     "web": {
       "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c4024769-dbe5-404f-9d89-64da8ea2a57b"
+      }
     }
   }
 }

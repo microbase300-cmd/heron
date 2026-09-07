@@ -15,29 +15,31 @@ import {
 
 // Dynamic host determination for Physical Devices, Emulators, and Web
 const resolveDefaultHost = (): string => {
-  if (Platform.OS === 'web') {
-    return 'http://localhost:5000/api';
-  }
-
-  // Check if running inside Expo Go with hostUri (contains host PC IP address)
-  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest2?.extra?.expoClient?.hostUri || (Constants as any).manifest?.debuggerHost;
-  if (hostUri) {
-    const ip = hostUri.split(':')[0];
-    if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
-      return `http://${ip}:5000/api`;
+  try {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:5000/api';
     }
-  }
 
-  // Check scriptURL
-  const scriptURL = (NativeModules as any)?.SourceCode?.scriptURL;
-  if (scriptURL) {
-    const match = scriptURL.match(/https?:\/\/([^/:]+)/);
-    if (match && match[1] && match[1] !== 'localhost' && match[1] !== '127.0.0.1') {
-      return `http://${match[1]}:5000/api`;
+    // Check if running inside Expo Go with hostUri (contains host PC IP address)
+    const hostUri = Constants?.expoConfig?.hostUri || (Constants as any)?.manifest2?.extra?.expoClient?.hostUri || (Constants as any)?.manifest?.debuggerHost;
+    if (hostUri && typeof hostUri === 'string') {
+      const ip = hostUri.split(':')[0];
+      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+        return `http://${ip}:5000/api`;
+      }
     }
-  }
 
-  // Default to PC's active Wi-Fi LAN IP
+    // Check scriptURL
+    const scriptURL = (NativeModules as any)?.SourceCode?.scriptURL;
+    if (scriptURL && typeof scriptURL === 'string') {
+      const match = scriptURL.match(/https?:\/\/([^/:]+)/);
+      if (match && match[1] && match[1] !== 'localhost' && match[1] !== '127.0.0.1') {
+        return `http://${match[1]}:5000/api`;
+      }
+    }
+  } catch {}
+
+  // Default fallback
   return 'http://192.168.43.149:5000/api';
 };
 
@@ -160,8 +162,9 @@ class MobileApiService {
           id: 'demo_123', 
           name: 'Demo Investor', 
           email: email, 
-          role: 'user', 
-          referralCode: 'DEMO' 
+          balance: 12500.50,
+          referralCode: 'DEMO',
+          createdAt: new Date().toISOString()
         };
         this.setToken('demo_token');
         this.setUser(mockUser);
@@ -268,8 +271,8 @@ class MobileApiService {
       if (this.token === 'demo_token') {
         return {
           plans: [
-            { id: 'standard', name: 'Standard Yield', min: 100, max: 10000, rate: 0.045, durationHours: 24, referralRate: 0.02 },
-            { id: 'premium', name: 'Premium Institutional', min: 10000, max: Infinity, rate: 0.085, durationHours: 72, referralRate: 0.05 }
+            { id: 'standard', name: 'Standard Yield', min: 100, max: 10000, rate: 0.045, durationHours: 24, referralRate: 0.02, description: 'Standard 24h institutional yield plan', badge: 'Popular' },
+            { id: 'premium', name: 'Premium Institutional', min: 10000, max: Infinity, rate: 0.085, durationHours: 72, referralRate: 0.05, description: 'High-yield 72h institutional plan', badge: 'VIP' }
           ]
         };
       }
@@ -286,8 +289,40 @@ class MobileApiService {
       if (this.token === 'demo_token') {
         return {
           investments: [
-            { id: 'inv1', userId: 'demo_123', planId: 'standard', amount: 5000, status: 'active', startedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 86400000).toISOString(), finalAmount: 5225, createdAt: new Date().toISOString() },
-            { id: 'inv2', userId: 'demo_123', planId: 'premium', amount: 20000, status: 'matured', startedAt: new Date(Date.now() - 400000000).toISOString(), expiresAt: new Date(Date.now() - 100000).toISOString(), finalAmount: 21700, createdAt: new Date(Date.now() - 400000000).toISOString() }
+            { 
+              id: 'inv1', 
+              userId: 'demo_123', 
+              planId: 'standard', 
+              planName: 'Standard Yield',
+              amount: 5000, 
+              rate: 0.045,
+              durationHours: 24,
+              expectedProfit: 225,
+              totalPayout: 5225,
+              status: 'active', 
+              startedAt: new Date().toISOString(), 
+              expiresAt: new Date(Date.now() + 86400000).toISOString(), 
+              progressPercent: 45,
+              secondsRemaining: 43200,
+              currentAccruedProfit: 101.25
+            },
+            { 
+              id: 'inv2', 
+              userId: 'demo_123', 
+              planId: 'premium', 
+              planName: 'Premium Institutional',
+              amount: 20000, 
+              rate: 0.085,
+              durationHours: 72,
+              expectedProfit: 1700,
+              totalPayout: 21700,
+              status: 'matured', 
+              startedAt: new Date(Date.now() - 400000000).toISOString(), 
+              expiresAt: new Date(Date.now() - 100000).toISOString(), 
+              progressPercent: 100,
+              secondsRemaining: 0,
+              currentAccruedProfit: 1700
+            }
           ]
         };
       }
@@ -318,8 +353,28 @@ class MobileApiService {
       if (this.token === 'demo_token') {
         return {
           notifications: [
-            { id: 'n1', userId: 'demo_123', title: 'Welcome to Heron', message: 'Your demo account is ready.', type: 'info', isRead: false, createdAt: new Date().toISOString() },
-            { id: 'n2', userId: 'demo_123', title: 'Deposit Received', message: '33,249.75 USDT has been deposited.', type: 'success', isRead: false, createdAt: new Date().toISOString() }
+            { 
+              id: 'n1', 
+              userId: 'demo_123', 
+              title: 'Welcome to Heron', 
+              message: 'Your institutional account is fully authenticated and active.', 
+              type: 'info', 
+              sender: 'Treasury Ops',
+              readBy: [],
+              isRead: false, 
+              createdAt: new Date().toISOString() 
+            },
+            { 
+              id: 'n2', 
+              userId: 'demo_123', 
+              title: 'Deposit Confirmed', 
+              message: '33,249.75 USDT has been credited to your active trading balance.', 
+              type: 'success', 
+              sender: 'Automated Gateway',
+              readBy: [],
+              isRead: false, 
+              createdAt: new Date().toISOString() 
+            }
           ],
           unreadCount: 2
         };
@@ -356,7 +411,11 @@ class MobileApiService {
           referralLink: 'https://heroncapital.com/register?ref=DEMO-8X91P',
           totalReferrals: 12,
           totalCommissionEarned: 150.00,
-          tierRates: [0.05, 0.02, 0.01],
+          tierRates: [
+            { tier: 'Tier 1', rate: '5%', min: '$100', max: '$5,000' },
+            { tier: 'Tier 2', rate: '2%', min: '$5,000', max: '$25,000' },
+            { tier: 'Tier 3', rate: '1%', min: '$25,000+', max: 'Unlimited' }
+          ],
           commissions: [],
           downline: []
         };
@@ -374,8 +433,28 @@ class MobileApiService {
       if (this.token === 'demo_token') {
         return {
           transactions: [
-            { id: 'tx1', userId: 'demo_123', type: 'deposit', amount: 33249.75, asset: 'USDT', status: 'completed', txHash: '0x...', createdAt: new Date(Date.now() - 8000000).toISOString() },
-            { id: 'tx2', userId: 'demo_123', type: 'investment', amount: 5000, asset: 'USD', status: 'completed', createdAt: new Date(Date.now() - 7000000).toISOString() }
+            { 
+              id: 'tx1', 
+              userId: 'demo_123', 
+              type: 'deposit', 
+              amount: 33249.75, 
+              asset: 'USDT', 
+              status: 'completed', 
+              txHash: '0x3a8f9c7b1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f7a', 
+              note: 'Direct Blockchain Inbound',
+              createdAt: new Date(Date.now() - 8000000).toISOString() 
+            },
+            { 
+              id: 'tx2', 
+              userId: 'demo_123', 
+              type: 'yield_payout', 
+              amount: 4250.75, 
+              asset: 'USDT', 
+              status: 'completed', 
+              txHash: '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+              note: 'Compounded Institutional Payout',
+              createdAt: new Date(Date.now() - 7000000).toISOString() 
+            }
           ]
         };
       }
