@@ -17,7 +17,10 @@ import {
   RefreshControl,
   Animated,
   Easing,
-  Image
+  Image,
+  BackHandler,
+  Pressable,
+  KeyboardAvoidingView
 } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
@@ -37,6 +40,29 @@ import {
 const { width, height } = Dimensions.get('window');
 
 type NavTab = 'overview' | 'investments' | 'liquidity' | 'referrals' | 'ledger';
+
+// ============================================================================
+// ANDROID OPTIMIZED TOUCHABLE (Ripple on Android, Opacity on iOS)
+// ============================================================================
+const TouchablePlatform = ({ onPress, style, children, onLongPress }: any) => {
+  if (Platform.OS === 'android') {
+    return (
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        android_ripple={{ color: 'rgba(255,255,255,0.15)', borderless: false }}
+        style={({ pressed }) => [style, { opacity: pressed ? 0.9 : 1 }]}
+      >
+        {children}
+      </Pressable>
+    );
+  }
+  return (
+    <TouchableOpacity onPress={onPress} onLongPress={onLongPress} style={style}>
+      {children}
+    </TouchableOpacity>
+  );
+};
 
 // ============================================================================
 // LUXURY OPENING SPLASH ANIMATION (BINANCE PRO THEMED • HERON ASSETS)
@@ -250,7 +276,8 @@ export default function App() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-
+  
+  // Moved down
   // Operational Data
   const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
   const [investments, setInvestments] = useState<Investment[]>([]);
@@ -290,6 +317,29 @@ export default function App() {
   const [selectedPlanId, setSelectedPlanId] = useState<PlanId>('standard');
   const [investAmount, setInvestAmount] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Android Hardware Back Handler
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const onBackPress = () => {
+        if (showDepositModal) { setShowDepositModal(false); return true; }
+        if (showWithdrawModal) { setShowWithdrawModal(false); return true; }
+        if (showInvestModal) { setShowInvestModal(false); return true; }
+        if (showNotificationModal) { setShowNotificationModal(false); return true; }
+        if (selectedDetailNotif) { setSelectedDetailNotif(null); return true; }
+        if (priorityPopUpNotif) { setPriorityPopUpNotif(null); return true; }
+        
+        if (activeTab !== 'overview') {
+          setActiveTab('overview');
+          return true;
+        }
+        return false; // Let default behavior happen (exit app)
+      };
+      
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => backHandler.remove();
+    }
+  }, [showDepositModal, showWithdrawModal, showInvestModal, showNotificationModal, selectedDetailNotif, priorityPopUpNotif, activeTab]);
 
   // Helper to dynamically match deposit asset to active receiving addresses
   const getSelectedDepositWallet = () => {
@@ -980,14 +1030,14 @@ export default function App() {
 
             {/* Binance-Style Action Grid */}
             <View style={styles.actionGridRow}>
-              <TouchableOpacity style={styles.actionGridBtn} onPress={() => setShowDepositModal(true)}>
+              <TouchablePlatform style={styles.actionGridBtn} onPress={() => setShowDepositModal(true)}>
                 <View style={styles.actionGridIconBox}>
                   <Text style={styles.actionGridIcon}>⬇️</Text>
                 </View>
                 <Text style={styles.actionGridText}>Deposit</Text>
-              </TouchableOpacity>
+              </TouchablePlatform>
 
-              <TouchableOpacity style={styles.actionGridBtn} onPress={() => {
+              <TouchablePlatform style={styles.actionGridBtn} onPress={() => {
                 setWithdrawStep(1);
                 setShowWithdrawModal(true);
               }}>
@@ -995,21 +1045,21 @@ export default function App() {
                   <Text style={styles.actionGridIcon}>⬆️</Text>
                 </View>
                 <Text style={styles.actionGridText}>Withdraw</Text>
-              </TouchableOpacity>
+              </TouchablePlatform>
 
-              <TouchableOpacity style={styles.actionGridBtn} onPress={() => setActiveTab('investments')}>
+              <TouchablePlatform style={styles.actionGridBtn} onPress={() => setActiveTab('investments')}>
                 <View style={styles.actionGridIconBox}>
                   <Text style={styles.actionGridIcon}>💰</Text>
                 </View>
                 <Text style={styles.actionGridText}>Earn</Text>
-              </TouchableOpacity>
+              </TouchablePlatform>
 
-              <TouchableOpacity style={styles.actionGridBtn} onPress={() => setActiveTab('referrals')}>
+              <TouchablePlatform style={styles.actionGridBtn} onPress={() => setActiveTab('referrals')}>
                 <View style={styles.actionGridIconBox}>
                   <Text style={styles.actionGridIcon}>🎁</Text>
                 </View>
                 <Text style={styles.actionGridText}>Referral</Text>
-              </TouchableOpacity>
+              </TouchablePlatform>
             </View>
 
             {/* Quick Investment Deploy Card */}
@@ -1473,7 +1523,7 @@ export default function App() {
           { id: 'referrals', label: 'Affiliate', icon: '👥' },
           { id: 'ledger', label: 'Wallets', icon: '💼' },
         ].map((tab) => (
-          <TouchableOpacity
+          <TouchablePlatform
             key={tab.id}
             style={styles.navItem}
             onPress={() => setActiveTab(tab.id as NavTab)}
@@ -1482,7 +1532,7 @@ export default function App() {
             <Text style={[styles.navLabel, activeTab === tab.id && styles.navLabelActive]}>
               {tab.label}
             </Text>
-          </TouchableOpacity>
+          </TouchablePlatform>
         ))}
       </View>
 

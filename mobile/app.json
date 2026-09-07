@@ -12,7 +12,16 @@
       "bundleIdentifier": "com.heron.mobile"
     },
     "android": {
-      "package": "com.heron.mobile"
+      "package": "com.heron.mobile",
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "backgroundColor": "#181A20"
+      }
+    },
+    "androidNavigationBar": {
+      "visible": "immersive",
+      "barStyle": "light-content",
+      "backgroundColor": "#181A20"
     },
     "web": {
       "bundler": "metro"
