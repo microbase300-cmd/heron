@@ -1254,9 +1254,9 @@ export default function App() {
         )}
 
         {activeTab === 'liquidity' && (
-          /* TAB 3: LIQUIDITY (DEPOSIT & WITHDRAW TERMINAL) */
+          /* TAB 3: DEPOSIT & LIQUIDITY HUB */
           <View style={styles.tabContent}>
-            <Text style={styles.pageTitle}>Multi-Asset Liquidity Hub</Text>
+            <Text style={styles.pageTitle}>Deposit & Liquidity Hub</Text>
             <Text style={styles.pageSub}>Inbound treasury addresses & automated disbursement pipeline.</Text>
 
             <View style={styles.actionCardGrid}>
@@ -1469,7 +1469,7 @@ export default function App() {
         {[
           { id: 'overview', label: 'Home', icon: '🏠' },
           { id: 'investments', label: 'Earn', icon: '📈' },
-          { id: 'liquidity', label: 'Trade', icon: '💱' },
+          { id: 'liquidity', label: 'Deposit', icon: '📥' },
           { id: 'referrals', label: 'Affiliate', icon: '👥' },
           { id: 'ledger', label: 'Wallets', icon: '💼' },
         ].map((tab) => (
@@ -3211,15 +3211,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   splashLogoWrapper: {
-    width: 140,
-    height: 140,
+    width: 68,
+    height: 68,
     alignItems: 'center',
     justifyContent: 'center',
   },
   splashLogoImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 70,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
   splashLetterRow: {
     flexDirection: 'row',
