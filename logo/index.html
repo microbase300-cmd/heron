@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset=UTF-8>
+  <meta name=viewport content=width=device-width, initial-scale=1.0>
+  <title>Heron Capital — Brand Identity & Logo Selection</title>
+  <link rel=preconnect href=https://fonts.googleapis.com>
+  <link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+  <link href=https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap rel=stylesheet>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --surface: #161a1f;
+      --card-border: #232a34;
+      --gold: #F0B90B;
+      --gold-light: #FCD535;
+      --text-main: #EAECEF;
+      --text-muted: #848E9C;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      padding: 40px 20px 80px;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 50px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(240, 185, 11, 0.12);
+      border: 1px solid rgba(240, 185, 11, 0.3);
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    h1 span {
+      color: var(--gold);
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    .logo-card {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(240, 185, 11, 0.5);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(240, 185, 11, 0.1);
+    }
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .logo-card:hover .image-wrapper img {
+      transform: scale(1.03);
+    }
+    .card-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+      flex-grow: 1;
+    }
+    .features {
+      list-style: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 14px;
+      margin-bottom: 18px;
+    }
+    .features li {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .features li:before {
+      content: ✦;
+      color: var(--gold);
+      font-size: 10px;
+    }
+    .download-btn {
+      display: block;
+      text-align: center;
+      background: rgba(240, 185, 11, 0.12);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .download-btn:hover {
+      background: var(--gold);
+      color: #111;
+    }
+  </style>
+</head>
+<body>
+  <div class=header>
+    <div class=badge>Brand Identity Proposals</div>
+    <h1>Heron Capital <span>Logo Concepts</span></h1>
+    <p class=subtitle>Select your preferred brandmark for the Heron Capital institutional wealth ecosystem.</p>
+  </div>
+
+  <div class=grid>
+    <div class=logo-card>
+      <div class=image-wrapper>
+        <img src=./01_heron_logo_diamond_crest.jpg alt=Concept 1 - Diamond Shield Crest>
+      </div>
+      <div class=card-tag>Option 01</div>
+      <h2 class=card-title>Diamond Shield Crest</h2>
+      <p class=card-desc>Sleek geometric Heron silhouette encased within a multifaceted diamond shield. Represents institutional reserve security and sovereign custody.</p>
+      <ul class=features>
+        <li>Institutional Trust & Security</li>
+        <li>Clean Geometric Vector Symmetry</li>
+        <li>Brushed Bullion Gold Finish</li>
+      </ul>
+      <a class=download-btn href=./01_heron_logo_diamond_crest.jpg download>Download High-Res</a>
+    </div>
+
+    <div class=logo-card>
+      <div class=image-wrapper>
+        <img src=./02_heron_logo_ascending_origami.jpg alt=Concept 2 - Ascending Origami Heron>
+      </div>
+      <div class=card-tag>Option 02</div>
+      <h2 class=card-title>Ascending Origami Wings</h2>
+      <p class=card-desc>Faceted modern origami Heron taking flight with ascending golden wings. Represents dynamic market alpha, upward yield trajectory, and exponential growth.</p>
+      <ul class=features>
+        <li>Dynamic Upward Momentum</li>
+        <li>Modern Faceted 3D Origami Aesthetic</li>
+        <li>High Visual Impact on Mobile & Web</li>
+      </ul>
+      <a class=download-btn href=./02_heron_logo_ascending_origami.jpg download>Download High-Res</a>
+    </div>
+
+    <div class=logo-card>
+      <div class=image-wrapper>
+        <img src=./03_heron_logo_monogram_h.jpg alt=Concept 3 - Monogram H Fusion>
+      </div>
+      <div class=card-tag>Option 03</div>
+      <h2 class=card-title>Monogram 'H' Fusion</h2>
+      <p class=card-desc>Architectural uppercase 'H' seamlessly morphing into aerodynamic wings and a sleek beak line. Ultra-clean typography meets fintech branding.</p>
+      <ul class=features>
+        <li>Minimalist Swiss Typography</li>
+        <li>Seamless Lettermark + Bird Integration</li>
+        <li>Exceptional Small-Size Favicon Legibility</li>
+      </ul>
+      <a class=download-btn href=./03_heron_logo_monogram_h.jpg download>Download High-Res</a>
+    </div>
+
+    <div class=logo-card>
+      <div class=image-wrapper>
+        <img src=./04_heron_logo_sovereign_orbital_seal.jpg alt=Concept 4 - Sovereign Orbital Seal>
+      </div>
+      <div class=card-tag>Option 04</div>
+      <h2 class=card-title>Sovereign Orbital Seal</h2>
+      <p class=card-desc>Poised Heron standing tall inside a luxury double-ring golden orbit with fine cryptographic node notches. Classic private banking medallion meets Web3.</p>
+      <ul class=features>
+        <li>Prestige Private Bank Medallion</li>
+        <li>Cryptographic Node Geometric Accents</li>
+        <li>Ideal for Official Seals & Signatures</li>
+      </ul>
+      <a class=download-btn href=./04_heron_logo_sovereign_orbital_seal.jpg download>Download High-Res</a>
+    </div>
+  </div>
+</body>
+</html>
