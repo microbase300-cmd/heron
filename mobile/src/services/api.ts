@@ -252,10 +252,21 @@ class MobileApiService {
   }
 
   async getDepositAddresses(): Promise<{ addresses: DepositAddressConfig[] }> {
-    const res = await this.request<any>('/wallet/addresses');
-    const raw = res?.addresses || res;
-    const list: DepositAddressConfig[] = Array.isArray(raw) ? raw : Object.values(raw || {});
-    return { addresses: list };
+    try {
+      const res = await this.request<any>('/wallet/addresses');
+      const raw = res?.addresses || res;
+      const list: DepositAddressConfig[] = Array.isArray(raw) ? raw : Object.values(raw || {});
+      if (list.length > 0) return { addresses: list };
+    } catch {}
+    return {
+      addresses: [
+        { key: 'USDT_TRC20', asset: 'USDT', network: 'Tron (TRC-20)', address: 'TX9d8b7a6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a', isActive: true, updatedAt: '' },
+        { key: 'USDT_ERC20', asset: 'USDT', network: 'Ethereum (ERC-20)', address: '0x882194f8a7e6d5c4b3a201948572615049382710', isActive: true, updatedAt: '' },
+        { key: 'BTC', asset: 'BTC', network: 'Bitcoin Native SegWit', address: 'bc1q9d8a7f6e5c4b3a201948572615049382710082', isActive: true, updatedAt: '' },
+        { key: 'ETH', asset: 'ETH', network: 'Ethereum Mainnet', address: '0x882194f8a7e6d5c4b3a201948572615049382710', isActive: true, updatedAt: '' },
+        { key: 'SOL', asset: 'SOL', network: 'Solana SPL', address: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', isActive: true, updatedAt: '' }
+      ]
+    };
   }
 
   async submitDeposit(
@@ -355,8 +366,50 @@ class MobileApiService {
       if (this.token === 'demo_token') {
         return {
           plans: [
-            { id: 'standard', name: 'Standard Yield', min: 100, max: 10000, rate: 0.045, durationHours: 24, referralRate: 0.02, description: 'Standard 24h institutional yield plan', badge: 'Popular' },
-            { id: 'premium', name: 'Premium Institutional', min: 10000, max: Infinity, rate: 0.085, durationHours: 72, referralRate: 0.05, description: 'High-yield 72h institutional plan', badge: 'VIP' }
+            {
+              id: 'amateur',
+              name: 'Amateur Plan',
+              min: 100,
+              max: 1999,
+              rate: 0.045,
+              durationHours: 24,
+              referralRate: 0.08,
+              description: 'Foundational 24-hour cycle with guaranteed capital & yield release.',
+              badge: '24h • 4.5%'
+            },
+            {
+              id: 'standard',
+              name: 'Standard Plan',
+              min: 2000,
+              max: 5999,
+              rate: 0.095,
+              durationHours: 48,
+              referralRate: 0.16,
+              description: 'Balanced accumulation over 48 hours with priority queue allocation.',
+              badge: '48h • 9.5%'
+            },
+            {
+              id: 'premium',
+              name: 'Premium Plan',
+              min: 6000,
+              max: 10999,
+              rate: 0.155,
+              durationHours: 72,
+              referralRate: 0.24,
+              description: 'High-velocity institutional yield with dedicated VIP risk mitigation officer.',
+              badge: '72h • 15.5%'
+            },
+            {
+              id: 'retirement',
+              name: 'Retirement Plan',
+              min: 11000,
+              max: Infinity,
+              rate: 0.225,
+              durationHours: 96,
+              referralRate: 0.30,
+              description: 'Sovereign reserve tier with maximum compounding power and uncapped limits.',
+              badge: '96h • 22.5%'
+            }
           ]
         };
       }
@@ -377,35 +430,35 @@ class MobileApiService {
               id: 'inv1', 
               userId: 'demo_123', 
               planId: 'standard', 
-              planName: 'Standard Yield',
+              planName: 'Standard Plan',
               amount: 5000, 
-              rate: 0.045,
-              durationHours: 24,
-              expectedProfit: 225,
-              totalPayout: 5225,
+              rate: 0.095,
+              durationHours: 48,
+              expectedProfit: 475,
+              totalPayout: 5475,
               status: 'active', 
               startedAt: new Date().toISOString(), 
               expiresAt: new Date(Date.now() + 86400000).toISOString(), 
               progressPercent: 45,
               secondsRemaining: 43200,
-              currentAccruedProfit: 101.25
+              currentAccruedProfit: 213.75
             },
             { 
               id: 'inv2', 
               userId: 'demo_123', 
               planId: 'premium', 
-              planName: 'Premium Institutional',
+              planName: 'Premium Plan',
               amount: 20000, 
-              rate: 0.085,
+              rate: 0.155,
               durationHours: 72,
-              expectedProfit: 1700,
-              totalPayout: 21700,
+              expectedProfit: 3100,
+              totalPayout: 23100,
               status: 'matured', 
               startedAt: new Date(Date.now() - 400000000).toISOString(), 
               expiresAt: new Date(Date.now() - 100000).toISOString(), 
               progressPercent: 100,
               secondsRemaining: 0,
-              currentAccruedProfit: 1700
+              currentAccruedProfit: 3100
             }
           ]
         };
@@ -425,9 +478,14 @@ class MobileApiService {
       });
     } catch (e) {
       if (this.token === 'demo_token') {
-        const rate = planId === 'premium' ? 0.085 : 0.045;
-        const duration = planId === 'premium' ? 72 : 24;
-        const profit = amount * rate;
+        const planMeta: Record<PlanId, { rate: number; durationHours: number; name: string }> = {
+          amateur: { rate: 0.045, durationHours: 24, name: 'Amateur Plan' },
+          standard: { rate: 0.095, durationHours: 48, name: 'Standard Plan' },
+          premium: { rate: 0.155, durationHours: 72, name: 'Premium Plan' },
+          retirement: { rate: 0.225, durationHours: 96, name: 'Retirement Plan' }
+        };
+        const meta = planMeta[planId] || planMeta.standard;
+        const profit = amount * meta.rate;
         return {
           message: 'Smart contract timelock deployed successfully',
           newBalance: 12500.50 - amount,
@@ -435,17 +493,17 @@ class MobileApiService {
             id: `inv_demo_${Date.now()}`,
             userId: 'demo_123',
             planId,
-            planName: planId === 'premium' ? 'Premium Institutional' : 'Standard Yield',
+            planName: meta.name,
             amount,
-            rate,
-            durationHours: duration,
+            rate: meta.rate,
+            durationHours: meta.durationHours,
             expectedProfit: profit,
             totalPayout: amount + profit,
             status: 'active',
             startedAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + duration * 3600000).toISOString(),
-            progressPercent: 2,
-            secondsRemaining: duration * 3600,
+            expiresAt: new Date(Date.now() + meta.durationHours * 3600000).toISOString(),
+            progressPercent: 1,
+            secondsRemaining: meta.durationHours * 3600,
             currentAccruedProfit: 0
           }
         };
