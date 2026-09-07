@@ -19,6 +19,7 @@
     },
     "android": {
       "package": "com.heron.mobile",
+      "usesCleartextTraffic": true,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/heron_logo.jpg",
