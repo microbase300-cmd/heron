@@ -265,11 +265,6 @@ export default function App() {
     if (cb) cb();
   };
 
-  // Backend Health & Endpoint config modal
-  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [customApiUrl, setCustomApiUrl] = useState(mobileApi.getBaseUrl());
-
   // App Navigation & Modals
   const [activeTab, setActiveTab] = useState<NavTab>('overview');
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -863,86 +858,8 @@ export default function App() {
                 )}
               </View>
             )}
-
-            {/* API Endpoint Config Link */}
-            <TouchableOpacity
-              style={styles.endpointLink}
-              onPress={() => setShowConfigModal(true)}
-            >
-              <Text style={styles.endpointText}>⚙️ Server API: {mobileApi.getBaseUrl()}</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
-
-        {/* Server Endpoint Config Modal */}
-        <Modal visible={showConfigModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Backend Server Configuration</Text>
-              <Text style={styles.modalSubtitle}>
-                Select a quick preset or enter your PC's Wi-Fi LAN IP (e.g. http://192.168.43.149:5000/api):
-              </Text>
-
-              {/* Quick Presets */}
-              <View style={styles.presetContainer}>
-                <TouchableOpacity
-                  style={styles.presetBtn}
-                  onPress={() => setCustomApiUrl('http://192.168.43.149:5000/api')}
-                >
-                  <Text style={styles.presetBtnText}>📱 Wi-Fi IP (192.168.43.149:5000)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.presetBtn}
-                  onPress={() => setCustomApiUrl('http://10.0.2.2:5000/api')}
-                >
-                  <Text style={styles.presetBtnText}>🤖 Android Studio AVD (10.0.2.2:5000)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.presetBtn}
-                  onPress={() => setCustomApiUrl('http://localhost:5000/api')}
-                >
-                  <Text style={styles.presetBtnText}>🌐 Web / Simulator (localhost:5000)</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TextInput
-                style={styles.input}
-                value={customApiUrl}
-                onChangeText={setCustomApiUrl}
-                placeholder="http://192.168.43.149:5000/api"
-                placeholderTextColor="#666"
-                autoCapitalize="none"
-              />
-
-              <View style={styles.modalBtnRow}>
-                <TouchableOpacity
-                  style={styles.modalCancelBtn}
-                  onPress={() => setShowConfigModal(false)}
-                >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalGoldBtn}
-                  onPress={async () => {
-                    mobileApi.setBaseUrl(customApiUrl);
-                    setShowConfigModal(false);
-                    const health = await mobileApi.checkHealth();
-                    setBackendOnline(health.online);
-                    showCustomAlert(
-                      health.online ? 'Connected!' : 'Saved (Endpoint Offline)',
-                      health.online
-                        ? `Successfully connected to ${customApiUrl}`
-                        : `Saved ${customApiUrl}, but could not reach server. Verify backend is running on your PC.`,
-                      health.online ? 'success' : 'warning'
-                    );
-                  }}
-                >
-                  <Text style={styles.modalGoldText}>Save Endpoint</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
 
         {/* Custom Luxury Alert Modal */}
         <CustomAlertModal alert={customAlert} onDismiss={hideCustomAlert} />
