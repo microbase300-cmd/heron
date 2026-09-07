@@ -22,6 +22,8 @@ import {
   KeyboardAvoidingView
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { NavigationBar } from 'expo-navigation-bar';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
 import {
@@ -104,6 +106,7 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
   return (
     <Animated.View style={[styles.splashContainer, { opacity: exitAnim }]}>
       <ExpoStatusBar style="light" />
+      <NavigationBar style="dark" />
 
       <Animated.View
         style={[
@@ -217,7 +220,20 @@ function CustomAlertModal({
   );
 }
 
-export default function App() {
+function MainAppContent() {
+  const insets = useSafeAreaInsets();
+
+  // Android System Navigation Bar styling (dark navigation bar with light buttons)
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      try {
+        NavigationBar.setStyle('dark');
+      } catch (e) {
+        console.warn('Navigation bar styling notice:', e);
+      }
+    }
+  }, []);
+
   // Splash Screen state
   const [splashVisible, setSplashVisible] = useState(true);
 
@@ -644,8 +660,15 @@ export default function App() {
   // --------------------------------------------------------------------------
   if (!currentUser) {
     return (
-      <SafeAreaView style={styles.safeContainer}>
+      <SafeAreaView style={[
+        styles.safeContainer,
+        {
+          paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0),
+          paddingBottom: insets.bottom || 12,
+        }
+      ]}>
         <ExpoStatusBar style="light" />
+        <NavigationBar style="dark" />
         <ScrollView contentContainerStyle={styles.authScroll}>
           <View style={styles.authBox}>
             {/* Logo */}
@@ -838,8 +861,14 @@ export default function App() {
   const portfolioNav = walletSummary?.totalPortfolioValue ?? (availableBal + (walletSummary?.lockedInInvestments ?? 0));
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaView style={[
+      styles.safeContainer,
+      {
+        paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0),
+      }
+    ]}>
       <ExpoStatusBar style="light" />
+      <NavigationBar style="dark" />
 
       {/* Binance-Style Top Mobile Header */}
       <View style={styles.appHeader}>
@@ -890,8 +919,29 @@ export default function App() {
         style={styles.mainScroll}
         contentContainerStyle={styles.mainScrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadAllData} tintColor="#F0B90B" />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={loadAllData}
+            colors={['#F0B90B', '#FFFFFF']}
+            progressBackgroundColor="#1E2329"
+            tintColor="#F0B90B"
+            title="Bybit Protocol • Syncing Market Liquidity..."
+            titleColor="#F0B90B"
+          />
+        }
       >
+        {/* Bybit-Style Institutional Sync Banner */}
+        {refreshing && (
+          <View style={styles.bybitSyncBanner}>
+            <ActivityIndicator size="small" color="#F0B90B" style={{ marginRight: 10 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bybitSyncTitle}>BYBIT PROTOCOL • SYNCING REAL-TIME DATA</Text>
+              <Text style={styles.bybitSyncSub}>Fetching institutional orderbooks, yield accruals & ledger...</Text>
+            </View>
+          </View>
+        )}
+
         {activeTab === 'overview' && (
           /* TAB 1: OVERVIEW */
           <View style={styles.tabContent}>
@@ -1395,7 +1445,12 @@ export default function App() {
       </ScrollView>
 
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
+      <View style={[
+        styles.bottomNav,
+        {
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 24 : 14)
+        }
+      ]}>
         {[
           { id: 'overview', label: 'Home', icon: '🏠' },
           { id: 'investments', label: 'Earn', icon: '📈' },
@@ -1967,6 +2022,14 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#181A20' }}>
+      <MainAppContent />
+    </SafeAreaProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
@@ -2289,6 +2352,33 @@ const styles = StyleSheet.create({
   mainScrollContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  bybitSyncBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E2329',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.35)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 14,
+    shadowColor: '#F0B90B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bybitSyncTitle: {
+    color: '#F0B90B',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  bybitSyncSub: {
+    color: '#848E9C',
+    fontSize: 10,
+    marginTop: 2,
   },
   tabContent: {
     gap: 16,

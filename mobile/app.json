@@ -30,11 +30,7 @@
       [
         "expo-navigation-bar",
         {
-          "position": "relative",
-          "visibility": "visible",
-          "behavior": "inset-swipe",
-          "backgroundColor": "#181A20",
-          "barStyle": "light-content"
+          "style": "dark"
         }
       ]
     ],
