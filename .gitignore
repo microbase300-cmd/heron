@@ -25,3 +25,9 @@ yarn-error.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Native generated folders
+mobile/android/
+mobile/ios/
+android/
+ios/
