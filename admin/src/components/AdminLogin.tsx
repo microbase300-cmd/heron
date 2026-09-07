@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Mail, AlertCircle, ArrowRight, KeyRound } from 'lucide-react';
+import { Lock, Mail, AlertCircle, ArrowRight, KeyRound } from 'lucide-react';
 import { adminApi } from '../services/api';
 import { AdminUser } from '../types';
 
@@ -37,9 +37,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess }) => {
       <div className="w-full max-w-md relative z-10">
         {/* Branding header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#F0B90B]/15 border border-[#F0B90B]/30 text-[#F0B90B] mb-4 shadow-xl shadow-[#F0B90B]/10">
-            <Shield className="w-8 h-8 text-[#F0B90B]" />
-          </div>
+          <img
+            src="/heron_logo.jpg"
+            alt="Heron Digital Capital"
+            className="inline-block w-16 h-16 rounded-full object-cover border border-[#F0B90B]/50 mb-4 shadow-xl shadow-[#F0B90B]/20"
+          />
           <h1 className="font-sans text-2xl font-extrabold text-[#EAECEF] tracking-tight">
             HERON DIGITAL CAPITAL
           </h1>

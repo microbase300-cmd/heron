@@ -54,9 +54,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div className="p-5 md:p-6 border-b border-[#2B313A] flex items-center justify-between">
           <a href="http://localhost:3000" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#F0B90B] flex items-center justify-center text-[#181A20] font-sans text-lg font-black shadow-md shadow-[#F0B90B]/20">
-              H
-            </div>
+            <img 
+              src="/heron_logo.jpg" 
+              alt="Heron Assets" 
+              className="w-9 h-9 rounded-full object-cover border border-[#F0B90B]/50 shadow-md shadow-[#F0B90B]/20" 
+            />
             <div>
               <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans">HERON ASSETS</div>
               <div className="text-[9px] tracking-wider uppercase text-[#F0B90B] font-sans font-bold mt-0.5">Binance Pro Engine</div>

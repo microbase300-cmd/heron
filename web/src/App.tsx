@@ -22,8 +22,21 @@ function Navbar() {
   return (
     <header className="topbar">
       <nav className="nav">
-        <Link className="brand" to="/" onClick={closeMenu}>
-          HERON / ASSETS TRUSTEES
+        <Link className="brand" to="/" onClick={closeMenu} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src="/heron_logo.jpg"
+            alt="Heron Assets"
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '1px solid rgba(240, 185, 11, 0.6)',
+              boxShadow: '0 0 10px rgba(240, 185, 11, 0.25)',
+              display: 'inline-block',
+            }}
+          />
+          <span>HERON / ASSETS TRUSTEES</span>
         </Link>
 
         <div className={`navlinks ${menuOpen ? 'open' : ''}`}>
@@ -131,7 +144,21 @@ function Footer({
       <div className="container">
         <div className="footer-top">
           <div>
-            <div className="footer-brand">HERON</div>
+            <div className="footer-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img
+                src="/heron_logo.jpg"
+                alt="Heron Assets"
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '1px solid rgba(240, 185, 11, 0.6)',
+                  boxShadow: '0 0 12px rgba(240, 185, 11, 0.25)',
+                }}
+              />
+              <span>HERON ASSETS</span>
+            </div>
             <p
               className="body"
               style={{

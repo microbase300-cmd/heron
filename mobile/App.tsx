@@ -16,7 +16,8 @@ import {
   Platform,
   RefreshControl,
   Animated,
-  Easing
+  Easing,
+  Image
 } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
@@ -38,74 +39,84 @@ const { width, height } = Dimensions.get('window');
 type NavTab = 'overview' | 'investments' | 'liquidity' | 'referrals' | 'ledger';
 
 // ============================================================================
-// LUXURY OPENING SPLASH ANIMATION (HERON CAPITAL)
+// LUXURY OPENING SPLASH ANIMATION (BINANCE PRO THEMED • HERON ASSETS)
 // ============================================================================
+const TITLE_CHARS = ['H', 'E', 'R', 'O', 'N', ' ', 'A', 'S', 'S', 'E', 'T', 'S'];
+
 function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.75)).current;
-  const titleAnim = useRef(new Animated.Value(0)).current;
-  const titleYAnim = useRef(new Animated.Value(25)).current;
-  const tagAnim = useRef(new Animated.Value(0)).current;
+  const logoFadeAnim = useRef(new Animated.Value(0)).current;
+  const logoScaleAnim = useRef(new Animated.Value(0.75)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const charAnims = useRef(TITLE_CHARS.map(() => new Animated.Value(0))).current;
+  const tagAnim = useRef(new Animated.Value(0)).current;
+  const goldLineAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const exitAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Continuous subtle pulsing light on the central shield
+    // Continuous subtle breathing pulse
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1300,
+          toValue: 1.04,
+          duration: 1600,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1.0,
-          duration: 1300,
+          duration: 1600,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
       ])
     ).start();
 
-    // Sequence: Fade & Scale in Crest -> Slide up Title -> Reveal Security & Progress -> Fade Out
+    // 1. Logo Entry in center of pure black background
     Animated.parallel([
-      Animated.timing(fadeAnim, {
+      Animated.timing(logoFadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 750,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      Animated.spring(scaleAnim, {
+      Animated.spring(logoScaleAnim, {
         toValue: 1,
-        friction: 5,
+        friction: 6,
         tension: 40,
         useNativeDriver: true,
       }),
     ]).start(() => {
-      Animated.parallel([
-        Animated.timing(titleAnim, {
+      // 2. Sequential Letter Animation for "HERON ASSETS"
+      const letterTimings = charAnims.map((anim) =>
+        Animated.timing(anim, {
           toValue: 1,
-          duration: 600,
+          duration: 380,
+          easing: Easing.out(Easing.back(1.4)),
           useNativeDriver: true,
-        }),
-        Animated.timing(titleYAnim, {
-          toValue: 0,
-          duration: 600,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        Animated.timing(tagAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }).start();
+        })
+      );
 
+      Animated.stagger(55, letterTimings).start(() => {
+        // 3. Reveal Welcome Subtitle, Line & Security Credentials
+        Animated.parallel([
+          Animated.timing(tagAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(goldLineAnim, {
+            toValue: 1,
+            duration: 650,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }),
+        ]).start();
+
+        // 4. Progress Simulation & Automatic Entry
         Animated.timing(progressAnim, {
           toValue: 1,
-          duration: 1600,
+          duration: 1700,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: false,
         }).start(() => {
@@ -126,56 +137,97 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
     outputRange: ['0%', '100%'],
   });
 
+  const goldLineWidth = goldLineAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '80%'],
+  });
+
   return (
     <Animated.View style={[styles.splashContainer, { opacity: exitAnim }]}>
       <ExpoStatusBar style="light" />
+
+      {/* Deep Obsidian Radial Backdrop */}
       <Animated.View
         style={[
           styles.splashGlowBg,
           {
             transform: [{ scale: pulseAnim }],
-            opacity: fadeAnim,
+            opacity: logoFadeAnim,
           },
         ]}
       />
 
-      <Animated.View
-        style={[
-          styles.splashCenterContent,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        {/* Heraldic Shield Monogram */}
-        <Animated.View style={[styles.splashEmblemWrapper, { transform: [{ scale: pulseAnim }] }]}>
-          <View style={styles.splashEmblemOuter}>
-            <View style={styles.splashEmblemInner}>
-              <Text style={styles.splashEmblemIcon}>🦅</Text>
-            </View>
-          </View>
-          <View style={styles.splashShieldBadge}>
-            <Text style={styles.splashShieldBadgeText}>H</Text>
+      <Animated.View style={styles.splashCenterContent}>
+        {/* Top Protocol Badge */}
+        <Animated.View style={{ opacity: logoFadeAnim, alignItems: 'center', marginBottom: 20 }}>
+          <View style={styles.splashProtocolBadge}>
+            <View style={styles.splashGreenPulseDot} />
+            <Text style={styles.splashProtocolText}>BINANCE INSTITUTIONAL TRUSTEE</Text>
           </View>
         </Animated.View>
 
-        {/* Brand Typography */}
+        {/* Central Logo - Seamlessly Blended on Pure Deep Black Background */}
         <Animated.View
-          style={{
-            opacity: titleAnim,
-            transform: [{ translateY: titleYAnim }],
-            alignItems: 'center',
-            marginTop: 26,
-          }}
+          style={[
+            styles.splashLogoWrapper,
+            {
+              opacity: logoFadeAnim,
+              transform: [{ scale: logoScaleAnim }, { scale: pulseAnim }],
+            },
+          ]}
         >
-          <Text style={styles.splashBrandName}>HERON CAPITAL</Text>
-          <View style={styles.splashGoldLine} />
-          <Text style={styles.splashTagline}>INSTITUTIONAL DIGITAL ASSET TRUSTEES</Text>
+          <Image
+            source={require('./assets/heron_logo.jpg')}
+            style={styles.splashLogoImage}
+            resizeMode="contain"
+          />
         </Animated.View>
 
-        {/* Security & Progress Indicator */}
-        <Animated.View style={{ opacity: tagAnim, alignItems: 'center', marginTop: 38, width: '100%' }}>
+        {/* Letter-by-Letter Animated "HERON ASSETS" Typography */}
+        <View style={styles.splashLetterRow}>
+          {TITLE_CHARS.map((char, index) => {
+            if (char === ' ') {
+              return <View key={index} style={{ width: 10 }} />;
+            }
+            const anim = charAnims[index];
+            const translateY = anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [18, 0],
+            });
+            const scale = anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.6, 1],
+            });
+            const isGold = index >= 6;
+
+            return (
+              <Animated.Text
+                key={index}
+                style={[
+                  styles.splashLetterText,
+                  isGold && styles.splashLetterGold,
+                  {
+                    opacity: anim,
+                    transform: [{ translateY }, { scale }],
+                  },
+                ]}
+              >
+                {char}
+              </Animated.Text>
+            );
+          })}
+        </View>
+
+        {/* Expanding Golden Horizon Line */}
+        <Animated.View style={[styles.splashGoldLineAnimated, { width: goldLineWidth }]} />
+
+        {/* Professional Welcome Subtitle & Security Verification */}
+        <Animated.View style={{ opacity: tagAnim, alignItems: 'center', width: '100%' }}>
+          <Text style={styles.splashWelcomeHeading}>WELCOME TO HERON ASSETS</Text>
+          <Text style={styles.splashWelcomeSub}>
+            Deterministic Digital Asset Liquidity & Timelock Escrow
+          </Text>
+
           <View style={styles.splashSecurityPill}>
             <View style={styles.splashPulseDot} />
             <Text style={styles.splashSecurityText}>256-BIT QUANTUM ENCRYPTION ACTIVE</Text>
@@ -716,7 +768,7 @@ export default function App() {
           <View style={styles.authBox}>
             {/* Logo */}
             <View style={styles.logoBadgeBig}>
-              <Text style={styles.logoTextBig}>H</Text>
+              <Image source={require('./assets/heron_logo.jpg')} style={styles.logoImageBig} resizeMode="cover" />
             </View>
             <Text style={styles.authBrandTitle}>HERON DIGITAL CAPITAL</Text>
             <Text style={styles.authBrandSub}>INSTITUTIONAL CRYPTO WEALTH</Text>
@@ -1011,7 +1063,7 @@ export default function App() {
       <View style={styles.appHeader}>
         <View style={styles.brandRow}>
           <View style={styles.logoBadgeSmall}>
-            <Text style={styles.logoTextSmall}>H</Text>
+            <Image source={require('./assets/heron_logo.jpg')} style={styles.logoImageSmall} resizeMode="cover" />
           </View>
           <View>
             <Text style={styles.headerBrandTitle}>HERON ASSETS</Text>
@@ -2141,21 +2193,27 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   logoBadgeBig: {
-    width: 60,
-    height: 60,
-    borderRadius: 18,
-    backgroundColor: 'rgba(240,185,11,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(240,185,11,0.3)',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#000000',
+    borderWidth: 1.5,
+    borderColor: 'rgba(240,185,11,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+    overflow: 'hidden',
+    shadowColor: '#F0B90B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 10,
   },
-  logoTextBig: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#F0B90B',
+  logoImageBig: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
   },
   authBrandTitle: {
     fontSize: 18,
@@ -2330,19 +2388,20 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoBadgeSmall: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: 'rgba(240,185,11,0.15)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#000000',
     borderWidth: 1,
-    borderColor: 'rgba(240,185,11,0.3)',
+    borderColor: 'rgba(240,185,11,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  logoTextSmall: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#F0B90B',
+  logoImageSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   headerBrandTitle: {
     fontSize: 13,
@@ -3270,93 +3329,111 @@ const styles = StyleSheet.create({
   // --- Opening Splash Screen Styles ---
   splashContainer: {
     flex: 1,
-    backgroundColor: '#181A20',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
   },
   splashGlowBg: {
     position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(240,185,11,0.06)',
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+    backgroundColor: 'rgba(240,185,11,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(240,185,11,0.12)',
+    borderColor: 'rgba(240,185,11,0.08)',
   },
   splashCenterContent: {
     alignItems: 'center',
     width: '100%',
   },
-  splashEmblemWrapper: {
-    position: 'relative',
+  splashProtocolBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(240, 185, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.25)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
-  splashEmblemOuter: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(240,185,11,0.15)',
-    borderWidth: 2,
-    borderColor: '#F0B90B',
+  splashGreenPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0ECB81',
+    marginRight: 7,
+  },
+  splashProtocolText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#F0B90B',
+    letterSpacing: 1.5,
+  },
+  splashLogoWrapper: {
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#F0B90B',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowOpacity: 0.35,
+    shadowRadius: 30,
+    elevation: 20,
+    overflow: 'hidden',
   },
-  splashEmblemInner: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    backgroundColor: '#1E2329',
+  splashLogoImage: {
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: '#000000',
+  },
+  splashLetterRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    marginTop: 22,
+    flexWrap: 'nowrap',
   },
-  splashEmblemIcon: {
-    fontSize: 36,
-  },
-  splashShieldBadge: {
-    position: 'absolute',
-    bottom: -6,
-    backgroundColor: '#F0B90B',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#181A20',
-  },
-  splashShieldBadgeText: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#181A20',
-    letterSpacing: 1,
-  },
-  splashBrandName: {
+  splashLetterText: {
     fontSize: 26,
     fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 2,
+    fontFamily: Platform.OS === 'ios' ? 'HelveticaNeue-Bold' : 'sans-serif-medium',
+  },
+  splashLetterGold: {
     color: '#F0B90B',
-    letterSpacing: 4,
-    textAlign: 'center',
   },
-  splashGoldLine: {
-    width: 48,
+  splashGoldLineAnimated: {
     height: 2,
-    backgroundColor: 'rgba(240,185,11,0.5)',
-    marginVertical: 10,
+    backgroundColor: '#F0B90B',
+    marginVertical: 12,
     borderRadius: 1,
+    shadowColor: '#F0B90B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
   },
-  splashTagline: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#8e9b97',
+  splashWelcomeHeading: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#F0B90B',
     letterSpacing: 2,
     textAlign: 'center',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  splashWelcomeSub: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgba(234, 236, 239, 0.7)',
+    textAlign: 'center',
+    letterSpacing: 0.4,
+    marginBottom: 18,
+    paddingHorizontal: 16,
   },
   splashSecurityPill: {
     flexDirection: 'row',
@@ -3367,7 +3444,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   splashPulseDot: {
     width: 6,
@@ -3403,7 +3480,7 @@ const styles = StyleSheet.create({
   },
   splashSkipBtn: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 36,
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 20,

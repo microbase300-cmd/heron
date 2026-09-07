@@ -94,9 +94,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
       <div className="relative w-full max-w-md rounded-2xl glass-card-featured border-gold/40 p-8 shadow-2xl shadow-black">
         {/* Logo */}
         <div className="text-center space-y-2 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/40 flex items-center justify-center text-gold font-sans text-2xl font-black mx-auto shadow-lg shadow-gold/15">
-            H
-          </div>
+          <img 
+            src="/heron_logo.jpg" 
+            alt="Heron Assets" 
+            className="w-12 h-12 rounded-full object-cover border border-gold/50 mx-auto shadow-lg shadow-gold/25" 
+          />
           <h3 className="font-sans text-2xl font-bold text-white tracking-tight">
             {mode === 'login' ? 'Client Access' : registerStep === 'otp' ? 'Security Verification' : 'Create Investor Account'}
           </h3>

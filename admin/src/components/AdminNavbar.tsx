@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, LogOut, RefreshCw, Sparkles } from 'lucide-react';
+import { LogOut, RefreshCw, Sparkles } from 'lucide-react';
 import { AdminUser } from '../types';
 
 interface AdminNavbarProps {
@@ -19,9 +19,11 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
     <header className="h-16 border-b border-[#2B313A] bg-[#181A20]/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
       {/* Brand & Clearance Indicator */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#F0B90B]/15 border border-[#F0B90B]/30 text-[#F0B90B] shadow-sm shadow-[#F0B90B]/20">
-          <Shield className="w-5 h-5 text-[#F0B90B]" />
-        </div>
+        <img
+          src="/heron_logo.jpg"
+          alt="Heron Executive"
+          className="w-9 h-9 rounded-full object-cover border border-[#F0B90B]/50 shadow-md shadow-[#F0B90B]/20"
+        />
         <div>
           <div className="flex items-center gap-2">
             <span className="font-sans font-bold text-[#EAECEF] text-sm sm:text-base tracking-tight">
