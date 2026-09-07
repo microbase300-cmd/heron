@@ -21,6 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
 
+## [1.4.2] - 2026-09-07
+### Added & Changed
+- **Custom Luxury Pop-Up Modal System for Mobile App (`mobile/App.tsx`)**:
+  - Replaced native OS default white alert dialogs (`Alert.alert`) with a high-end customized Binance Pro modal dialog (`CustomAlertModal`).
+  - Added support for 4 custom alert variants: `success` (emerald green badge & glowing border), `error` (coral red badge & border), `warning` (Binance yellow badge), and `info` (shield icon).
+  - Designed with `#1E2329` elevated card, `rgba(240, 185, 11, 0.4)` gold border, gold button CTA, security protocol branding, and smooth fade transitions.
+  - Seamlessly handles authentication responses, deposit receipts, withdrawal authorizations, investment contracts, and network connection prompts.
+
 ## [1.4.1] - 2026-09-07
 ### Added & Changed
 - **Web App Luxury Editorial Theme Restoration (`web/` & `assets/css/style.css`)**:

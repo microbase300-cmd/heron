@@ -400,6 +400,14 @@ graph TD
    - `mobile/`: `npx tsc --noEmit` (Exit Code 0)
    - `backend/`: `npx tsc --noEmit` (Exit Code 0)
 
+### Phase 11: Custom Luxury Pop-Up Modal System (Mobile App)
+1. **Replacement of Plain White OS Alerts (`mobile/App.tsx`)**:
+   - Replaced all `Alert.alert` calls across authentication, OTP verification, deposit submission, withdrawal authorization, investment deployments, and network configurations with a dedicated `CustomAlertModal`.
+   - Designed with the Binance Pro dark theme (`#1E2329` card surface, `#2B313A` & `rgba(240,185,11,0.4)` borders, `#F0B90B` button, and glowing icon badges for success, error, warning, and info).
+   - Rendered at the root of both unauthenticated and authenticated branches for a seamless and luxury user experience.
+2. **Typecheck & Verification**:
+   - `mobile/`: `npx tsc --noEmit` (Exit Code 0).
+
 ---
 
 ## 3. Standard Operational Commands

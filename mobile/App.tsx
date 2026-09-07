@@ -196,6 +196,97 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
   );
 }
 
+// ============================================================================
+// LUXURY CUSTOM BINANCE PRO ALERT MODAL
+// ============================================================================
+interface CustomAlertState {
+  visible: boolean;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  confirmText?: string;
+  onConfirm?: () => void;
+}
+
+function CustomAlertModal({
+  alert,
+  onDismiss,
+}: {
+  alert: CustomAlertState;
+  onDismiss: () => void;
+}) {
+  if (!alert.visible) return null;
+
+  const isSuccess = alert.type === 'success';
+  const isError = alert.type === 'error';
+  const isWarning = alert.type === 'warning';
+
+  return (
+    <Modal visible={alert.visible} transparent animationType="fade">
+      <View style={styles.modalOverlayCenter}>
+        <View
+          style={[
+            styles.customAlertCard,
+            isSuccess && styles.customAlertCardSuccess,
+            isError && styles.customAlertCardError,
+            isWarning && styles.customAlertCardWarning,
+          ]}
+        >
+          {/* Glowing Circle Badge */}
+          <View
+            style={[
+              styles.customAlertIconCircle,
+              isSuccess && styles.customAlertIconCircleSuccess,
+              isError && styles.customAlertIconCircleError,
+              isWarning && styles.customAlertIconCircleWarning,
+            ]}
+          >
+            <Text
+              style={[
+                styles.customAlertIconText,
+                isSuccess && { color: '#0ECB81' },
+                isError && { color: '#F6465D' },
+                isWarning && { color: '#F0B90B' },
+                !isSuccess && !isError && !isWarning && { color: '#F0B90B' },
+              ]}
+            >
+              {isSuccess ? '✓' : isError ? '✕' : isWarning ? '⚠️' : '🛡️'}
+            </Text>
+          </View>
+
+          {/* Security & Protocol Subtitle */}
+          <Text style={styles.customAlertBrandTag}>HERON CAPITAL PROTOCOL</Text>
+
+          {/* Dialog Title */}
+          <Text style={styles.customAlertTitle}>{alert.title}</Text>
+
+          {/* Dialog Message */}
+          <Text style={styles.customAlertMessage}>{alert.message}</Text>
+
+          {/* Primary Action Button */}
+          <TouchableOpacity
+            style={[
+              styles.customAlertBtn,
+              isError && styles.customAlertBtnError,
+            ]}
+            onPress={onDismiss}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.customAlertBtnText,
+                isError && styles.customAlertBtnTextError,
+              ]}
+            >
+              {alert.confirmText || 'Acknowledge'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function App() {
   // Splash Screen state
   const [splashVisible, setSplashVisible] = useState(true);
@@ -211,6 +302,38 @@ export default function App() {
   const [regStep, setRegStep] = useState<1 | 2>(1);
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Custom Alert Modal State
+  const [customAlert, setCustomAlert] = useState<CustomAlertState>({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info',
+    confirmText: 'Acknowledge',
+  });
+
+  const showCustomAlert = (
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'warning' | 'info' = 'info',
+    onConfirm?: () => void,
+    confirmText: string = 'Acknowledge'
+  ) => {
+    setCustomAlert({
+      visible: true,
+      title,
+      message,
+      type,
+      confirmText,
+      onConfirm,
+    });
+  };
+
+  const hideCustomAlert = () => {
+    const cb = customAlert.onConfirm;
+    setCustomAlert(prev => ({ ...prev, visible: false, onConfirm: undefined }));
+    if (cb) cb();
+  };
 
   // Backend Health & Endpoint config modal
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
@@ -373,16 +496,16 @@ export default function App() {
   // Auth Handlers
   const handleLogin = async () => {
     if (!authEmail.trim() || !authPassword.trim()) {
-      Alert.alert('Error', 'Please enter both email and password.');
+      showCustomAlert('Missing Credentials', 'Please enter both your investor email and master password.', 'warning');
       return;
     }
     setAuthLoading(true);
     try {
       const res = await mobileApi.login(authEmail.trim(), authPassword.trim());
       setCurrentUser(res.user);
-      Alert.alert('Success', `Welcome back, ${res.user.name}`);
+      showCustomAlert('Login Successful', `Welcome back, ${res.user.name}. Your institutional portfolio is authenticated.`, 'success');
     } catch (err: any) {
-      Alert.alert('Authentication Failed', err.message || 'Invalid email or password.');
+      showCustomAlert('Authentication Failed', err.message || 'Invalid email or password. Please verify your credentials.', 'error');
     } finally {
       setAuthLoading(false);
     }
@@ -390,7 +513,7 @@ export default function App() {
 
   const handleRequestRegOtp = async () => {
     if (!authName.trim() || !authEmail.trim() || !authPassword.trim()) {
-      Alert.alert('Missing Details', 'Name, email, and password (min 6 chars) are required.');
+      showCustomAlert('Missing Details', 'Full name, email, and password (min 6 chars) are required.', 'warning');
       return;
     }
     setAuthLoading(true);
@@ -401,9 +524,9 @@ export default function App() {
         setAuthOtp(res.devOtp);
       }
       setRegStep(2);
-      Alert.alert('Security OTP Sent', `A 6-digit security code was dispatched to ${authEmail}.`);
+      showCustomAlert('Security OTP Dispatched', `A 6-digit security verification code was dispatched to ${authEmail}.`, 'success');
     } catch (err: any) {
-      Alert.alert('Registration Notice', err.message || 'Failed to dispatch verification OTP.');
+      showCustomAlert('Registration Notice', err.message || 'Failed to dispatch verification OTP.', 'error');
     } finally {
       setAuthLoading(false);
     }
@@ -411,7 +534,7 @@ export default function App() {
 
   const handleCompleteRegister = async () => {
     if (!authOtp.trim() || authOtp.trim().length !== 6) {
-      Alert.alert('Verification Code', 'Please enter the 6-digit verification OTP.');
+      showCustomAlert('Verification Code', 'Please enter the 6-digit verification OTP.', 'warning');
       return;
     }
     setAuthLoading(true);
@@ -424,9 +547,9 @@ export default function App() {
         referralCode: authReferral.trim() || undefined
       });
       setCurrentUser(res.user);
-      Alert.alert('Account Verified', 'Your portfolio has been created with $0.00 initial balance. Deposit liquidity to start earning yield.');
+      showCustomAlert('Account Verified', 'Your portfolio has been created with $0.00 initial balance. Deposit liquidity to start earning yield.', 'success');
     } catch (err: any) {
-      Alert.alert('Registration Error', err.message || 'Failed to register account.');
+      showCustomAlert('Registration Error', err.message || 'Failed to register account.', 'error');
     } finally {
       setAuthLoading(false);
     }
@@ -444,23 +567,23 @@ export default function App() {
   const handleDepositSubmit = async () => {
     const amt = parseFloat(depositAmount);
     if (isNaN(amt) || amt <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid deposit amount.');
+      showCustomAlert('Invalid Amount', 'Please enter a valid deposit amount.', 'warning');
       return;
     }
     if (!depositTxHash.trim()) {
-      Alert.alert('Missing Hash', 'Please provide your blockchain transaction hash.');
+      showCustomAlert('Missing TX Hash', 'Please provide your blockchain transaction hash.', 'warning');
       return;
     }
     setModalLoading(true);
     try {
       await mobileApi.submitDeposit(amt, depositAsset, depositTxHash.trim(), depositAsset);
-      Alert.alert('Deposit Receipt Submitted', 'Your inbound deposit is now pending confirmation by the Executive Settlement Desk. Funds will be credited once verified.');
+      showCustomAlert('Deposit Receipt Submitted', 'Your inbound deposit is now pending confirmation by the Executive Settlement Desk. Funds will be credited once verified.', 'success');
       setShowDepositModal(false);
       setDepositAmount('');
       setDepositTxHash('');
       loadAllData();
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to submit deposit receipt.');
+      showCustomAlert('Deposit Error', err.message || 'Failed to submit deposit receipt.', 'error');
     } finally {
       setModalLoading(false);
     }
@@ -470,16 +593,16 @@ export default function App() {
   const handleRequestWithdrawOtp = async () => {
     const amt = parseFloat(withdrawAmount);
     if (isNaN(amt) || amt <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid withdrawal amount.');
+      showCustomAlert('Invalid Amount', 'Please enter a valid withdrawal amount.', 'warning');
       return;
     }
     if (!withdrawAddress.trim()) {
-      Alert.alert('Missing Address', 'Please enter your recipient wallet address.');
+      showCustomAlert('Missing Address', 'Please enter your recipient wallet address.', 'warning');
       return;
     }
     const avail = walletSummary?.availableBalance ?? 0;
     if (amt > avail) {
-      Alert.alert('Insufficient Balance', `Your available balance is $${avail.toFixed(2)}.`);
+      showCustomAlert('Insufficient Balance', `Your available balance is $${avail.toFixed(2)}.`, 'error');
       return;
     }
     setModalLoading(true);
@@ -490,9 +613,9 @@ export default function App() {
         setWithdrawOtp(res.devOtp);
       }
       setWithdrawStep(2);
-      Alert.alert('OTP Dispatched', 'A 6-digit security authorization code was sent to your registered email.');
+      showCustomAlert('OTP Dispatched', 'A 6-digit security authorization code was sent to your registered email.', 'info');
     } catch (err: any) {
-      Alert.alert('Withdrawal Notice', err.message || 'Failed to request withdrawal OTP.');
+      showCustomAlert('Withdrawal Notice', err.message || 'Failed to request withdrawal OTP.', 'error');
     } finally {
       setModalLoading(false);
     }
@@ -500,13 +623,13 @@ export default function App() {
 
   const handleCompleteWithdrawal = async () => {
     if (!withdrawOtp.trim() || withdrawOtp.trim().length !== 6) {
-      Alert.alert('Invalid Code', 'Please enter the 6-digit authorization code.');
+      showCustomAlert('Invalid Code', 'Please enter the 6-digit authorization code.', 'warning');
       return;
     }
     setModalLoading(true);
     try {
       await mobileApi.submitWithdrawal(parseFloat(withdrawAmount), withdrawAsset, withdrawAddress.trim(), withdrawOtp.trim());
-      Alert.alert('Disbursement Submitted', 'Your withdrawal has been placed into pending escrow awaiting Executive Treasury approval.');
+      showCustomAlert('Disbursement Submitted', 'Your withdrawal has been placed into pending escrow awaiting Executive Treasury approval.', 'success');
       setShowWithdrawModal(false);
       setWithdrawAmount('');
       setWithdrawAddress('');
@@ -514,7 +637,7 @@ export default function App() {
       setWithdrawStep(1);
       loadAllData();
     } catch (err: any) {
-      Alert.alert('Withdrawal Error', err.message || 'Failed to authorize withdrawal.');
+      showCustomAlert('Withdrawal Error', err.message || 'Failed to authorize withdrawal.', 'error');
     } finally {
       setModalLoading(false);
     }
@@ -524,23 +647,23 @@ export default function App() {
   const handleCreateInvestment = async () => {
     const amt = parseFloat(investAmount);
     if (isNaN(amt) || amt <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter an allocation amount.');
+      showCustomAlert('Invalid Amount', 'Please enter an allocation amount.', 'warning');
       return;
     }
     const avail = walletSummary?.availableBalance ?? 0;
     if (amt > avail) {
-      Alert.alert('Insufficient Balance', `Available: $${avail.toFixed(2)}. Please deposit additional liquidity.`);
+      showCustomAlert('Insufficient Balance', `Available: $${avail.toFixed(2)}. Please deposit additional liquidity.`, 'error');
       return;
     }
     setModalLoading(true);
     try {
       await mobileApi.createInvestment(selectedPlanId, amt);
-      Alert.alert('Investment Deployed', 'Your timelocked smart contract has started. Programmatic yield will accrue in real time.');
+      showCustomAlert('Investment Deployed', 'Your timelocked smart contract has started. Programmatic yield will accrue in real time.', 'success');
       setShowInvestModal(false);
       setInvestAmount('');
       loadAllData();
     } catch (err: any) {
-      Alert.alert('Investment Error', err.message || 'Failed to deploy investment.');
+      showCustomAlert('Investment Error', err.message || 'Failed to deploy investment.', 'error');
     } finally {
       setModalLoading(false);
     }
@@ -851,11 +974,12 @@ export default function App() {
                     setShowConfigModal(false);
                     const health = await mobileApi.checkHealth();
                     setBackendOnline(health.online);
-                    Alert.alert(
+                    showCustomAlert(
                       health.online ? 'Connected!' : 'Saved (Endpoint Offline)',
                       health.online
                         ? `Successfully connected to ${customApiUrl}`
-                        : `Saved ${customApiUrl}, but could not reach server. Verify backend is running on your PC.`
+                        : `Saved ${customApiUrl}, but could not reach server. Verify backend is running on your PC.`,
+                      health.online ? 'success' : 'warning'
                     );
                   }}
                 >
@@ -865,6 +989,9 @@ export default function App() {
             </View>
           </View>
         </Modal>
+
+        {/* Custom Luxury Alert Modal */}
+        <CustomAlertModal alert={customAlert} onDismiss={hideCustomAlert} />
       </SafeAreaView>
     );
   }
@@ -1989,6 +2116,9 @@ export default function App() {
           </View>
         </View>
       </Modal>
+
+      {/* Custom Luxury Alert Modal */}
+      <CustomAlertModal alert={customAlert} onDismiss={hideCustomAlert} />
     </SafeAreaView>
   );
 }
@@ -3798,5 +3928,107 @@ const styles = StyleSheet.create({
   tierWarningText: {
     fontSize: 10,
     color: '#F6465D',
+  },
+  // Custom Luxury Alert Popup Styles
+  customAlertCard: {
+    width: '90%',
+    maxWidth: 360,
+    backgroundColor: '#1E2329',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(240, 185, 11, 0.4)',
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.8,
+    shadowRadius: 32,
+    elevation: 25,
+  },
+  customAlertCardSuccess: {
+    borderColor: 'rgba(14, 203, 129, 0.5)',
+  },
+  customAlertCardError: {
+    borderColor: 'rgba(246, 70, 93, 0.5)',
+  },
+  customAlertCardWarning: {
+    borderColor: 'rgba(240, 185, 11, 0.5)',
+  },
+  customAlertIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderWidth: 1.5,
+    borderColor: '#F0B90B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  customAlertIconCircleSuccess: {
+    backgroundColor: 'rgba(14, 203, 129, 0.15)',
+    borderColor: '#0ECB81',
+  },
+  customAlertIconCircleError: {
+    backgroundColor: 'rgba(246, 70, 93, 0.15)',
+    borderColor: '#F6465D',
+  },
+  customAlertIconCircleWarning: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderColor: '#F0B90B',
+  },
+  customAlertIconText: {
+    fontSize: 26,
+    fontWeight: 'bold',
+  },
+  customAlertBrandTag: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 2,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  customAlertTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 10,
+    letterSpacing: 0.2,
+  },
+  customAlertMessage: {
+    fontSize: 13,
+    color: 'rgba(234, 236, 239, 0.85)',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 22,
+    paddingHorizontal: 6,
+  },
+  customAlertBtn: {
+    width: '100%',
+    backgroundColor: '#F0B90B',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#F0B90B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  customAlertBtnError: {
+    backgroundColor: '#F6465D',
+    shadowColor: '#F6465D',
+  },
+  customAlertBtnText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#181A20',
+    letterSpacing: 0.5,
+  },
+  customAlertBtnTextError: {
+    color: '#ffffff',
   },
 });
