@@ -45,208 +45,60 @@ const TITLE_CHARS = ['H', 'E', 'R', 'O', 'N', ' ', 'A', 'S', 'S', 'E', 'T', 'S']
 
 function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
   const logoFadeAnim = useRef(new Animated.Value(0)).current;
-  const logoScaleAnim = useRef(new Animated.Value(0.75)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const charAnims = useRef(TITLE_CHARS.map(() => new Animated.Value(0))).current;
-  const tagAnim = useRef(new Animated.Value(0)).current;
-  const goldLineAnim = useRef(new Animated.Value(0)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
+  const logoScaleAnim = useRef(new Animated.Value(0.85)).current;
   const exitAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Continuous subtle breathing pulse
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.04,
-          duration: 1600,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1.0,
-          duration: 1600,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // 1. Logo Entry in center of pure black background
+    // 1. Minimalist Binance-style Logo Entry
     Animated.parallel([
       Animated.timing(logoFadeAnim, {
         toValue: 1,
-        duration: 750,
+        duration: 800,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.spring(logoScaleAnim, {
         toValue: 1,
-        friction: 6,
+        friction: 7,
         tension: 40,
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // 2. Sequential Letter Animation for "HERON ASSETS"
-      const letterTimings = charAnims.map((anim) =>
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: 380,
-          easing: Easing.out(Easing.back(1.4)),
+      // 2. Brief pause then exit, exactly like Binance
+      setTimeout(() => {
+        Animated.timing(exitAnim, {
+          toValue: 0,
+          duration: 400,
           useNativeDriver: true,
-        })
-      );
-
-      Animated.stagger(55, letterTimings).start(() => {
-        // 3. Reveal Welcome Subtitle, Line & Security Credentials
-        Animated.parallel([
-          Animated.timing(tagAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(goldLineAnim, {
-            toValue: 1,
-            duration: 650,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: false,
-          }),
-        ]).start();
-
-        // 4. Progress Simulation & Automatic Entry
-        Animated.timing(progressAnim, {
-          toValue: 1,
-          duration: 1700,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: false,
-        }).start(() => {
-          setTimeout(() => {
-            Animated.timing(exitAnim, {
-              toValue: 0,
-              duration: 450,
-              useNativeDriver: true,
-            }).start(onFinish);
-          }, 350);
-        });
-      });
+        }).start(onFinish);
+      }, 1200);
     });
   }, []);
-
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
-  const goldLineWidth = goldLineAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '80%'],
-  });
 
   return (
     <Animated.View style={[styles.splashContainer, { opacity: exitAnim }]}>
       <ExpoStatusBar style="light" />
 
-      {/* Deep Obsidian Radial Backdrop */}
       <Animated.View
         style={[
-          styles.splashGlowBg,
+          styles.splashLogoWrapper,
           {
-            transform: [{ scale: pulseAnim }],
             opacity: logoFadeAnim,
+            transform: [{ scale: logoScaleAnim }],
           },
         ]}
-      />
-
-      <Animated.View style={styles.splashCenterContent}>
-        {/* Top Protocol Badge */}
-        <Animated.View style={{ opacity: logoFadeAnim, alignItems: 'center', marginBottom: 20 }}>
-          <View style={styles.splashProtocolBadge}>
-            <View style={styles.splashGreenPulseDot} />
-            <Text style={styles.splashProtocolText}>BINANCE INSTITUTIONAL TRUSTEE</Text>
-          </View>
-        </Animated.View>
-
-        {/* Central Logo - Seamlessly Blended on Pure Deep Black Background */}
-        <Animated.View
-          style={[
-            styles.splashLogoWrapper,
-            {
-              opacity: logoFadeAnim,
-              transform: [{ scale: logoScaleAnim }, { scale: pulseAnim }],
-            },
-          ]}
-        >
-          <Image
-            source={require('./assets/heron_logo.jpg')}
-            style={styles.splashLogoImage}
-            resizeMode="contain"
-          />
-        </Animated.View>
-
-        {/* Letter-by-Letter Animated "HERON ASSETS" Typography */}
-        <View style={styles.splashLetterRow}>
-          {TITLE_CHARS.map((char, index) => {
-            if (char === ' ') {
-              return <View key={index} style={{ width: 10 }} />;
-            }
-            const anim = charAnims[index];
-            const translateY = anim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [18, 0],
-            });
-            const scale = anim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.6, 1],
-            });
-            const isGold = index >= 6;
-
-            return (
-              <Animated.Text
-                key={index}
-                style={[
-                  styles.splashLetterText,
-                  isGold && styles.splashLetterGold,
-                  {
-                    opacity: anim,
-                    transform: [{ translateY }, { scale }],
-                  },
-                ]}
-              >
-                {char}
-              </Animated.Text>
-            );
-          })}
-        </View>
-
-        {/* Expanding Golden Horizon Line */}
-        <Animated.View style={[styles.splashGoldLineAnimated, { width: goldLineWidth }]} />
-
-        {/* Professional Welcome Subtitle & Security Verification */}
-        <Animated.View style={{ opacity: tagAnim, alignItems: 'center', width: '100%' }}>
-          <Text style={styles.splashWelcomeHeading}>WELCOME TO HERON ASSETS</Text>
-          <Text style={styles.splashWelcomeSub}>
-            Deterministic Digital Asset Liquidity & Timelock Escrow
-          </Text>
-
-          <View style={styles.splashSecurityPill}>
-            <View style={styles.splashPulseDot} />
-            <Text style={styles.splashSecurityText}>256-BIT QUANTUM ENCRYPTION ACTIVE</Text>
-          </View>
-
-          <View style={styles.splashProgressBarTrack}>
-            <Animated.View style={[styles.splashProgressBarFill, { width: progressWidth }]} />
-          </View>
-          <Text style={styles.splashLoadingText}>CONNECTING TO INSTITUTIONAL LEDGER...</Text>
-        </Animated.View>
+      >
+        <Image
+          source={require('./assets/heron_logo.jpg')}
+          style={styles.splashLogoImage}
+          resizeMode="contain"
+        />
       </Animated.View>
 
-      {/* Skip Button */}
-      <TouchableOpacity style={styles.splashSkipBtn} onPress={onFinish} activeOpacity={0.7}>
-        <Text style={styles.splashSkipText}>ENTER PORTAL →</Text>
-      </TouchableOpacity>
     </Animated.View>
   );
 }
+
 
 // ============================================================================
 // LUXURY CUSTOM BINANCE PRO ALERT MODAL
@@ -1059,20 +911,21 @@ export default function App() {
     <SafeAreaView style={styles.safeContainer}>
       <ExpoStatusBar style="light" />
 
-      {/* Top Mobile Header */}
+      {/* Binance-Style Top Mobile Header */}
       <View style={styles.appHeader}>
-        <View style={styles.brandRow}>
-          <View style={styles.logoBadgeSmall}>
-            <Image source={require('./assets/heron_logo.jpg')} style={styles.logoImageSmall} resizeMode="cover" />
-          </View>
-          <View>
-            <Text style={styles.headerBrandTitle}>HERON ASSETS</Text>
-            <Text style={styles.headerBrandSub}>INSTITUTIONAL LIQUIDITY</Text>
-          </View>
-        </View>
+        <TouchableOpacity style={styles.headerAvatarBtn} onPress={handleLogout}>
+          <Text style={styles.headerAvatarText}>{currentUser.name.charAt(0).toUpperCase()}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.headerSearchBox}>
+          <Text style={styles.headerSearchIcon}>🔍</Text>
+          <Text style={styles.headerSearchText}>Search coin, pairs...</Text>
+        </TouchableOpacity>
 
         <View style={styles.headerRightControls}>
-          {/* Notification Bell with Unread Badge */}
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <Text style={styles.headerIconText}>[–]</Text> {/* Scan icon mock */}
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => setShowNotificationModal(true)}
@@ -1083,11 +936,6 @@ export default function App() {
                 <Text style={styles.unreadBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
-          </TouchableOpacity>
-
-          {/* User Avatar / Logout */}
-          <TouchableOpacity style={styles.avatarBtn} onPress={handleLogout}>
-            <Text style={styles.avatarText}>{currentUser.name.charAt(0).toUpperCase()}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1117,37 +965,51 @@ export default function App() {
         {activeTab === 'overview' && (
           /* TAB 1: OVERVIEW */
           <View style={styles.tabContent}>
-            {/* Primary NAV Card */}
-            <View style={styles.navCard}>
-              <Text style={styles.cardEyebrow}>TOTAL PORTFOLIO NET ASSET VALUE</Text>
-              <Text style={styles.navAmount}>${portfolioNav.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-              
-              <View style={styles.navSubRow}>
-                <Text style={styles.navSubLabel}>Available Liquidity: </Text>
-                <Text style={styles.navSubValue}>${availableBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+            {/* Binance-Style Hero Balance */}
+            <View style={styles.heroBalanceCard}>
+              <View style={styles.balanceHeader}>
+                <Text style={styles.cardEyebrow}>Total Balance</Text>
+                <Text style={styles.eyeIcon}>👁️</Text>
               </View>
+              <Text style={styles.navAmount}>
+                <Text style={styles.navAmountSymbol}>$ </Text>
+                {portfolioNav.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+              <Text style={styles.pnlText}>Today's PNL: <Text style={{ color: '#0ECB81' }}>+$124.50 (+1.25%)</Text></Text>
+            </View>
 
-              {/* Action Buttons */}
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={styles.primaryActionBtn}
-                  onPress={() => setShowDepositModal(true)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.primaryActionText}>+ Add Liquidity</Text>
-                </TouchableOpacity>
+            {/* Binance-Style Action Grid */}
+            <View style={styles.actionGridRow}>
+              <TouchableOpacity style={styles.actionGridBtn} onPress={() => setShowDepositModal(true)}>
+                <View style={styles.actionGridIconBox}>
+                  <Text style={styles.actionGridIcon}>⬇️</Text>
+                </View>
+                <Text style={styles.actionGridText}>Deposit</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.secondaryActionBtn}
-                  onPress={() => {
-                    setWithdrawStep(1);
-                    setShowWithdrawModal(true);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.secondaryActionText}>Withdraw ↗</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.actionGridBtn} onPress={() => {
+                setWithdrawStep(1);
+                setShowWithdrawModal(true);
+              }}>
+                <View style={styles.actionGridIconBox}>
+                  <Text style={styles.actionGridIcon}>⬆️</Text>
+                </View>
+                <Text style={styles.actionGridText}>Withdraw</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionGridBtn} onPress={() => setActiveTab('investments')}>
+                <View style={styles.actionGridIconBox}>
+                  <Text style={styles.actionGridIcon}>💰</Text>
+                </View>
+                <Text style={styles.actionGridText}>Earn</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionGridBtn} onPress={() => setActiveTab('referrals')}>
+                <View style={styles.actionGridIconBox}>
+                  <Text style={styles.actionGridIcon}>🎁</Text>
+                </View>
+                <Text style={styles.actionGridText}>Referral</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Quick Investment Deploy Card */}
@@ -1605,18 +1467,18 @@ export default function App() {
       {/* Bottom Navigation Bar */}
       <View style={styles.bottomNav}>
         {[
-          { id: 'overview', label: 'Portfolio', icon: '📊' },
-          { id: 'investments', label: 'Investments', icon: '⚡' },
-          { id: 'liquidity', label: 'Liquidity', icon: '💳' },
+          { id: 'overview', label: 'Home', icon: '🏠' },
+          { id: 'investments', label: 'Earn', icon: '📈' },
+          { id: 'liquidity', label: 'Trade', icon: '💱' },
           { id: 'referrals', label: 'Affiliate', icon: '👥' },
-          { id: 'ledger', label: 'Ledger', icon: '📜' },
+          { id: 'ledger', label: 'Wallets', icon: '💼' },
         ].map((tab) => (
           <TouchableOpacity
             key={tab.id}
             style={styles.navItem}
             onPress={() => setActiveTab(tab.id as NavTab)}
           >
-            <Text style={styles.navIcon}>{tab.icon}</Text>
+            <Text style={[styles.navIcon, activeTab === tab.id && styles.navIconActive]}>{tab.icon}</Text>
             <Text style={[styles.navLabel, activeTab === tab.id && styles.navLabelActive]}>
               {tab.label}
             </Text>
@@ -2378,46 +2240,45 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
     backgroundColor: '#181A20',
   },
-  brandRow: {
+  headerAvatarBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#2B313A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  headerAvatarText: {
+    color: '#F0B90B',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  headerSearchBox: {
+    flex: 1,
+    backgroundColor: '#2B313A',
+    borderRadius: 16,
+    height: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    paddingHorizontal: 12,
   },
-  logoBadgeSmall: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#000000',
-    borderWidth: 1,
-    borderColor: 'rgba(240,185,11,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+  headerSearchIcon: {
+    color: '#848E9C',
+    marginRight: 8,
+    fontSize: 12,
   },
-  logoImageSmall: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  headerBrandTitle: {
+  headerSearchText: {
+    color: '#848E9C',
     fontSize: 13,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    letterSpacing: 0.5,
-  },
-  headerBrandSub: {
-    fontSize: 8,
-    color: '#F0B90B',
-    letterSpacing: 1.5,
   },
   headerRightControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    marginLeft: 12,
+    gap: 12,
   },
   headerIconBtn: {
     padding: 6,
@@ -2502,58 +2363,70 @@ const styles = StyleSheet.create({
   tabContent: {
     gap: 16,
   },
-  navCard: {
-    backgroundColor: '#1E2329',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(240,185,11,0.3)',
-  },
   cardEyebrow: {
-    fontSize: 10,
-    color: '#F0B90B',
-    letterSpacing: 1,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 13,
+    color: '#848E9C',
+    fontWeight: '500',
+  },
+  heroBalanceCard: {
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+  },
+  balanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  eyeIcon: {
+    fontSize: 14,
+    marginLeft: 8,
+    color: '#848E9C',
+  },
+  navAmountSymbol: {
+    fontSize: 20,
+    color: '#EAECEF',
+    fontWeight: '600',
+  },
+  pnlText: {
+    color: '#848E9C',
+    fontSize: 13,
+    marginTop: 4,
+    fontWeight: '500',
   },
   navAmount: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#ffffff',
+    letterSpacing: -1,
   },
-  navSubRow: {
+  actionGridRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    marginBottom: 24,
+    marginTop: 8,
+  },
+  actionGridBtn: {
     alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 16,
   },
-  navSubLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  navSubValue: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#0ECB81',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  primaryActionBtn: {
-    flex: 1,
-    backgroundColor: '#F0B90B',
+  actionGridIconBox: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: '#2B313A',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  primaryActionText: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#181A20',
+  actionGridIcon: {
+    fontSize: 18,
+  },
+  actionGridText: {
+    color: '#EAECEF',
+    fontSize: 12,
+    fontWeight: '500',
   },
   secondaryActionBtn: {
-    flex: 1,
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
@@ -2935,6 +2808,10 @@ const styles = StyleSheet.create({
   navIcon: {
     fontSize: 18,
     marginBottom: 2,
+    opacity: 0.5,
+  },
+  navIconActive: {
+    opacity: 1,
   },
   navLabel: {
     fontSize: 10,
@@ -3329,66 +3206,20 @@ const styles = StyleSheet.create({
   // --- Opening Splash Screen Styles ---
   splashContainer: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#181A20', // Binance Dark Background
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  splashGlowBg: {
-    position: 'absolute',
-    width: 340,
-    height: 340,
-    borderRadius: 170,
-    backgroundColor: 'rgba(240,185,11,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(240,185,11,0.08)',
-  },
-  splashCenterContent: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  splashProtocolBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(240, 185, 11, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(240, 185, 11, 0.25)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  splashGreenPulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#0ECB81',
-    marginRight: 7,
-  },
-  splashProtocolText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#F0B90B',
-    letterSpacing: 1.5,
   },
   splashLogoWrapper: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: '#000000',
+    width: 140,
+    height: 140,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#F0B90B',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    elevation: 20,
-    overflow: 'hidden',
   },
   splashLogoImage: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: '#000000',
+    width: '100%',
+    height: '100%',
+    borderRadius: 70,
   },
   splashLetterRow: {
     flexDirection: 'row',
