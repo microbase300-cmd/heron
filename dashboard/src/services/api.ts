@@ -350,6 +350,15 @@ class ApiService {
     frontDocumentUrl: string;
     backDocumentUrl?: string;
     selfieUrl?: string;
+    livenessVerified?: boolean;
+    livenessDetails?: {
+      botDetected: boolean;
+      turnLeftPassed: boolean;
+      turnRightPassed: boolean;
+      smilePassed: boolean;
+      capturedLive: boolean;
+      confidenceScore?: number;
+    };
   }): Promise<{ message: string; submission: KycSubmission }> {
     return this.request('/kyc/submit', {
       method: 'POST',

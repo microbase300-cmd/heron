@@ -44,6 +44,15 @@ export interface KycSubmission {
   reviewedBy?: string;
   reviewedAt?: string;
   ocrResult: KycOcrResult;
+  livenessVerified?: boolean;
+  livenessDetails?: {
+    botDetected: boolean;
+    turnLeftPassed: boolean;
+    turnRightPassed: boolean;
+    smilePassed: boolean;
+    capturedLive: boolean;
+    confidenceScore?: number;
+  };
   submittedAt: string;
   updatedAt: string;
 }

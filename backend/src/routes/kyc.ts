@@ -61,7 +61,9 @@ router.post('/submit', authenticateToken, (req: AuthRequest, res: Response) => {
       expiryDate,
       frontDocumentUrl,
       backDocumentUrl,
-      selfieUrl
+      selfieUrl,
+      livenessVerified,
+      livenessDetails
     } = req.body;
 
     if (!documentType || !issuingCountry || !documentNumber || !fullName || !frontDocumentUrl) {
@@ -102,6 +104,8 @@ router.post('/submit', authenticateToken, (req: AuthRequest, res: Response) => {
       selfieUrl: selfieUrl || undefined,
       status: 'pending',
       ocrResult,
+      livenessVerified: Boolean(livenessVerified),
+      livenessDetails: livenessDetails || undefined,
       submittedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
