@@ -212,4 +212,159 @@ router.get('/me', authenticateToken, (req: AuthRequest, res: Response): void => 
   res.json({ user: safeUser });
 });
 
+// Update Profile Details (Name, Anti-Phishing Code, 2FA, Preferences)
+router.put('/profile', authenticateToken, (req: AuthRequest, res: Response): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const { name, antiPhishingCode, twoFactorEnabled, whitelistEnabled, preferredCurrency } = req.body;
+    const updatedUser = db.updateUserProfile(req.user.userId, {
+      name,
+      antiPhishingCode,
+      twoFactorEnabled,
+      whitelistEnabled,
+      preferredCurrency,
+    });
+
+    if (!updatedUser) {
+      res.status(404).json({ error: 'User not found.' });
+      return;
+    }
+
+    const { passwordHash: _, ...safeUser } = updatedUser;
+    res.json({
+      message: 'Profile configuration updated successfully.',
+      user: safeUser
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to update profile.' });
+  }
+});
+
+// Change Password
+router.put('/change-password', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'Current password and new password are required.' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: 'New password must be at least 8 characters with high complexity.' });
+      return;
+    }
+
+    const user = db.getUserById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found.' });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      res.status(400).json({ error: 'Current password verification failed.' });
+      return;
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    db.updateUserPassword(user.id, newHash);
+
+    db.recordSecurityLog(user.id, {
+      ip: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '197.210.84.11',
+      device: (req.headers['user-agent'] as string)?.includes('Mobile') ? 'Mobile Client' : 'Web Terminal',
+      location: 'New York, US [Cloudflare Edge]',
+      status: 'Authorized'
+    });
+
+    res.json({ message: 'Security password changed successfully. Active session remains authenticated.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to change password.' });
+  }
+});
+
+// Add Whitelisted Wallet
+router.post('/whitelist-wallet', authenticateToken, (req: AuthRequest, res: Response): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const { asset, network, address, label } = req.body;
+    if (!asset || !network || !address || !label) {
+      res.status(400).json({ error: 'Asset, network, address, and destination label are required.' });
+      return;
+    }
+
+    const newWallet = db.addWhitelistedWallet(req.user.userId, {
+      asset,
+      network,
+      address,
+      label
+    });
+
+    if (!newWallet) {
+      res.status(404).json({ error: 'User not found.' });
+      return;
+    }
+
+    res.json({
+      message: 'Withdrawal destination whitelisted successfully.',
+      wallet: newWallet
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to whitelist wallet.' });
+  }
+});
+
+// Delete Whitelisted Wallet
+router.delete('/whitelist-wallet/:id', authenticateToken, (req: AuthRequest, res: Response): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const removed = db.deleteWhitelistedWallet(req.user.userId, id);
+    if (!removed) {
+      res.status(404).json({ error: 'Whitelisted address not found or already removed.' });
+      return;
+    }
+
+    res.json({ message: 'Whitelisted address deleted successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to remove whitelisted address.' });
+  }
+});
+
+// Get Security & Session Logs
+router.get('/security-logs', authenticateToken, (req: AuthRequest, res: Response): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+
+    const user = db.getUserById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found.' });
+      return;
+    }
+
+    res.json({ logs: user.securityLogs || [] });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve security logs.' });
+  }
+});
+
 export default router;

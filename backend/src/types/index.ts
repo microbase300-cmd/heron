@@ -1,6 +1,24 @@
 export type UserRole = 'user' | 'admin' | 'compliance';
 export type UserStatus = 'active' | 'suspended' | 'pending_verification';
 
+export interface WhitelistedWallet {
+  id: string;
+  asset: string;
+  network: string;
+  address: string;
+  label: string;
+  addedAt: string;
+}
+
+export interface SecurityLogItem {
+  id: string;
+  timestamp: string;
+  ip: string;
+  device: string;
+  location: string;
+  status: 'Authorized' | 'Blocked' | 'Challenge';
+}
+
 export interface User {
   id: string;
   email: string;
@@ -12,6 +30,15 @@ export interface User {
   referredBy?: string | null;
   status: UserStatus;
   createdAt: string;
+  uid?: string;
+  kycLevel?: 'unverified' | 'tier1' | 'tier2';
+  vipLevel?: string;
+  antiPhishingCode?: string;
+  twoFactorEnabled?: boolean;
+  whitelistEnabled?: boolean;
+  whitelistedWallets?: WhitelistedWallet[];
+  securityLogs?: SecurityLogItem[];
+  preferredCurrency?: string;
 }
 
 export interface RefreshToken {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, ArrowDownLeft, Menu } from 'lucide-react';
+import { Plus, ArrowDownLeft, Menu, ShieldCheck } from 'lucide-react';
 import { User } from '../types';
 import { NotificationCenter } from './NotificationCenter';
 
@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenDeposit: () => void;
   onOpenInvest: () => void;
   onOpenMobileNav?: () => void;
+  onOpenProfile?: () => void;
   onRefreshData?: () => void;
 }
 
@@ -19,7 +20,8 @@ const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
   deposit: { title: 'Multi-Asset Liquidity Hub', subtitle: 'Deposit BTC, ETH, USDT (TRC-20 / ERC-20), or SOL' },
   withdraw: { title: 'Disbursement Terminal', subtitle: 'Automated direct-to-wallet withdrawal pipeline' },
   referrals: { title: 'Partner Affiliate Network', subtitle: 'Earn up to 30% instant commission on referred client allocations' },
-  ledger: { title: 'Cryptographic Audit Ledger', subtitle: 'Immutable transaction records and smart contract proofs' }
+  ledger: { title: 'Cryptographic Audit Ledger', subtitle: 'Immutable transaction records and smart contract proofs' },
+  profile: { title: 'Account Intelligence & Security', subtitle: 'Identity verification, multi-factor cryptographic security, and whitelisted destinations' },
 };
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,6 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenDeposit,
   onOpenInvest,
   onOpenMobileNav,
+  onOpenProfile,
   onRefreshData
 }) => {
   const meta = TAB_TITLES[currentTab] || TAB_TITLES.overview;
@@ -59,6 +62,21 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Account & Security Profile Quick Access */}
+        {onOpenProfile && (
+          <button
+            onClick={onOpenProfile}
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+              currentTab === 'profile'
+                ? 'bg-[#F0B90B]/20 border-[#F0B90B] text-[#F0B90B]'
+                : 'bg-[#2B313A] border-[#363D47] hover:border-[#F0B90B]/50 text-[#848E9C] hover:text-[#EAECEF]'
+            }`}
+            title="Account & Security Center"
+          >
+            <ShieldCheck className="w-4 h-4" />
+          </button>
+        )}
+
         {/* Real-time Notification Center */}
         <NotificationCenter onNotificationRead={onRefreshData} />
 

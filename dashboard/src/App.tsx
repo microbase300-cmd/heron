@@ -9,6 +9,7 @@ import { MandatesView } from './components/MandatesView';
 import { NewInvestmentView } from './components/NewInvestmentView';
 import { ReferralsView } from './components/ReferralsView';
 import { LedgerView } from './components/LedgerView';
+import { ProfileView } from './components/ProfileView';
 import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AuthModal } from './components/AuthModal';
@@ -117,6 +118,7 @@ export const App: React.FC = () => {
             user={user}
             onOpenDeposit={() => setIsDepositOpen(true)}
             onOpenInvest={() => setCurrentTab('invest')}
+            onOpenProfile={() => setCurrentTab('profile')}
             onOpenMobileNav={() => setIsMobileSidebarOpen(true)}
           />
 
@@ -184,6 +186,17 @@ export const App: React.FC = () => {
 
               {currentTab === 'ledger' && (
                 <LedgerView transactions={transactions} />
+              )}
+
+              {currentTab === 'profile' && (
+                <ProfileView
+                  user={user}
+                  onUpdateUser={setUser}
+                  onNavigate={setCurrentTab}
+                  onOpenWithdraw={(_addr) => {
+                    setIsWithdrawOpen(true);
+                  }}
+                />
               )}
             </div>
           </main>

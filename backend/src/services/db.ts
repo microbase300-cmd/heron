@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig } from '../types';
+import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem } from '../types';
 
 export const DEFAULT_DEPOSIT_ADDRESSES: Record<string, DepositAddressConfig> = {
   USDT_TRC20: {
@@ -725,6 +725,88 @@ class DatabaseService {
       activeMandatesCount: activeInvestments.length,
       pendingTransactionsCount
     };
+  }
+
+  // --- Profile & Security Operations ---
+  updateUserProfile(userId: string, updates: Partial<User>): User | undefined {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return undefined;
+
+    if (updates.name !== undefined) user.name = updates.name.trim();
+    if (updates.antiPhishingCode !== undefined) user.antiPhishingCode = updates.antiPhishingCode.trim();
+    if (updates.twoFactorEnabled !== undefined) user.twoFactorEnabled = updates.twoFactorEnabled;
+    if (updates.whitelistEnabled !== undefined) user.whitelistEnabled = updates.whitelistEnabled;
+    if (updates.preferredCurrency !== undefined) user.preferredCurrency = updates.preferredCurrency;
+
+    this.save();
+    return user;
+  }
+
+  updateUserPassword(userId: string, newPasswordHash: string): boolean {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return false;
+
+    user.passwordHash = newPasswordHash;
+    this.save();
+    return true;
+  }
+
+  addWhitelistedWallet(userId: string, wallet: Omit<WhitelistedWallet, 'id' | 'addedAt'>): WhitelistedWallet | undefined {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return undefined;
+
+    if (!user.whitelistedWallets) {
+      user.whitelistedWallets = [];
+    }
+
+    const newWallet: WhitelistedWallet = {
+      id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      asset: wallet.asset,
+      network: wallet.network,
+      address: wallet.address.trim(),
+      label: wallet.label.trim(),
+      addedAt: new Date().toISOString()
+    };
+
+    user.whitelistedWallets.push(newWallet);
+    this.save();
+    return newWallet;
+  }
+
+  deleteWhitelistedWallet(userId: string, walletId: string): boolean {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user || !user.whitelistedWallets) return false;
+
+    const initialLen = user.whitelistedWallets.length;
+    user.whitelistedWallets = user.whitelistedWallets.filter(w => w.id !== walletId);
+    if (user.whitelistedWallets.length !== initialLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  recordSecurityLog(userId: string, log: Omit<SecurityLogItem, 'id' | 'timestamp'>): void {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return;
+
+    if (!user.securityLogs) {
+      user.securityLogs = [];
+    }
+
+    user.securityLogs.unshift({
+      id: `sec_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      ip: log.ip,
+      device: log.device,
+      location: log.location,
+      status: log.status
+    });
+
+    if (user.securityLogs.length > 20) {
+      user.securityLogs = user.securityLogs.slice(0, 20);
+    }
+    this.save();
   }
 }
 

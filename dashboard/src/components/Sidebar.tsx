@@ -10,7 +10,8 @@ import {
   ExternalLink, 
   LogOut, 
   X,
-  ChevronRight 
+  ChevronRight,
+  ShieldCheck
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -41,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'withdraw', label: 'Withdraw Terminal', icon: ArrowUpRight },
     { id: 'referrals', label: 'Affiliate Network', icon: Users, badge: '30%' },
     { id: 'ledger', label: 'Audit Ledger', icon: ReceiptText },
+    { id: 'profile', label: 'Account & Security', icon: ShieldCheck, badge: 'Verified' },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -151,14 +153,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {user && (
           <div className="flex items-center justify-between pt-2 border-t border-[#2B313A] px-2">
-            <div className="overflow-hidden pr-2">
-              <div className="text-xs font-semibold text-[#EAECEF] truncate">{user.name}</div>
-              <div className="text-[10px] text-[#848E9C] font-mono truncate">{user.email}</div>
-            </div>
+            <button
+              onClick={() => handleTabClick('profile')}
+              className="flex-1 text-left overflow-hidden pr-2 group cursor-pointer"
+              title="View Account & Security Profile"
+            >
+              <div className="text-xs font-semibold text-[#EAECEF] group-hover:text-[#F0B90B] transition-colors truncate">
+                {user.name}
+              </div>
+              <div className="text-[10px] text-[#848E9C] font-mono truncate flex items-center gap-1">
+                <span>{user.email}</span>
+                <span className="text-[#0ECB81] text-[9px]">●</span>
+              </div>
+            </button>
             <button 
               onClick={onLogout}
               title="Sign Out"
-              className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#F6465D] hover:bg-[#2B313A] transition-all"
+              className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#F6465D] hover:bg-[#2B313A] transition-all shrink-0 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
