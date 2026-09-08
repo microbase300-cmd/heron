@@ -4,13 +4,123 @@
       "id": "usr_admin_001",
       "email": "admin@heronassets.com",
       "name": "Chief Risk Officer",
-      "passwordHash": "$2a$10$1rGT/03zV22Zp8nTcWv9Z.dAyvKmfNtgS1tmrNf133ARUiSWNnL3.",
+      "passwordHash": "$2a$10$nhnE0eauC0/iw14tQMxt4.EFVPN6TgEUV5YOPuUJlmwcbRr3E8mVi",
       "role": "admin",
       "balance": 0,
       "referralCode": "HERON-ADMIN",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T01:11:41.826Z"
+      "createdAt": "2026-09-05T01:11:41.826Z",
+      "securityLogs": [
+        {
+          "id": "sec_1788845594229_0fg5",
+          "timestamp": "2026-09-08T05:33:14.229Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_admin_001_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_admin_001_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_admin_001_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
+    },
+    {
+      "id": "usr_demo_882194",
+      "email": "investor@heronassets.com",
+      "name": "Alexander Sterling",
+      "passwordHash": "$2a$10$s.jCimbuHB3TQwMko5JjDuCmkh65wAXmfcRwlevbzMLOqX6bY5aoC",
+      "balance": 23751.25,
+      "referralCode": "HERON-8821",
+      "referredBy": null,
+      "createdAt": "2026-08-29T17:18:13.156Z",
+      "role": "user",
+      "status": "active",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_demo_882194_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_demo_882194_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_demo_882194_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
+    },
+    {
+      "id": "usr_downline_49201",
+      "email": "clara.vance@genevacapital.ch",
+      "name": "Clara Vance",
+      "passwordHash": "$2a$10$s.jCimbuHB3TQwMko5JjDuCmkh65wAXmfcRwlevbzMLOqX6bY5aoC",
+      "balance": 3200,
+      "referralCode": "CLARA-9921",
+      "referredBy": "HERON-8821",
+      "createdAt": "2026-08-31T17:18:13.156Z",
+      "role": "user",
+      "status": "active",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_downline_49201_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_downline_49201_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_downline_49201_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
     },
     {
       "id": "usr_d9120325-7839-4607-8cc4-ebda84749ef2",
@@ -22,7 +132,33 @@
       "referredBy": null,
       "createdAt": "2026-09-03T17:30:29.126Z",
       "role": "user",
-      "status": "active"
+      "status": "active",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_d9120325-7839-4607-8cc4-ebda84749ef2_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_d9120325-7839-4607-8cc4-ebda84749ef2_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_d9120325-7839-4607-8cc4-ebda84749ef2_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
     },
     {
       "id": "usr_f14b4038-7532-4b34-962a-c2c978953f7d",
@@ -34,7 +170,88 @@
       "referredBy": null,
       "createdAt": "2026-09-03T17:32:55.790Z",
       "role": "user",
-      "status": "active"
+      "status": "active",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_f14b4038-7532-4b34-962a-c2c978953f7d_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_f14b4038-7532-4b34-962a-c2c978953f7d_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_f14b4038-7532-4b34-962a-c2c978953f7d_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
+    },
+    {
+      "id": "usr_demo_vance",
+      "email": "alex.vance@vanceholdings.com",
+      "name": "Alexander Vance",
+      "passwordHash": "$2a$10$ocMSmylYDV60zjJ5iQiBj.0QaDS85exUeBB8e.OqohOMbJ7q0L6Jm",
+      "role": "user",
+      "balance": 45500,
+      "referralCode": "HERON-VANCE",
+      "referredBy": null,
+      "status": "active",
+      "createdAt": "2026-09-05T01:11:41.826Z",
+      "preferredCurrency": "USD",
+      "securityLogs": [
+        {
+          "id": "sec_1788847801604_pyzx",
+          "timestamp": "2026-09-08T06:10:01.604Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788845237908_d1tz",
+          "timestamp": "2026-09-08T05:27:17.908Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_demo_vance_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_demo_vance_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_demo_vance_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
     },
     {
       "id": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
@@ -46,7 +263,33 @@
       "referralCode": "HERON-1842",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T01:46:40.359Z"
+      "createdAt": "2026-09-05T01:46:40.359Z",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_3b02dfde-3160-4db6-800f-a35577816fe3_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_3b02dfde-3160-4db6-800f-a35577816fe3_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_3b02dfde-3160-4db6-800f-a35577816fe3_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
     },
     {
       "id": "usr_2b892fa5-dafb-4965-804f-a0276dd94488",
@@ -58,7 +301,33 @@
       "referralCode": "HERON-8599",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T03:47:58.970Z"
+      "createdAt": "2026-09-05T03:47:58.970Z",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_2b892fa5-dafb-4965-804f-a0276dd94488_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_2b892fa5-dafb-4965-804f-a0276dd94488_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_2b892fa5-dafb-4965-804f-a0276dd94488_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
     },
     {
       "id": "usr_0cda17de-def3-477d-a0a8-06c984532277",
@@ -70,7 +339,33 @@
       "referralCode": "HERON-4542",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T04:10:57.553Z"
+      "createdAt": "2026-09-05T04:10:57.553Z",
+      "securityLogs": [
+        {
+          "id": "sec_init_usr_0cda17de-def3-477d-a0a8-06c984532277_01",
+          "timestamp": "2026-09-08T03:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Windows 11 • Chrome 128",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_0cda17de-def3-477d-a0a8-06c984532277_02",
+          "timestamp": "2026-09-07T15:25:20.520Z",
+          "ip": "197.210.84.***",
+          "device": "Android 15 • Mobile App",
+          "location": "New York, US [Mobile Node]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_init_usr_0cda17de-def3-477d-a0a8-06c984532277_03",
+          "timestamp": "2026-09-06T05:25:20.520Z",
+          "ip": "104.28.19.***",
+          "device": "macOS Sonoma • Safari 17",
+          "location": "London, UK [Secured Gateway]",
+          "status": "Authorized"
+        }
+      ]
     }
   ],
   "refreshTokens": [
@@ -381,10 +676,150 @@
       "tokenHash": "b742642a3bb21aff16d8c8bd3e07ea824607da5bae1bdd39d06c862eb34ac1f6",
       "expiresAt": "2026-09-15T02:44:47.148Z",
       "createdAt": "2026-09-08T02:44:47.148Z"
+    },
+    {
+      "id": "rft_fa0f7417-d3c1-4394-9053-102efb0a7bb4",
+      "userId": "usr_demo_vance",
+      "tokenHash": "cce5011966a3d0163a06bd5efcb2a468e7e6eb7f9305c03c8f7b4835469b7a4f",
+      "expiresAt": "2026-09-15T03:09:46.725Z",
+      "createdAt": "2026-09-08T03:09:46.725Z"
+    },
+    {
+      "id": "rft_92fae4d1-7ccb-45c1-b0c4-00640ca36f68",
+      "userId": "usr_demo_vance",
+      "tokenHash": "4c1ca304b2a8b0e60260a8f30c99ab894e3e486d87ad1768a863ba8621f1f63e",
+      "expiresAt": "2026-09-15T04:34:14.813Z",
+      "createdAt": "2026-09-08T04:34:14.822Z"
+    },
+    {
+      "id": "rft_d04fa89e-ffba-44a0-b83f-bde88850c452",
+      "userId": "usr_demo_vance",
+      "tokenHash": "e84821a92697aadb2a8acd8e97005e0148d954481658d3f5d07ec997cd9d2782",
+      "expiresAt": "2026-09-15T05:27:17.917Z",
+      "createdAt": "2026-09-08T05:27:17.920Z"
+    },
+    {
+      "id": "rft_35afc246-c07c-4e95-8980-5189af752d94",
+      "userId": "usr_admin_001",
+      "tokenHash": "e2ad789ceda055342d6af8c4da73b224ea8791b4dfb43417074491b89cb0f3a4",
+      "expiresAt": "2026-09-15T05:33:14.232Z",
+      "createdAt": "2026-09-08T05:33:14.232Z"
+    },
+    {
+      "id": "rft_6de5b7e6-708b-4de3-9b6b-a81d7072b749",
+      "userId": "usr_demo_vance",
+      "tokenHash": "e185c2c792ca3a209914a5738e70490a7a4ffbd98e323e3cd35c732e473ebcc7",
+      "expiresAt": "2026-09-15T06:10:01.612Z",
+      "createdAt": "2026-09-08T06:10:01.612Z"
     }
   ],
-  "investments": [],
+  "investments": [
+    {
+      "id": "inv_prem_9381",
+      "userId": "usr_demo_882194",
+      "planId": "premium",
+      "planName": "Premium Plan",
+      "amount": 8000,
+      "rate": 0.155,
+      "durationHours": 72,
+      "expectedProfit": 1240,
+      "totalPayout": 9240,
+      "status": "completed",
+      "startedAt": "2026-09-02T21:18:13.156Z",
+      "expiresAt": "2026-09-05T21:18:13.156Z",
+      "completedAt": "2026-09-05T21:43:57.300Z"
+    },
+    {
+      "id": "inv_std_4120",
+      "userId": "usr_demo_882194",
+      "planId": "standard",
+      "planName": "Standard Plan",
+      "amount": 3000,
+      "rate": 0.095,
+      "durationHours": 48,
+      "expectedProfit": 285,
+      "totalPayout": 3285,
+      "status": "completed",
+      "startedAt": "2026-09-01T15:18:13.156Z",
+      "expiresAt": "2026-09-03T15:18:13.156Z",
+      "completedAt": "2026-09-03T15:18:13.156Z"
+    },
+    {
+      "id": "inv_0e2ca714-0068-4514-bd8d-bde9e6626983",
+      "userId": "usr_demo_882194",
+      "planId": "amateur",
+      "planName": "Amateur Plan",
+      "amount": 250,
+      "rate": 0.045,
+      "durationHours": 24,
+      "expectedProfit": 11.25,
+      "totalPayout": 261.25,
+      "status": "completed",
+      "startedAt": "2026-09-03T17:27:31.806Z",
+      "expiresAt": "2026-09-04T17:27:31.806Z",
+      "completedAt": "2026-09-04T17:27:41.130Z"
+    },
+    {
+      "id": "inv_d8513c42-6b2b-4852-a66e-731f5858f455",
+      "userId": "usr_demo_vance",
+      "planId": "standard",
+      "planName": "Standard Plan",
+      "amount": 3500,
+      "rate": 0.095,
+      "durationHours": 48,
+      "expectedProfit": 332.5,
+      "totalPayout": 3832.5,
+      "status": "active",
+      "startedAt": "2026-09-06T12:51:17.649Z",
+      "expiresAt": "2026-09-08T12:51:17.649Z",
+      "completedAt": null
+    }
+  ],
   "transactions": [
+    {
+      "id": "tx_8fe4ddb2-4332-453a-bcab-872876879fb1",
+      "userId": "usr_demo_vance",
+      "type": "admin_adjustment",
+      "amount": 5000,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x36663131626362312d623463372d346534342d393036312d6665383963386332",
+      "note": "Admin CREDIT: Executive liquidity deposit",
+      "createdAt": "2026-09-08T00:40:50.510Z"
+    },
+    {
+      "id": "tx_2916abb6-28b8-473c-a56e-e3212b270002",
+      "userId": "usr_demo_vance",
+      "type": "investment_lock",
+      "amount": 3500,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x752054a5407d74f4e46ee72aa29c1f2d991dce5c286dfb273c230e9ba363dd53",
+      "note": "Committed capital to Standard Plan (48h • 9.5%)",
+      "createdAt": "2026-09-06T12:51:17.649Z"
+    },
+    {
+      "id": "tx_685cffe1-f22a-457d-9d7e-4c2db0d4187b",
+      "userId": "usr_demo_vance",
+      "type": "withdrawal",
+      "amount": 1000,
+      "asset": "USDT (TRC-20)",
+      "status": "completed",
+      "txHash": "0xa95326dbbb546be826c6a4f57ca11396e75b9fc24e3c93d6c0e5ecfa09565111",
+      "note": "Pending withdrawal of $1,000 to aqqqqq...qqq2 (USDT (TRC-20))",
+      "createdAt": "2026-09-06T10:08:50.524Z"
+    },
+    {
+      "id": "tx_6419c863-d7a0-4a4a-91d9-643f591bc843",
+      "userId": "usr_demo_882194",
+      "type": "yield_payout",
+      "amount": 9240,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0xa74289179deeb29657a4dbb275e264a00ff11719b9258d9ced03228b95001566",
+      "note": "Premium Plan Matured: Principal $8,000 + Yield $1,240",
+      "createdAt": "2026-09-05T21:43:57.411Z"
+    },
     {
       "id": "tx_f19c9deb-e671-4e92-a03f-73b03f4db2b3",
       "userId": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
@@ -395,9 +830,98 @@
       "txHash": "0xf353ca27a8b8abd46d121b22ab8fb5d9d0b97203970321e38dd1fb630ec3c2e6",
       "note": "Inbound USDT deposit of $2,500 awaiting admin confirmation (TX: 0xf353ca27...)",
       "createdAt": "2026-09-05T02:10:19.469Z"
+    },
+    {
+      "id": "tx_df9769bf-0623-4d2c-9abb-b3bb67d20847",
+      "userId": "usr_demo_882194",
+      "type": "yield_payout",
+      "amount": 261.25,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0xfcfbdb7d515169370d0947d3eef798f82abcc017d3d0547e8b1af419bd69aeea",
+      "note": "Amateur Plan Matured: Principal $250 + Yield $11.25",
+      "createdAt": "2026-09-04T17:27:41.356Z"
+    },
+    {
+      "id": "tx_44017c98-0244-472d-8540-c08f1153417f",
+      "userId": "usr_demo_882194",
+      "type": "investment_lock",
+      "amount": 250,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x152c102d956ef3f4a91bf69c790783283b50002fb2c38cacd86dd601365bdf96",
+      "note": "Committed capital to Amateur Plan (24h • 4.5%)",
+      "createdAt": "2026-09-03T17:27:31.806Z"
+    },
+    {
+      "id": "tx_yield_01",
+      "userId": "usr_demo_882194",
+      "type": "yield_payout",
+      "amount": 3285,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x991a0c88ef290bca2957110195ab47c819a82bbef49910cf91a823bf90184719",
+      "note": "Standard Plan Matured: Principal $3,000 + Yield $285",
+      "createdAt": "2026-09-03T15:18:13.156Z"
+    },
+    {
+      "id": "tx_inv_lock_02",
+      "userId": "usr_demo_882194",
+      "type": "investment_lock",
+      "amount": 8000,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x33cf81b10a2894ca91028374928174aa910cbe88102819cf8192801928472918",
+      "note": "Allocated to Premium Plan (72h)",
+      "createdAt": "2026-09-02T21:18:13.156Z"
+    },
+    {
+      "id": "tx_ref_01",
+      "userId": "usr_demo_882194",
+      "type": "referral_bonus",
+      "amount": 320,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x77ab102948ca9182740182739481726354819201948271049281740294817263",
+      "note": "Referral Bonus: Clara Vance invested in Standard Plan (16% of $2,000)",
+      "createdAt": "2026-09-01T17:18:13.156Z"
+    },
+    {
+      "id": "tx_inv_lock_01",
+      "userId": "usr_demo_882194",
+      "type": "investment_lock",
+      "amount": 3000,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x10b741ad5c2901a8efbc01289547aa2810a9bf4910cf91a823bf902840182741",
+      "note": "Allocated to Standard Plan (48h)",
+      "createdAt": "2026-09-01T15:18:13.156Z"
+    },
+    {
+      "id": "tx_dep_109284",
+      "userId": "usr_demo_882194",
+      "type": "deposit",
+      "amount": 25000,
+      "asset": "USDT",
+      "status": "completed",
+      "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
+      "note": "Deposit via TRC-20 Smart Contract",
+      "createdAt": "2026-08-30T17:18:13.156Z"
     }
   ],
-  "referralCommissions": [],
+  "referralCommissions": [
+    {
+      "id": "ref_comm_101",
+      "referrerId": "usr_demo_882194",
+      "referredUserId": "usr_downline_49201",
+      "referredUserEmail": "clara.vance@genevacapital.ch",
+      "planId": "standard",
+      "depositAmount": 2000,
+      "rate": 0.16,
+      "commissionAmount": 320,
+      "createdAt": "2026-09-01T17:18:13.156Z"
+    }
+  ],
   "planConfigs": {
     "amateur": {
       "id": "amateur",
@@ -449,6 +973,67 @@
     }
   },
   "notifications": [
+    {
+      "id": "notif_39d0ca63-d44c-4de0-88c3-0590257c0f4d",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Deposit Successfull",
+      "message": "we have confirmed ur deposite",
+      "type": "success",
+      "sender": "Chief Risk Officer",
+      "readBy": [
+        "usr_demo_vance"
+      ],
+      "createdAt": "2026-09-06T10:55:58.337Z"
+    },
+    {
+      "id": "notif_105d77a0-48bc-4dc0-b501-74b0db544570",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Account error",
+      "message": "testing alert",
+      "type": "alert",
+      "sender": "Chief Risk Officer",
+      "readBy": [
+        "usr_demo_vance"
+      ],
+      "createdAt": "2026-09-06T10:25:07.164Z"
+    },
+    {
+      "id": "notif_5c7b414b-e4cc-4977-a3ae-df031d841a6b",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Testing",
+      "message": "testing the message.",
+      "type": "announcement",
+      "sender": "Chief Risk Officer",
+      "readBy": [],
+      "createdAt": "2026-09-06T10:20:04.163Z"
+    },
+    {
+      "id": "notif_33e26ffd-7ba5-4f4f-87f6-843e40b618be",
+      "userId": "usr_demo_882194",
+      "targetEmail": "investor@heronassets.com",
+      "title": "Direct Portfolio Settlement Notice",
+      "message": "Your institutional liquidity deposit has been validated and confirmed by the Executive Risk Desk.",
+      "type": "success",
+      "sender": "Chief Risk Officer",
+      "readBy": [],
+      "createdAt": "2026-09-06T10:17:28.428Z"
+    },
+    {
+      "id": "notif_90b7a2f1-3b16-4b79-8cc8-b93f1ee015e6",
+      "userId": "usr_demo_vance",
+      "targetEmail": "alex.vance@vanceholdings.com",
+      "title": "Withdrawal Disbursement Authorized: $1,000 USDT (TRC-20)",
+      "message": "Your withdrawal request of $1,000.00 USDT (TRC-20) has been approved and dispatched to your destination wallet.",
+      "type": "success",
+      "sender": "Settlement Treasury Desk",
+      "readBy": [
+        "usr_demo_vance"
+      ],
+      "createdAt": "2026-09-06T10:12:35.618Z"
+    },
     {
       "id": "notif_welcome_01",
       "userId": null,
@@ -502,5 +1087,6 @@
       "isActive": true,
       "updatedAt": "2026-09-05T01:42:17.058Z"
     }
-  }
+  },
+  "kycSubmissions": []
 }

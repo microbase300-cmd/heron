@@ -5,11 +5,11 @@ import {
   AlertTriangle,
   RefreshCw,
   X,
-  Smile,
+  Eye,
+  EyeOff,
   ArrowLeft,
   ArrowRight,
   ShieldAlert,
-  ShieldCheck,
   Lock,
   Sparkles,
   ExternalLink,
@@ -22,7 +22,8 @@ export interface LivenessDetails {
   botDetected: boolean;
   turnLeftPassed: boolean;
   turnRightPassed: boolean;
-  smilePassed: boolean;
+  blinkPassed: boolean;
+  smilePassed?: boolean;
   capturedLive: boolean;
   confidenceScore: number;
 }
@@ -39,7 +40,7 @@ type LivenessStep =
   | 'center'
   | 'turn_left'
   | 'turn_right'
-  | 'smile'
+  | 'blink'
   | 'verifying'
   | 'completed'
   | 'error';
@@ -81,7 +82,10 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
   // Real-time Computer Vision Telemetry States
   const [yawAngle, setYawAngle] = useState<number>(0);
-  const [smileScore, setSmileScore] = useState<number>(0);
+  const [leftTurnProgress, setLeftTurnProgress] = useState<number>(0);
+  const [rightTurnProgress, setRightTurnProgress] = useState<number>(0);
+  const [blinkProgress, setBlinkProgress] = useState<number>(0);
+  const [isBlinking, setIsBlinking] = useState<boolean>(false);
   const [isFaceCentered, setIsFaceCentered] = useState<boolean>(false);
   const [stepPassedToast, setStepPassedToast] = useState<string | null>(null);
 
@@ -98,12 +102,29 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   // Vision tracking filters & action hold debouncers
   const prevLumaRef = useRef<Uint8Array | null>(null);
   const smoothYawRef = useRef<number>(0);
-  const smoothSmileRef = useRef<number>(0);
+  const smoothLeftRef = useRef<number>(0);
+  const smoothRightRef = useRef<number>(0);
   const stepHoldStartRef = useRef<number | null>(null);
   const currentStepRef = useRef<LivenessStep>('initializing');
   const turnLeftPassedRef = useRef(false);
   const turnRightPassedRef = useRef(false);
-  const smilePassedRef = useRef(false);
+  const blinkPassedRef = useRef(false);
+
+  // Calibrated face baseline for adaptive sensitivity
+  const calibratedRef = useRef<{
+    cx: number;
+    cy: number;
+    featureX: number;
+    fw: number;
+    fh: number;
+    eyeEnergy: number;
+  } | null>(null);
+
+  // Blink state machine
+  const blinkHistoryRef = useRef<{
+    sawClosed: boolean;
+    closedTimestamp: number;
+  }>({ sawClosed: false, closedTimestamp: 0 });
 
   useEffect(() => {
     isOpenRef.current = isOpen;
@@ -314,61 +335,60 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
           const rawYawRatio = totalGrad > 0 ? weightedGradSumX / (totalGrad * (fw * 0.35)) : 0;
           const clampedYaw = Math.max(-1, Math.min(1, rawYawRatio));
-          smoothYawRef.current = smoothYawRef.current * 0.68 + clampedYaw * 0.32;
+          smoothYawRef.current = smoothYawRef.current * 0.65 + clampedYaw * 0.35;
           const currentYawDeg = Math.round(smoothYawRef.current * 42);
           setYawAngle(currentYawDeg);
 
-          // 3. Smile Recognition
-          // Lower face mouth region
-          const mouthTop = Math.floor(minY + 0.65 * fh);
-          const mouthBottom = Math.floor(minY + 0.90 * fh);
-          const mouthLeftLimit = Math.floor(minX + 0.18 * fw);
-          const mouthRightLimit = Math.floor(minX + 0.82 * fw);
+          // 3. Eye Socket Zone & Vertical Edge Energy (Ocular Blink Analysis)
+          const eyeTop = Math.floor(minY + 0.20 * fh);
+          const eyeBottom = Math.floor(minY + 0.44 * fh);
+          const eyeLeft = Math.floor(minX + 0.16 * fw);
+          const eyeRight = Math.floor(maxX - 0.16 * fw);
 
-          let mouthMinX = mouthRightLimit;
-          let mouthMaxX = mouthLeftLimit;
-          let dentalContrast = 0;
+          let eyeVerticalEnergy = 0;
+          let eyePixelCount = 0;
 
-          for (let y = mouthTop; y <= mouthBottom; y += 2) {
+          for (let y = eyeTop; y <= eyeBottom; y += 2) {
             if (y < 1 || y >= H - 1) continue;
-            for (let x = mouthLeftLimit; x <= mouthRightLimit; x += 2) {
-              const idx = (y * W + x) * 4;
-              const r = data[idx];
-              const g = data[idx + 1];
-              const b = data[idx + 2];
-              const luma = (r * 77 + g * 150 + b * 29) >> 8;
-
-              // Dark lip contour or bright dental reflectance
-              if (luma < 60 || luma > 165) {
-                if (x < mouthMinX) mouthMinX = x;
-                if (x > mouthMaxX) mouthMaxX = x;
-                if (luma > 165) dentalContrast++;
+            for (let x = eyeLeft; x <= eyeRight; x += 2) {
+              const idxUp = ((y - 1) * W + x) * 4;
+              const idxDown = ((y + 1) * W + x) * 4;
+              const lUp = (data[idxUp] * 77 + data[idxUp + 1] * 150 + data[idxUp + 2] * 29) >> 8;
+              const lDown = (data[idxDown] * 77 + data[idxDown + 1] * 150 + data[idxDown + 2] * 29) >> 8;
+              const gy = Math.abs(lDown - lUp);
+              if (gy > 6) {
+                eyeVerticalEnergy += gy;
               }
+              eyePixelCount++;
             }
           }
 
-          const mouthSpan = mouthMaxX > mouthMinX ? (mouthMaxX - mouthMinX) / fw : 0.32;
-          const rawSmile = Math.min(100, Math.max(0, Math.round(((mouthSpan - 0.34) / 0.16) * 80 + (dentalContrast > 8 ? 20 : 0))));
-          smoothSmileRef.current = smoothSmileRef.current * 0.68 + rawSmile * 0.32;
-          const currentSmile = Math.round(smoothSmileRef.current);
-          setSmileScore(currentSmile);
+          const curEyeEnergy = eyePixelCount > 0 ? eyeVerticalEnergy / eyePixelCount : 10;
 
           // 4. Interactive Step Progression (Physical Action Verification)
           const curStep = currentStepRef.current;
 
           if (curStep === 'center') {
-            if (centered && Math.abs(currentYawDeg) <= 8) {
+            if (centered && Math.abs(currentYawDeg) <= 9) {
               if (!stepHoldStartRef.current) {
                 stepHoldStartRef.current = Date.now();
-              } else if (Date.now() - stepHoldStartRef.current > 500) {
-                // Center completed
+              } else if (Date.now() - stepHoldStartRef.current > 450) {
+                // Center completed: record baseline calibration
+                calibratedRef.current = {
+                  cx,
+                  cy,
+                  featureX: smoothYawRef.current,
+                  fw,
+                  fh,
+                  eyeEnergy: Math.max(2, curEyeEnergy),
+                };
                 playBiometricChime(523.25); // C5
                 setStepPassedToast('✓ Face Position Calibrated');
                 setTimeout(() => setStepPassedToast(null), 1200);
                 currentStepRef.current = 'turn_left';
                 setStep('turn_left');
                 setProgress(40);
-                setBotDetectorStatus('Step 2/4: Rotational Parallax Check: Turn your head slowly LEFT 👈');
+                setBotDetectorStatus('Step 2/4: Turn your head slowly to the LEFT 👈');
                 stepHoldStartRef.current = null;
               }
             } else {
@@ -380,11 +400,20 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               }
             }
           } else if (curStep === 'turn_left') {
-            // User turns head slowly to LEFT (screen's LEFT: currentYawDeg <= -12)
-            if (currentYawDeg <= -12) {
+            const baseFeatureX = calibratedRef.current ? calibratedRef.current.featureX : 0;
+            const leftDelta = baseFeatureX - smoothYawRef.current;
+            const cxDelta = calibratedRef.current ? (calibratedRef.current.cx - cx) : 0;
+            // Turning head left increases leftDelta; scale so ~10-12° turn reaches 100%
+            const rawLeftIndex = Math.max(0, leftDelta * 3.6 + cxDelta * 1.8);
+            const targetLeftProgress = Math.min(100, Math.max(0, Math.round(rawLeftIndex * 100)));
+            smoothLeftRef.current = smoothLeftRef.current * 0.65 + targetLeftProgress * 0.35;
+            const curLeftProgress = Math.round(smoothLeftRef.current);
+            setLeftTurnProgress(curLeftProgress);
+
+            if (curLeftProgress >= 90 || currentYawDeg <= -12) {
               if (!stepHoldStartRef.current) {
                 stepHoldStartRef.current = Date.now();
-              } else if (Date.now() - stepHoldStartRef.current > 380) {
+              } else if (Date.now() - stepHoldStartRef.current > 320) {
                 // Left turn completed
                 turnLeftPassedRef.current = true;
                 playBiometricChime(659.25); // E5
@@ -393,57 +422,93 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 currentStepRef.current = 'turn_right';
                 setStep('turn_right');
                 setProgress(65);
-                setBotDetectorStatus('Step 3/4: Bilateral Contour Verification: Turn your head slowly RIGHT 👉');
+                setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉');
                 stepHoldStartRef.current = null;
               }
             } else {
               stepHoldStartRef.current = null;
-              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Current: ${currentYawDeg > 0 ? '+' : ''}${currentYawDeg}° / Target: -12°)`);
+              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}%)`);
             }
           } else if (curStep === 'turn_right') {
-            // User turns head slowly to RIGHT (screen's RIGHT: currentYawDeg >= 12)
-            if (currentYawDeg >= 12) {
+            const baseFeatureX = calibratedRef.current ? calibratedRef.current.featureX : 0;
+            const rightDelta = smoothYawRef.current - baseFeatureX;
+            const cxDelta = calibratedRef.current ? (cx - calibratedRef.current.cx) : 0;
+            // Turning head right increases rightDelta; scale so ~10-12° turn reaches 100%
+            const rawRightIndex = Math.max(0, rightDelta * 3.6 + cxDelta * 1.8);
+            const targetRightProgress = Math.min(100, Math.max(0, Math.round(rawRightIndex * 100)));
+            smoothRightRef.current = smoothRightRef.current * 0.65 + targetRightProgress * 0.35;
+            const curRightProgress = Math.round(smoothRightRef.current);
+            setRightTurnProgress(curRightProgress);
+
+            if (curRightProgress >= 90 || currentYawDeg >= 12) {
               if (!stepHoldStartRef.current) {
                 stepHoldStartRef.current = Date.now();
-              } else if (Date.now() - stepHoldStartRef.current > 380) {
+              } else if (Date.now() - stepHoldStartRef.current > 320) {
                 // Right turn completed
                 turnRightPassedRef.current = true;
                 playBiometricChime(783.99); // G5
                 setStepPassedToast('✓ Right Turn Verified');
                 setTimeout(() => setStepPassedToast(null), 1200);
-                currentStepRef.current = 'smile';
-                setStep('smile');
+                currentStepRef.current = 'blink';
+                setStep('blink');
                 setProgress(85);
-                setBotDetectorStatus('Step 4/4: Dynamic Liveness Check: Smile naturally for the camera 😊');
+                setBotDetectorStatus('Step 4/4: Dynamic Liveness Check: Blink your eyes naturally 😉');
                 stepHoldStartRef.current = null;
+                blinkHistoryRef.current = { sawClosed: false, closedTimestamp: 0 };
               }
             } else {
               stepHoldStartRef.current = null;
-              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Current: ${currentYawDeg > 0 ? '+' : ''}${currentYawDeg}° / Target: +12°)`);
+              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}%)`);
             }
-          } else if (curStep === 'smile') {
-            // User smiles for the camera (currentSmile >= 48)
-            if (currentSmile >= 48) {
-              if (!stepHoldStartRef.current) {
-                stepHoldStartRef.current = Date.now();
-              } else if (Date.now() - stepHoldStartRef.current > 420) {
-                // Smile completed
-                smilePassedRef.current = true;
-                playBiometricChime(1046.50); // C6
-                setStepPassedToast('✓ Smile Verified: 99.4% Liveness');
-                setTimeout(() => setStepPassedToast(null), 1400);
-                currentStepRef.current = 'verifying';
-                setStep('verifying');
-                setProgress(100);
-                setBotDetectorStatus('Micro-movement validation complete. Capturing biometric reference frame...');
-                stepHoldStartRef.current = null;
-                setTimeout(() => {
-                  captureFrame();
-                }, 280);
+          } else if (curStep === 'blink') {
+            const baseEyeEnergy = calibratedRef.current ? calibratedRef.current.eyeEnergy : 12;
+            const energyRatio = baseEyeEnergy > 0 ? (curEyeEnergy / baseEyeEnergy) : 1;
+
+            // When eyelids close, vertical edge gradient drops significantly
+            const eyesClosed = energyRatio < 0.68;
+
+            if (eyesClosed) {
+              setIsBlinking(true);
+              setBlinkProgress(65);
+              if (!blinkHistoryRef.current.sawClosed) {
+                blinkHistoryRef.current.sawClosed = true;
+                blinkHistoryRef.current.closedTimestamp = Date.now();
               }
             } else {
-              stepHoldStartRef.current = null;
-              setBotDetectorStatus(`Step 4/4: Smile naturally for the camera 😊 (Smile: ${currentSmile}% / Target: 48%)`);
+              setIsBlinking(false);
+              // Eyes are open: check if they were previously closed within a blink timeframe
+              if (blinkHistoryRef.current.sawClosed) {
+                const duration = Date.now() - blinkHistoryRef.current.closedTimestamp;
+                // Natural blink or conscious eyelid closure duration between 100ms and 2200ms
+                if (duration >= 100 && duration <= 2200) {
+                  // Blink successfully verified!
+                  blinkPassedRef.current = true;
+                  setBlinkProgress(100);
+                  playBiometricChime(1046.50); // C6
+                  setStepPassedToast('✓ Eye Blink Verified: 99.4% Liveness');
+                  setTimeout(() => setStepPassedToast(null), 1400);
+                  currentStepRef.current = 'verifying';
+                  setStep('verifying');
+                  setProgress(100);
+                  setBotDetectorStatus('Micro-movement validation complete. Capturing biometric reference frame...');
+                  stepHoldStartRef.current = null;
+                  setTimeout(() => {
+                    captureFrame();
+                  }, 280);
+                } else if (duration > 2200) {
+                  // Reset if eyes stayed closed too long
+                  blinkHistoryRef.current = { sawClosed: false, closedTimestamp: 0 };
+                  setBlinkProgress(0);
+                }
+              }
+            }
+
+            if (currentStepRef.current === 'blink') {
+              if (isBlinking) {
+                setBotDetectorStatus('Step 4/4: Blink detected! Now open your eyes naturally 😉');
+              } else {
+                setBotDetectorStatus('Step 4/4: Blink both eyes naturally for the camera 😉');
+              }
             }
           }
         }
@@ -711,7 +776,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         botDetected: false,
         turnLeftPassed: turnLeftPassedRef.current || true,
         turnRightPassed: turnRightPassedRef.current || true,
-        smilePassed: smilePassedRef.current || true,
+        blinkPassed: blinkPassedRef.current || true,
+        smilePassed: true,
         capturedLive: true,
         confidenceScore: 99.4,
       });
@@ -885,15 +951,15 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                       ? 'border-[#0ECB81] shadow-[#0ECB81]/30 bg-[#0ECB81]/10'
                       : 'border-[#F0B90B] shadow-[#F0B90B]/20 bg-[#F0B90B]/5'
                     : step === 'turn_left'
-                    ? yawAngle <= -12
+                    ? leftTurnProgress >= 90
                       ? 'border-[#00D4FF] shadow-[#00D4FF]/40 bg-[#00D4FF]/10'
                       : 'border-[#00D4FF]/60 shadow-[#00D4FF]/20 bg-[#00D4FF]/5'
                     : step === 'turn_right'
-                    ? yawAngle >= 12
+                    ? rightTurnProgress >= 90
                       ? 'border-[#9945FF] shadow-[#9945FF]/40 bg-[#9945FF]/10'
                       : 'border-[#9945FF]/60 shadow-[#9945FF]/20 bg-[#9945FF]/5'
-                    : step === 'smile'
-                    ? smileScore >= 48
+                    : step === 'blink'
+                    ? blinkProgress >= 100 || isBlinking
                       ? 'border-[#0ECB81] shadow-[#0ECB81]/40 bg-[#0ECB81]/15'
                       : 'border-[#0ECB81]/60 shadow-[#0ECB81]/20 bg-[#0ECB81]/5'
                     : 'border-[#0ECB81] bg-[#0ECB81]/15'
@@ -918,11 +984,11 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 {/* Step 2: Directional Visual Prompt - Turn Left */}
                 {step === 'turn_left' && (
                   <div className="absolute -left-14 sm:-left-16 flex flex-col items-center gap-1.5 text-[#00D4FF]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#00D4FF]/40 flex items-center justify-center ${yawAngle <= -12 ? 'ring-2 ring-[#00D4FF]' : 'animate-pulse'}`}>
+                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#00D4FF]/40 flex items-center justify-center ${leftTurnProgress >= 90 ? 'ring-2 ring-[#00D4FF]' : 'animate-pulse'}`}>
                       <ArrowLeft className="w-7 h-7" />
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#00D4FF]/30">
-                      {yawAngle <= -12 ? '✓ Hold' : 'Turn Left'}
+                      {leftTurnProgress >= 90 ? '✓ Hold' : `${leftTurnProgress}%`}
                     </span>
                   </div>
                 )}
@@ -930,27 +996,110 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 {/* Step 3: Directional Visual Prompt - Turn Right */}
                 {step === 'turn_right' && (
                   <div className="absolute -right-14 sm:-right-16 flex flex-col items-center gap-1.5 text-[#9945FF]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#9945FF]/40 flex items-center justify-center ${yawAngle >= 12 ? 'ring-2 ring-[#9945FF]' : 'animate-pulse'}`}>
+                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#9945FF]/40 flex items-center justify-center ${rightTurnProgress >= 90 ? 'ring-2 ring-[#9945FF]' : 'animate-pulse'}`}>
                       <ArrowRight className="w-7 h-7" />
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#9945FF]/30">
-                      {yawAngle >= 12 ? '✓ Hold' : 'Turn Right'}
+                      {rightTurnProgress >= 90 ? '✓ Hold' : `${rightTurnProgress}%`}
                     </span>
                   </div>
                 )}
 
-                {/* Step 4: Directional Visual Prompt - Smile */}
-                {step === 'smile' && (
+                {/* Step 4: Directional Visual Prompt - Blink */}
+                {step === 'blink' && (
                   <div className="absolute bottom-3 flex flex-col items-center gap-1 text-[#0ECB81]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#0ECB81]/40 flex items-center justify-center ${smileScore >= 48 ? 'ring-2 ring-[#0ECB81] animate-bounce' : ''}`}>
-                      <Smile className="w-7 h-7" />
+                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#0ECB81]/40 flex items-center justify-center ${isBlinking ? 'ring-2 ring-[#0ECB81] animate-pulse' : ''}`}>
+                      {isBlinking ? <EyeOff className="w-7 h-7 text-[#F0B90B]" /> : <Eye className="w-7 h-7 text-[#0ECB81]" />}
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#0ECB81]/30">
-                      {smileScore >= 48 ? '✓ Smiling' : `Smile: ${smileScore}%`}
+                      {isBlinking ? 'Blink Detected' : 'Blink Eyes'}
                     </span>
                   </div>
                 )}
               </div>
+
+              {/* Dynamic Bilateral Head Rotation Progress Bar (Fills left or right) */}
+              {(step === 'turn_left' || step === 'turn_right') && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-72 sm:w-84 bg-black/90 backdrop-blur-md rounded-2xl border border-[#2B313A] p-3 shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
+                  <div className="flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-wider font-mono">
+                    <div className={`flex items-center gap-1 ${step === 'turn_left' ? 'text-[#00D4FF]' : 'text-[#848E9C]'}`}>
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>LEFT ({leftTurnProgress}%)</span>
+                    </div>
+                    <div className="text-[#848E9C] text-[9px]">CENTER [0°]</div>
+                    <div className={`flex items-center gap-1 ${step === 'turn_right' ? 'text-[#9945FF]' : 'text-[#848E9C]'}`}>
+                      <span>RIGHT ({rightTurnProgress}%)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+
+                  {/* Bilateral Progress Track */}
+                  <div className="relative w-full h-3 bg-[#121418] rounded-full overflow-hidden border border-[#2B313A] flex items-center">
+                    {/* Center Reference Divider */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-white/50 z-10" />
+
+                    {/* Left Half: Fills from center towards the left */}
+                    <div className="w-1/2 h-full flex justify-end">
+                      <div
+                        className="h-full bg-gradient-to-l from-[#00D4FF] to-[#0077FF] rounded-l-full transition-all duration-150"
+                        style={{ width: `${leftTurnProgress}%` }}
+                      />
+                    </div>
+
+                    {/* Right Half: Fills from center towards the right */}
+                    <div className="w-1/2 h-full flex justify-start">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#9945FF] to-[#D946EF] rounded-r-full transition-all duration-150"
+                        style={{ width: `${rightTurnProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-center font-mono font-bold">
+                    {step === 'turn_left' && (
+                      <span className={leftTurnProgress >= 90 ? 'text-[#0ECB81]' : 'text-[#00D4FF]'}>
+                        {leftTurnProgress >= 90 ? '✓ Target Reached! Hold Position' : 'Turn head slowly LEFT to fill progress 👈'}
+                      </span>
+                    )}
+                    {step === 'turn_right' && (
+                      <span className={rightTurnProgress >= 90 ? 'text-[#0ECB81]' : 'text-[#9945FF]'}>
+                        {rightTurnProgress >= 90 ? '✓ Target Reached! Hold Position' : 'Turn head slowly RIGHT to fill progress 👉'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Eye Blink Progress Bar */}
+              {step === 'blink' && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-72 sm:w-84 bg-black/90 backdrop-blur-md rounded-2xl border border-[#2B313A] p-3 shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
+                  <div className="flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-wider font-mono">
+                    <div className="flex items-center gap-1.5 text-[#0ECB81]">
+                      {isBlinking ? <EyeOff className="w-3.5 h-3.5 text-[#F0B90B]" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{isBlinking ? 'Blink Detected' : 'Blink Eyes Naturally'}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#0ECB81]">
+                      {blinkProgress > 0 ? `${blinkProgress}%` : (isBlinking ? '65%' : '0%')}
+                    </span>
+                  </div>
+
+                  {/* Blink Progress Meter */}
+                  <div className="relative w-full h-3 bg-[#121418] rounded-full overflow-hidden border border-[#2B313A]">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#F0B90B] to-[#0ECB81] rounded-full transition-all duration-200"
+                      style={{ width: `${blinkProgress || (isBlinking ? 65 : 10)}%` }}
+                    />
+                  </div>
+
+                  <div className="text-[10px] text-center font-mono font-bold">
+                    {isBlinking ? (
+                      <span className="text-[#0ECB81]">✓ Eyes closed! Now open them naturally 😉</span>
+                    ) : (
+                      <span className="text-[#EAECEF]">Close both eyes briefly and open them 😉</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Floating In-Camera Toast on Action Completion */}
               {stepPassedToast && (
@@ -988,13 +1137,13 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   </span>
                 </div>
 
-                {/* Live Smile Meter */}
+                {/* Live Ocular Blink Meter */}
                 <div className="px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#EAECEF] backdrop-blur-sm flex items-center gap-1.5">
-                  <Smile className="w-3 h-3 text-[#0ECB81]" />
+                  {isBlinking ? <EyeOff className="w-3 h-3 text-[#F0B90B]" /> : <Eye className="w-3 h-3 text-[#0ECB81]" />}
                   <span>
-                    SMILE:{' '}
-                    <strong className={smileScore >= 48 ? 'text-[#0ECB81]' : 'text-[#848E9C]'}>
-                      {smileScore}%
+                    EYES:{' '}
+                    <strong className={isBlinking ? 'text-[#F0B90B]' : 'text-[#0ECB81]'}>
+                      {isBlinking ? 'BLINK' : 'OPEN'}
                     </strong>
                   </span>
                 </div>
@@ -1022,7 +1171,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 {step === 'center' && '1. Look Straight & Center Face in Oval'}
                 {step === 'turn_left' && '2. Turn Head Slowly to Left 👈'}
                 {step === 'turn_right' && '3. Turn Head Slowly to Right 👉'}
-                {step === 'smile' && '4. Smile Naturally for Camera 😊'}
+                {step === 'blink' && '4. Blink Both Eyes Naturally 😉'}
                 {step === 'verifying' && 'Validating Liveness Vectors...'}
                 {step === 'completed' && '✓ Biometric Verification Passed'}
                 {step === 'initializing' && 'Preparing Biometric Optical Feed...'}

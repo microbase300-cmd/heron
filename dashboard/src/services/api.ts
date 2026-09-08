@@ -31,9 +31,16 @@ class ApiService {
       headers
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { error: text && text.length < 250 ? text : `Server error (${res.status}: ${res.statusText})` };
+    }
+
     if (!res.ok) {
-      throw new Error(data.error || 'Network request failed');
+      throw new Error(data.error || `Request failed with status ${res.status}`);
     }
     return data;
   }
@@ -290,7 +297,8 @@ class ApiService {
       botDetected: boolean;
       turnLeftPassed: boolean;
       turnRightPassed: boolean;
-      smilePassed: boolean;
+      blinkPassed?: boolean;
+      smilePassed?: boolean;
       capturedLive: boolean;
       confidenceScore?: number;
     };

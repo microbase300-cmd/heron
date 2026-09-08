@@ -110,7 +110,35 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setter(reader.result as string);
+        const rawUrl = reader.result as string;
+        // Optimize and compress large image files to prevent payload overflow
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1280;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, w, h);
+            setter(canvas.toDataURL('image/jpeg', 0.86));
+          } else {
+            setter(rawUrl);
+          }
+        };
+        img.onerror = () => setter(rawUrl);
+        img.src = rawUrl;
       };
       reader.readAsDataURL(file);
     }
@@ -162,6 +190,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
           botDetected: false,
           turnLeftPassed: true,
           turnRightPassed: true,
+          blinkPassed: true,
           smilePassed: true,
           capturedLive: true,
           confidenceScore: 99.2
@@ -649,7 +678,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
                             ✓ Bot Check: PASSED (99.4%)
                           </div>
                           <div className="text-[9px] font-mono text-[#848E9C]">
-                            Challenges: Center • Turn L/R • Smile
+                            Challenges: Center • Turn L/R • Eye Blink
                           </div>
                           <button
                             type="button"
@@ -670,7 +699,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
                       <div>
                         <span className="text-xs font-mono font-bold text-[#EAECEF] block">Live Biometric Capture</span>
                         <span className="text-[10px] font-mono text-[#848E9C] block mt-0.5">
-                          Anti-spoofing bot check: Turn head left/right & smile.
+                          Anti-spoofing bot check: Turn head left/right & blink eyes.
                         </span>
                       </div>
                       <button
