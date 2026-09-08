@@ -115,10 +115,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess }) => {
             </button>
           </form>
         </div>
-
-        <div className="text-center mt-6 text-xs text-[#848E9C]">
-          Heron Assets Trustee • Built and developed by Microbase
-        </div>
       </div>
     </div>
   );

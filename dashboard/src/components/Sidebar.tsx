@@ -185,10 +185,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
         )}
-
-        <div className="text-[10px] text-center text-[#5E6673] tracking-wide pt-1">
-          Built and developed by Microbase
-        </div>
       </div>
     </div>
   );

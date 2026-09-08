@@ -273,7 +273,7 @@ function Footer({
         </div>
 
         <div className="footer-bottom">
-          <span>© 2026 Heron Assets Trustee. All rights reserved. • Built and developed by Microbase</span>
+          <span>© 2026 Heron Assets Trustee. All rights reserved.</span>
           <span>
             Digital assets involve market risk. Information is for general institutional purposes.
           </span>

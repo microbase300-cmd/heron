@@ -312,10 +312,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
             </div>
           </form>
         )}
-
-        <div className="text-center mt-4 text-[10px] text-white/30 font-mono">
-          Heron Assets Trustee • Built and developed by Microbase
-        </div>
       </div>
     </div>
   );

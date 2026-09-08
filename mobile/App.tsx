@@ -142,12 +142,6 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
           Institutional Crypto Wealth
         </Text>
       </Animated.View>
-
-      <Animated.View style={{ position: 'absolute', bottom: 44, alignItems: 'center', opacity: logoFadeAnim }}>
-        <Text style={{ color: '#5E6673', fontSize: 11, letterSpacing: 0.5 }}>
-          Built and developed by Microbase
-        </Text>
-      </Animated.View>
     </Animated.View>
   );
 }
@@ -918,9 +912,6 @@ function MainAppContent() {
             </View>
             <Text style={styles.authBrandTitle}>HERON ASSETS TRUSTEE</Text>
             <Text style={styles.authBrandSub}>INSTITUTIONAL CRYPTO WEALTH</Text>
-            <Text style={{ color: '#5E6673', fontSize: 11, marginTop: 4, marginBottom: 12, letterSpacing: 0.3 }}>
-              Built and developed by Microbase
-            </Text>
 
             {/* Toggle Login / Register */}
             <View style={styles.authToggleRow}>

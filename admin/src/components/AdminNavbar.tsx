@@ -34,7 +34,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
             </span>
           </div>
           <div className="text-[10px] font-mono text-[#848E9C] hidden sm:block">
-            Settlement & Escrow Control Center • Built and developed by Microbase
+            Settlement & Escrow Control Center
           </div>
         </div>
       </div>
