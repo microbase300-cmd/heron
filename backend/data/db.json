@@ -212,6 +212,14 @@
       "preferredCurrency": "USD",
       "securityLogs": [
         {
+          "id": "sec_1788849039455_37zj",
+          "timestamp": "2026-09-08T06:30:39.455Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
           "id": "sec_1788847801604_pyzx",
           "timestamp": "2026-09-08T06:10:01.604Z",
           "ip": "127.0.0.***",
@@ -711,6 +719,13 @@
       "tokenHash": "e185c2c792ca3a209914a5738e70490a7a4ffbd98e323e3cd35c732e473ebcc7",
       "expiresAt": "2026-09-15T06:10:01.612Z",
       "createdAt": "2026-09-08T06:10:01.612Z"
+    },
+    {
+      "id": "rft_bc142d15-bc0a-4065-9099-ec4f2a70de26",
+      "userId": "usr_demo_vance",
+      "tokenHash": "a12ad31da8146ab53380ffcb073968fa3a4326ca22557f1c34d10c77a74e6d3b",
+      "expiresAt": "2026-09-15T06:30:39.458Z",
+      "createdAt": "2026-09-08T06:30:39.458Z"
     }
   ],
   "investments": [
