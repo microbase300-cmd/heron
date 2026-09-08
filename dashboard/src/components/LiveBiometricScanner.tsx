@@ -20,7 +20,7 @@ import {
   Pause,
   Zap
 } from 'lucide-react';
-import { LightweightVisionEngine, LightweightVisionResult } from '../services/lightweightVision';
+import { faceApiService, FaceApiAnalysisResult } from '../services/faceApiService';
 
 export interface LivenessDetails {
   botDetected: boolean;
@@ -106,8 +106,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const isOpenRef = useRef(isOpen);
   const selectedDeviceIdRef = useRef(selectedDeviceId);
 
-  // Ultra-lightweight Zero-Download Vision Engine (< 1ms per frame, 0 lag)
-  const visionEngineRef = useRef<LightweightVisionEngine>(new LightweightVisionEngine());
+  // Neural Face-API processing guard
+  const isProcessingRef = useRef(false);
 
   // Live session MediaRecorder references
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -238,165 +238,181 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     if (onError) onError(failMsg);
   }, [onError, stopCamera]);
 
-  // Real-time 60 FPS Ultra-Fast Analysis Loop (< 0.4ms per frame, 0 lag)
-  const processVisionFrame = useCallback(() => {
+  // Real-time Neural Face-API Analysis Loop (68 Landmarks + Precise Cranial Geometry)
+  const processVisionFrame = useCallback(async () => {
     if (!isOpenRef.current || !videoRef.current || !streamRef.current) return;
+    if (isProcessingRef.current) {
+      if (currentStepRef.current !== 'completed' && currentStepRef.current !== 'error' && isOpenRef.current) {
+        animationFrameRef.current = requestAnimationFrame(processVisionFrame);
+      }
+      return;
+    }
 
     const video = videoRef.current;
     if (video.readyState >= 2 && !video.paused && !video.ended) {
       const curStep = currentStepRef.current;
-      const res: LightweightVisionResult = visionEngineRef.current.process(
-        video,
-        curStep === 'wave_hand' ? 'wave_hand' : 'any'
-      );
-
-      const now = Date.now();
-      const shouldUpdateUi = now - lastUiUpdateRef.current > 50; // Throttle to 20 FPS to prevent render lag
-
-      if (res.faceDetected && shouldUpdateUi) {
-        setYawAngle(res.yawAngle);
-      }
-
-      // Check if device or laptop is actively being shaken/moved
-      if (res.isDeviceMoving) {
-        stepHoldStartRef.current = null;
-        if (shouldUpdateUi) {
-          setBotDetectorStatus('Device movement detected: Please rotate your head, not your laptop.');
-        }
-      } else if (curStep === 'initializing') {
-        // Optical hardware still initializing / stabilizing - keep video hidden and loop
+      if (curStep === 'initializing') {
         if (currentStepRef.current !== 'completed' && currentStepRef.current !== 'error' && isOpenRef.current) {
           animationFrameRef.current = requestAnimationFrame(processVisionFrame);
         }
         return;
-      } else if (res.faceDetected) {
-        if (curStep === 'center') {
-          if (shouldUpdateUi) setIsFaceCentered(res.isCentered);
+      }
 
-          if (res.isCentered) {
-            if (!stepHoldStartRef.current) {
-              stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 420) {
-              playBiometricChime(523.25); // C5
-              setStepPassedToast('✓ Face Position Calibrated');
-              setTimeout(() => setStepPassedToast(null), 1200);
-              currentStepRef.current = 'turn_left';
-              setStep('turn_left');
-              setProgress(45);
-              setBotDetectorStatus('Step 2/4: Turn your head slowly to the LEFT 👈');
+      isProcessingRef.current = true;
+      try {
+        const res: FaceApiAnalysisResult = await faceApiService.detect(
+          video,
+          curStep === 'wave_hand' ? 'wave_hand' : 'any'
+        );
+
+        const now = Date.now();
+        const shouldUpdateUi = now - lastUiUpdateRef.current > 40;
+
+        if (res.faceDetected && shouldUpdateUi) {
+          setYawAngle(res.yawAngle);
+        }
+
+        if (res.faceDetected) {
+          if (curStep === 'center') {
+            if (shouldUpdateUi) setIsFaceCentered(res.isCentered);
+
+            if (res.isCentered) {
+              if (!stepHoldStartRef.current) {
+                stepHoldStartRef.current = Date.now();
+              } else if (Date.now() - stepHoldStartRef.current > 400) {
+                playBiometricChime(523.25); // C5
+                setStepPassedToast('✓ Face Position Calibrated');
+                setTimeout(() => setStepPassedToast(null), 1200);
+                currentStepRef.current = 'turn_left';
+                setStep('turn_left');
+                setProgress(45);
+                setBotDetectorStatus('Step 2/4: Turn your head slowly to the LEFT 👈');
+                stepHoldStartRef.current = null;
+                smoothLeftRef.current = 0;
+              }
+            } else {
               stepHoldStartRef.current = null;
-              smoothLeftRef.current = 0;
+              if (shouldUpdateUi) {
+                setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
+              }
             }
-          } else {
+          } else if (curStep === 'turn_left') {
+            // Turning head left makes normalizedYaw negative (< 0)
+            const leftRotDelta = -res.normalizedYaw;
+            const rawLeftProgress = Math.min(100, Math.max(0, Math.round((leftRotDelta / 0.22) * 100)));
+            smoothLeftRef.current = smoothLeftRef.current * 0.65 + rawLeftProgress * 0.35;
+            const curLeftProgress = Math.round(smoothLeftRef.current);
+
+            if (shouldUpdateUi) {
+              setLeftTurnProgress(curLeftProgress);
+            }
+
+            if (curLeftProgress >= 50) {
+              if (!stepHoldStartRef.current) {
+                stepHoldStartRef.current = Date.now();
+              } else if (Date.now() - stepHoldStartRef.current > 320) {
+                turnLeftPassedRef.current = true;
+                playBiometricChime(659.25); // E5
+                setStepPassedToast('✓ Left Turn Verified');
+                setTimeout(() => setStepPassedToast(null), 1200);
+                currentStepRef.current = 'turn_right';
+                setStep('turn_right');
+                setProgress(65);
+                setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉');
+                stepHoldStartRef.current = null;
+                smoothRightRef.current = 0;
+              }
+            } else {
+              stepHoldStartRef.current = null;
+              if (shouldUpdateUi) {
+                setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}% / 50%)`);
+              }
+            }
+          } else if (curStep === 'turn_right') {
+            // Turning head right makes normalizedYaw positive (> 0)
+            const rightRotDelta = res.normalizedYaw;
+            const rawRightProgress = Math.min(100, Math.max(0, Math.round((rightRotDelta / 0.22) * 100)));
+            smoothRightRef.current = smoothRightRef.current * 0.65 + rawRightProgress * 0.35;
+            const curRightProgress = Math.round(smoothRightRef.current);
+
+            if (shouldUpdateUi) {
+              setRightTurnProgress(curRightProgress);
+            }
+
+            if (curRightProgress >= 50) {
+              if (!stepHoldStartRef.current) {
+                stepHoldStartRef.current = Date.now();
+              } else if (Date.now() - stepHoldStartRef.current > 320) {
+                turnRightPassedRef.current = true;
+                playBiometricChime(783.99); // G5
+                setStepPassedToast('✓ Right Turn Verified');
+                setTimeout(() => setStepPassedToast(null), 1200);
+                currentStepRef.current = 'wave_hand';
+                setStep('wave_hand');
+                setProgress(85);
+                setBotDetectorStatus('Step 4/4: Wave your hand side-to-side in front of camera 👋');
+                stepHoldStartRef.current = null;
+                setWaveProgress(0);
+                setWaveCount(0);
+                faceApiService.resetWave();
+              }
+            } else {
+              stepHoldStartRef.current = null;
+              if (shouldUpdateUi) {
+                setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}% / 50%)`);
+              }
+            }
+          } else if (curStep === 'wave_hand') {
+            const rawWaveProg = Math.min(100, Math.round((res.handStrokeCount / 2) * 100));
+            smoothWaveRef.current = smoothWaveRef.current * 0.70 + rawWaveProg * 0.30;
+            const curWave = Math.round(smoothWaveRef.current);
+
+            if (shouldUpdateUi) {
+              setWaveProgress(curWave);
+              setWaveCount(res.handStrokeCount);
+            }
+
+            if (curWave >= 50 || res.handStrokeCount >= 2 || res.handWaveDetected) {
+              if (!stepHoldStartRef.current) {
+                stepHoldStartRef.current = Date.now();
+              } else if (Date.now() - stepHoldStartRef.current > 300) {
+                waveHandPassedRef.current = true;
+                playBiometricChime(1046.50); // C6
+                setStepPassedToast('✓ Hand Wave Verified: 99.4% Liveness');
+                setTimeout(() => setStepPassedToast(null), 1400);
+                currentStepRef.current = 'verifying';
+                setStep('verifying');
+                setProgress(100);
+                setBotDetectorStatus('Micro-movement validation complete. Finalizing biometric capture...');
+                stepHoldStartRef.current = null;
+                setTimeout(() => {
+                  captureFrame();
+                }, 250);
+              }
+            } else {
+              stepHoldStartRef.current = null;
+              if (shouldUpdateUi) {
+                setBotDetectorStatus(`Step 4/4: Wave your hand side-to-side in front of camera 👋 (${res.handStrokeCount}/2 strokes)`);
+              }
+            }
+          }
+        } else {
+          if (curStep === 'center') {
+            if (shouldUpdateUi) setIsFaceCentered(false);
             stepHoldStartRef.current = null;
             if (shouldUpdateUi) {
-              setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
-            }
-          }
-        } else if (curStep === 'turn_left') {
-          // Turning head left makes normalizedYaw negative (< 0)
-          const leftRotDelta = -res.normalizedYaw;
-          const rawLeftProgress = Math.min(100, Math.max(0, Math.round((leftRotDelta / 0.22) * 100)));
-          smoothLeftRef.current = smoothLeftRef.current * 0.65 + rawLeftProgress * 0.35;
-          const curLeftProgress = Math.round(smoothLeftRef.current);
-
-          if (shouldUpdateUi) {
-            setLeftTurnProgress(curLeftProgress);
-          }
-
-          if (curLeftProgress >= 50) {
-            if (!stepHoldStartRef.current) {
-              stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 320) {
-              turnLeftPassedRef.current = true;
-              playBiometricChime(659.25); // E5
-              setStepPassedToast('✓ Left Turn Verified');
-              setTimeout(() => setStepPassedToast(null), 1200);
-              currentStepRef.current = 'turn_right';
-              setStep('turn_right');
-              setProgress(65);
-              setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉');
-              stepHoldStartRef.current = null;
-              smoothRightRef.current = 0;
-            }
-          } else {
-            stepHoldStartRef.current = null;
-            if (shouldUpdateUi) {
-              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}% / 50%)`);
-            }
-          }
-        } else if (curStep === 'turn_right') {
-          // Turning head right makes normalizedYaw positive (> 0)
-          const rightRotDelta = res.normalizedYaw;
-          const rawRightProgress = Math.min(100, Math.max(0, Math.round((rightRotDelta / 0.22) * 100)));
-          smoothRightRef.current = smoothRightRef.current * 0.65 + rawRightProgress * 0.35;
-          const curRightProgress = Math.round(smoothRightRef.current);
-
-          if (shouldUpdateUi) {
-            setRightTurnProgress(curRightProgress);
-          }
-
-          if (curRightProgress >= 50) {
-            if (!stepHoldStartRef.current) {
-              stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 320) {
-              turnRightPassedRef.current = true;
-              playBiometricChime(783.99); // G5
-              setStepPassedToast('✓ Right Turn Verified');
-              setTimeout(() => setStepPassedToast(null), 1200);
-              currentStepRef.current = 'wave_hand';
-              setStep('wave_hand');
-              setProgress(85);
-              setBotDetectorStatus('Step 4/4: Wave your hand side-to-side in front of camera 👋');
-              stepHoldStartRef.current = null;
-              setWaveProgress(0);
-              setWaveCount(0);
-              visionEngineRef.current.resetWave();
-            }
-          } else {
-            stepHoldStartRef.current = null;
-            if (shouldUpdateUi) {
-              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}% / 50%)`);
-            }
-          }
-        } else if (curStep === 'wave_hand') {
-          const rawWaveProg = Math.min(100, Math.round((res.handStrokeCount / 2) * 100));
-          smoothWaveRef.current = smoothWaveRef.current * 0.70 + rawWaveProg * 0.30;
-          const curWave = Math.round(smoothWaveRef.current);
-
-          if (shouldUpdateUi) {
-            setWaveProgress(curWave);
-            setWaveCount(res.handStrokeCount);
-          }
-
-          if (curWave >= 50 || res.handStrokeCount >= 2 || res.handWaveDetected) {
-            if (!stepHoldStartRef.current) {
-              stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 300) {
-              waveHandPassedRef.current = true;
-              playBiometricChime(1046.50); // C6
-              setStepPassedToast('✓ Hand Wave Verified: 99.4% Liveness');
-              setTimeout(() => setStepPassedToast(null), 1400);
-              currentStepRef.current = 'verifying';
-              setStep('verifying');
-              setProgress(100);
-              setBotDetectorStatus('Micro-movement validation complete. Finalizing biometric capture...');
-              stepHoldStartRef.current = null;
-              setTimeout(() => {
-                captureFrame();
-              }, 250);
-            }
-          } else {
-            stepHoldStartRef.current = null;
-            if (shouldUpdateUi) {
-              setBotDetectorStatus(`Step 4/4: Wave your hand side-to-side in front of camera 👋 (${res.handStrokeCount}/2 strokes)`);
+              setBotDetectorStatus('Step 1/4: Looking for face... Please look directly at the camera.');
             }
           }
         }
-      }
 
-      if (shouldUpdateUi) {
-        lastUiUpdateRef.current = now;
+        if (shouldUpdateUi) {
+          lastUiUpdateRef.current = now;
+        }
+      } catch (detectErr) {
+        console.warn('Face-API frame execution notice:', detectErr);
+      } finally {
+        isProcessingRef.current = false;
       }
     }
 
@@ -405,7 +421,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     }
   }, [captureFrame]);
 
-  // Start real hardware camera instantly (0 model download delay)
+  // Start real hardware camera instantly with pre-loaded neural weights
   const startCamera = useCallback(async (forcedDeviceId?: string) => {
     if (isStartingRef.current || !isOpenRef.current) return;
     isStartingRef.current = true;
@@ -441,8 +457,15 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     currentStepRef.current = 'initializing';
     setStep('initializing');
     setProgress(15);
-    setBotDetectorStatus('Starting Optical Video Stream...');
-    visionEngineRef.current.resetWave();
+    setBotDetectorStatus('Initializing Face-API Neural Optical Feed...');
+    faceApiService.resetWave();
+
+    // Preload local Face-API models
+    try {
+      await faceApiService.loadModels('/models');
+    } catch (modelErr) {
+      console.warn('Face-API local model preload notice:', modelErr);
+    }
 
     if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const msg = 'Camera API is not supported in this browser. Please use Google Chrome, Edge, or Firefox.';
