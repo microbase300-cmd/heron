@@ -330,7 +330,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#F0B90B]/20 via-[#2B313A] to-[#181A20] border-2 border-[#F0B90B]/60 p-1 shadow-lg shadow-[#F0B90B]/10 flex items-center justify-center">
                 <img
                   src="/heron_logo.jpg"
-                  alt="Heron Assets Trustees"
+                  alt="Heron Assets Trustee"
                   className="w-full h-full rounded-xl object-cover"
                 />
               </div>
@@ -596,7 +596,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </div>
                   <div>
                     <h4 className="text-sm font-sans font-bold text-[#EAECEF]">Anti-Phishing Verification Code</h4>
-                    <p className="text-xs text-[#848E9C] mt-0.5">Verifies official communications from Heron Assets Trustees</p>
+                    <p className="text-xs text-[#848E9C] mt-0.5">Verifies official communications from Heron Assets Trustee</p>
                   </div>
                 </div>
                 <p className="text-[11px] text-[#848E9C] mt-2">

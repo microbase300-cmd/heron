@@ -63,11 +63,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <a href="http://localhost:3000" className="flex items-center gap-3">
             <img 
               src="/heron_logo.jpg" 
-              alt="Heron Assets Trustees" 
+              alt="Heron Assets Trustee" 
               className="w-9 h-9 rounded-full object-cover border border-[#F0B90B]/50 shadow-md shadow-[#F0B90B]/20" 
             />
             <div>
-              <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans">HERON ASSETS TRUSTEES</div>
+              <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans">HERON ASSETS TRUSTEE</div>
               <div className="text-[9px] tracking-wider uppercase text-[#F0B90B] font-sans font-bold mt-0.5">Binance Pro Engine</div>
             </div>
           </a>
@@ -185,6 +185,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
         )}
+
+        <div className="text-[10px] text-center text-[#5E6673] tracking-wide pt-1">
+          Built and developed by Microbase
+        </div>
       </div>
     </div>
   );

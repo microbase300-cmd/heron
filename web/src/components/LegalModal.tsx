@@ -41,7 +41,7 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
             </h2>
             <div className="body" style={{ maxHeight: '55vh', overflowY: 'auto', paddingRight: '12px' }}>
               <p>
-                <strong>1. Data Collection & Minimization:</strong> Heron Assets Trustees collects only necessary information to process inquiries and execute authenticated investments. We do not store unencrypted credentials or private keys.
+                <strong>1. Data Collection & Minimization:</strong> Heron Assets Trustee collects only necessary information to process inquiries and execute authenticated investments. We do not store unencrypted credentials or private keys.
               </p>
               <p>
                 <strong>2. Cryptographic Security:</strong> All client telemetry and communications are transmitted over TLS 1.3 with end-to-end encryption. Ledger operations and wallet identifiers are protected by multi-signature protocols.
@@ -101,7 +101,7 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
             </h2>
             <div className="body" style={{ maxHeight: '55vh', overflowY: 'auto', paddingRight: '12px' }}>
               <p>
-                <strong>Operating Standard:</strong> Heron Assets Trustees structures its custody architectures in alignment with global fiduciary practices and institutional security standards.
+                <strong>Operating Standard:</strong> Heron Assets Trustee structures its custody architectures in alignment with global fiduciary practices and institutional security standards.
               </p>
               <p>
                 <strong>Multi-Party Computation:</strong> Institutional client reserves are managed via Multi-Party Computation (MPC) cold storage systems with distributed key shards.

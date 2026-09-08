@@ -38,7 +38,7 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    service: 'Heron Assets Trustees API',
+    service: 'Heron Assets Trustee API',
     version: '1.0.0',
     database: dbPool.isConnected ? 'postgresql-connected' : 'in-memory-active'
   });

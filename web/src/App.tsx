@@ -25,7 +25,7 @@ function Navbar() {
         <Link className="brand" to="/" onClick={closeMenu} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
           <img
             src="/heron_logo.jpg"
-            alt="Heron Assets Trustees"
+            alt="Heron Assets Trustee"
             style={{
               width: '28px',
               height: '28px',
@@ -36,7 +36,7 @@ function Navbar() {
               display: 'inline-block',
             }}
           />
-          <span>HERON / ASSETS TRUSTEES</span>
+          <span>HERON / ASSETS TRUSTEE</span>
         </Link>
 
         <div className={`navlinks ${menuOpen ? 'open' : ''}`}>
@@ -147,7 +147,7 @@ function Footer({
             <div className="footer-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <img
                 src="/heron_logo.jpg"
-                alt="Heron Assets Trustees"
+                alt="Heron Assets Trustee"
                 style={{
                   width: '34px',
                   height: '34px',
@@ -157,7 +157,7 @@ function Footer({
                   boxShadow: '0 0 12px rgba(240, 185, 11, 0.25)',
                 }}
               />
-              <span>HERON ASSETS TRUSTEES</span>
+              <span>HERON ASSETS TRUSTEE</span>
             </div>
             <p
               className="body"
@@ -273,7 +273,7 @@ function Footer({
         </div>
 
         <div className="footer-bottom">
-          <span>© 2026 Heron Assets Trustees. All rights reserved.</span>
+          <span>© 2026 Heron Assets Trustee. All rights reserved. • Built and developed by Microbase</span>
           <span>
             Digital assets involve market risk. Information is for general institutional purposes.
           </span>

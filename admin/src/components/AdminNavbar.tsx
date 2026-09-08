@@ -21,20 +21,20 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
       <div className="flex items-center gap-3">
         <img
           src="/heron_logo.jpg"
-          alt="Heron Assets Trustees"
+          alt="Heron Assets Trustee"
           className="w-9 h-9 rounded-full object-cover border border-[#F0B90B]/50 shadow-md shadow-[#F0B90B]/20"
         />
         <div>
           <div className="flex items-center gap-2">
             <span className="font-sans font-bold text-[#EAECEF] text-sm sm:text-base tracking-tight">
-              HERON ASSETS TRUSTEES
+              HERON ASSETS TRUSTEE
             </span>
             <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30 uppercase font-semibold">
               Restricted Area
             </span>
           </div>
           <div className="text-[10px] font-mono text-[#848E9C] hidden sm:block">
-            Settlement & Escrow Control Center
+            Settlement & Escrow Control Center • Built and developed by Microbase
           </div>
         </div>
       </div>

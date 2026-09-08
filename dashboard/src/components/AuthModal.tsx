@@ -96,7 +96,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
         <div className="text-center space-y-2 mb-6">
           <img 
             src="/heron_logo.jpg" 
-            alt="Heron Assets" 
+            alt="Heron Assets Trustee" 
             className="w-12 h-12 rounded-full object-cover border border-gold/50 mx-auto shadow-lg shadow-gold/25" 
           />
           <h3 className="font-sans text-2xl font-bold text-white tracking-tight">
@@ -312,6 +312,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
             </div>
           </form>
         )}
+
+        <div className="text-center mt-4 text-[10px] text-white/30 font-mono">
+          Heron Assets Trustee • Built and developed by Microbase
+        </div>
       </div>
     </div>
   );

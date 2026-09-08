@@ -1,6 +1,7 @@
-# Heron Assets Trustees — Cross-Platform Mobile App (Android & iOS)
+# Heron Assets Trustee — Cross-Platform Mobile App (Android & iOS)
+*Built and developed by Microbase.*
 
-This mobile app provides the mobile client experience for Heron Assets Trustees, mirroring the **Cyber-Institutional Web3 Liquid** design language.
+This mobile app provides the mobile client experience for Heron Assets Trustee, mirroring the **Cyber-Institutional Web3 Liquid** design language.
 
 ## Key Features
 - **Net Asset Value (NAV) Tracker**: Live portfolio valuation in USD, BTC, and ETH.

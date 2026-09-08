@@ -103,6 +103,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <span>Public Web (3000)</span>
           <ExternalLink className="w-3.5 h-3.5 text-[#848E9C]" />
         </a>
+
+        <div className="text-[10px] text-center text-[#5E6673] tracking-wide pt-2">
+          Built and developed by Microbase
+        </div>
       </div>
     </aside>
   );

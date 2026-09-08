@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang=en>
 <head>
   <meta charset=UTF-8>
   <meta name=viewport content=width=device-width, initial-scale=1.0>
-  <title>Heron Capital — Brand Identity & Logo Selection</title>
+  <title>Heron Assets Trustee — Brand Identity & Logo Selection</title>
   <link rel=preconnect href=https://fonts.googleapis.com>
   <link rel=preconnect href=https://fonts.gstatic.com crossorigin>
   <link href=https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap rel=stylesheet>
@@ -19,75 +19,78 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: var(--bg);
+      background: var(--bg);
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      padding: 40px 20px 80px;
-      line-height: 1.6;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
     }
     .header {
       text-align: center;
-      max-width: 800px;
+      max-width: 720px;
       margin: 0 auto 50px;
+    }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 38px;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .header h1 span {
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p.subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.6;
     }
     .badge {
       display: inline-block;
       padding: 6px 14px;
-      border-radius: 999px;
       background: rgba(240, 185, 11, 0.12);
-      border: 1px solid rgba(240, 185, 11, 0.3);
+      border: 1px solid rgba(240, 185, 11, 0.35);
+      border-radius: 999px;
       color: var(--gold);
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(32px, 5vw, 48px);
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 12px;
-      letter-spacing: -0.02em;
-    }
-    h1 span {
-      color: var(--gold);
-    }
-    p.subtitle {
-      color: var(--text-muted);
-      font-size: 16px;
+      margin-bottom: 18px;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 28px;
       max-width: 1300px;
       margin: 0 auto;
     }
     .logo-card {
       background: var(--surface);
       border: 1px solid var(--card-border);
-      border-radius: 20px;
+      border-radius: 16px;
       padding: 24px;
-      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
       display: flex;
       flex-direction: column;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
     .logo-card:hover {
-      transform: translateY(-6px);
+      transform: translateY(-4px);
       border-color: rgba(240, 185, 11, 0.5);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(240, 185, 11, 0.1);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(240, 185, 11, 0.15);
     }
     .image-wrapper {
-      position: relative;
       width: 100%;
-      aspect-ratio: 1/1;
-      border-radius: 14px;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
       overflow: hidden;
-      background: #000;
       margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #08090b;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
     .image-wrapper img {
       width: 100%;
@@ -100,69 +103,69 @@
       transform: scale(1.03);
     }
     .card-tag {
-      font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
       color: var(--gold);
-      margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 1px;
+      margin-bottom: 6px;
     }
     .card-title {
       font-family: 'Playfair Display', serif;
       font-size: 22px;
-      color: #ffffff;
       margin-bottom: 10px;
+      color: #fff;
     }
     .card-desc {
-      color: var(--text-muted);
       font-size: 13px;
       line-height: 1.6;
-      margin-bottom: 18px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
       flex-grow: 1;
     }
     .features {
       list-style: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 24px;
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
     }
     .features li {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 6px;
+      color: var(--text-main);
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .features li:before {
-      content: ✦;
+    .features li::before {
+      content: '✓';
       color: var(--gold);
-      font-size: 10px;
+      font-weight: bold;
     }
     .download-btn {
       display: block;
       text-align: center;
-      background: rgba(240, 185, 11, 0.12);
+      padding: 12px 20px;
+      background: rgba(240, 185, 11, 0.1);
       border: 1px solid var(--gold);
       color: var(--gold);
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 700;
       text-decoration: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
       transition: all 0.2s ease;
     }
     .download-btn:hover {
       background: var(--gold);
-      color: #111;
+      color: #0b0d0f;
     }
   </style>
 </head>
 <body>
   <div class=header>
     <div class=badge>Brand Identity Proposals</div>
-    <h1>Heron Capital <span>Logo Concepts</span></h1>
-    <p class=subtitle>Select your preferred brandmark for the Heron Capital institutional wealth ecosystem.</p>
+    <h1>Heron Assets Trustee <span>Logo Concepts</span></h1>
+    <p class=subtitle>Select your preferred brandmark for the Heron Assets Trustee institutional wealth ecosystem. Built and developed by Microbase.</p>
   </div>
 
   <div class=grid>

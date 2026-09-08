@@ -198,7 +198,7 @@ class DatabaseService {
           userId: null, // Broadcast to all
           targetEmail: null,
           title: 'Institutional Smart Contract Protocol Activated',
-          message: 'Welcome to Heron Assets Trustees. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.',
+          message: 'Welcome to Heron Assets Trustee. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.',
           type: 'announcement',
           sender: 'Chief Risk Officer',
           readBy: [],
@@ -292,7 +292,7 @@ class DatabaseService {
           userId: null,
           targetEmail: null,
           title: 'Institutional Smart Contract Protocol Activated',
-          message: 'Welcome to Heron Assets Trustees. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.',
+          message: 'Welcome to Heron Assets Trustee. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.',
           type: 'announcement',
           sender: 'Chief Risk Officer',
           readBy: [],

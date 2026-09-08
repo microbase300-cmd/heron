@@ -4,7 +4,7 @@
       "id": "usr_admin_001",
       "email": "admin@heronassets.com",
       "name": "Chief Risk Officer",
-      "passwordHash": "$2a$10$H8W4YUPy4Vexn9tRgn3yFumuRhZStAKxzhA7K7RLQo3.S6bcf6piK",
+      "passwordHash": "$2a$10$laoGCgW5/wj1/e3CKvTjNe7sI5hO3/2vIaUJiVnFa6lcuF1V2uYaG",
       "role": "admin",
       "balance": 0,
       "referralCode": "HERON-ADMIN",

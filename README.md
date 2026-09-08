@@ -1,4 +1,5 @@
-# Heron Digital Capital — Enterprise Platform Suite
+# Heron Assets Trustee — Enterprise Platform Suite
+*Built and developed by Microbase.*
 
 Institutional-grade digital asset management ecosystem consisting of 4 independent modular applications:
 

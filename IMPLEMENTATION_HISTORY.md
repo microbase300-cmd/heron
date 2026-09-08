@@ -1,6 +1,7 @@
-# Heron Capital — Implementation History & Architecture Blueprint
+# Heron Assets Trustee — Implementation History & Architecture Blueprint
+*Built and developed by Microbase.*
 
-This document tracks the complete chronological timeline of implementations, architectural decisions, system topologies, command execution histories, and operational procedures for the **Heron Capital Institutional Wealth & Crypto Platform**.
+This document tracks the complete chronological timeline of implementations, architectural decisions, system topologies, command execution histories, and operational procedures for the **Heron Assets Trustee Institutional Wealth & Crypto Platform**.
 
 ---
 

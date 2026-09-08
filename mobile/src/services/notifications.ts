@@ -51,7 +51,7 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
     if (Platform.OS === 'android') {
       try {
         await Notifications.setNotificationChannelAsync('heron-default', {
-          name: 'Heron Assets Trustees Dispatches',
+          name: 'Heron Assets Trustee Dispatches',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#F0B90B',

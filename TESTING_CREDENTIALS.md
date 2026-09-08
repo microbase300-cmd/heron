@@ -1,6 +1,7 @@
-# Heron Capital — Institutional Testing & Access Credentials
+# Heron Assets Trustee — Institutional Testing & Access Credentials
+*Built and developed by Microbase.*
 
-This document provides authorized test accounts and step-by-step verification flows for testing the **Heron Capital** multi-platform ecosystem across Web, Admin, and Mobile.
+This document provides authorized test accounts and step-by-step verification flows for testing the **Heron Assets Trustee** multi-platform ecosystem across Web, Admin, and Mobile.
 
 ---
 

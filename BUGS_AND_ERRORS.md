@@ -1,6 +1,7 @@
-# Heron Capital — Bug & Error Knowledge Base
+# Heron Assets Trustee — Bug & Error Knowledge Base
+*Built and developed by Microbase.*
 
-This document is the **single source of truth** for all errors reported, bugs identified, root-cause analyses, exact resolutions, and regression prevention rules across the Heron Capital ecosystem.
+This document is the **single source of truth** for all errors reported, bugs identified, root-cause analyses, exact resolutions, and regression prevention rules across the Heron Assets Trustee ecosystem.
 
 ---
 

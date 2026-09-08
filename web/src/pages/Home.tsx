@@ -32,7 +32,7 @@ export default function Home() {
           <div>
             <Reveal>
               <div className="eyebrow">
-                Heron Assets Trustees / 01 — stewardship
+                Heron Assets Trustee / 01 — stewardship
               </div>
             </Reveal>
 

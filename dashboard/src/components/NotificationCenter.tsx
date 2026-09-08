@@ -327,7 +327,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono uppercase tracking-widest text-[#F0B90B] font-bold">
-                      HERON ASSETS TRUSTEES DISPATCH
+                      HERON ASSETS TRUSTEE DISPATCH
                     </span>
                     {getTypeBadge(priorityPopUp.type)}
                   </div>

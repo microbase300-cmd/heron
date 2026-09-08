@@ -122,8 +122,9 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
 
       <Animated.View
         style={[
-          styles.splashLogoWrapper,
           {
+            alignItems: 'center',
+            justifyContent: 'center',
             opacity: logoFadeAnim,
             transform: [{ scale: logoScaleAnim }],
           },
@@ -134,8 +135,19 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
           style={styles.splashLogoImage}
           resizeMode="contain"
         />
+        <Text style={{ color: '#EAECEF', fontSize: 16, fontWeight: '700', letterSpacing: 1.5, marginTop: 16 }}>
+          HERON ASSETS TRUSTEE
+        </Text>
+        <Text style={{ color: '#F0B90B', fontSize: 10, letterSpacing: 1.2, marginTop: 4, textTransform: 'uppercase' }}>
+          Institutional Crypto Wealth
+        </Text>
       </Animated.View>
 
+      <Animated.View style={{ position: 'absolute', bottom: 44, alignItems: 'center', opacity: logoFadeAnim }}>
+        <Text style={{ color: '#5E6673', fontSize: 11, letterSpacing: 0.5 }}>
+          Built and developed by Microbase
+        </Text>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -200,7 +212,7 @@ function CustomAlertModal({
           </View>
 
           {/* Security & Protocol Subtitle */}
-          <Text style={styles.customAlertBrandTag}>HERON ASSETS TRUSTEES</Text>
+          <Text style={styles.customAlertBrandTag}>HERON ASSETS TRUSTEE</Text>
 
           {/* Dialog Title */}
           <Text style={styles.customAlertTitle}>{alert.title}</Text>
@@ -904,8 +916,11 @@ function MainAppContent() {
             <View style={styles.logoBadgeBig}>
               <Image source={require('./assets/heron_logo.jpg')} style={styles.logoImageBig} resizeMode="cover" />
             </View>
-            <Text style={styles.authBrandTitle}>HERON ASSETS TRUSTEES</Text>
+            <Text style={styles.authBrandTitle}>HERON ASSETS TRUSTEE</Text>
             <Text style={styles.authBrandSub}>INSTITUTIONAL CRYPTO WEALTH</Text>
+            <Text style={{ color: '#5E6673', fontSize: 11, marginTop: 4, marginBottom: 12, letterSpacing: 0.3 }}>
+              Built and developed by Microbase
+            </Text>
 
             {/* Toggle Login / Register */}
             <View style={styles.authToggleRow}>
@@ -1627,7 +1642,7 @@ function MainAppContent() {
                 <TouchableOpacity
                   style={[styles.secondaryActionBtn, { flex: 1, paddingVertical: 14 }]}
                   onPress={() => {
-                    const link = referralData?.referralLink || `https://heronassetstrustees.com/register?ref=${currentUser.referralCode}`;
+                    const link = referralData?.referralLink || `https://heronassetstrustee.com/register?ref=${currentUser.referralCode}`;
                     copyToClipboard(link, 'ref_link');
                   }}
                 >
@@ -1958,7 +1973,7 @@ function MainAppContent() {
                   {/* Institutional Subsidy Notice */}
                   <View style={styles.subsidyNoticeBox}>
                     <Text style={styles.subsidyNoticeText}>
-                      🛡️ <Text style={{ fontWeight: 'bold', color: '#0ECB81' }}>Zero Fee Protocol:</Text> 100% of blockchain network gas fees are covered by Heron Assets Trustees Institutional Treasury.
+                      🛡️ <Text style={{ fontWeight: 'bold', color: '#0ECB81' }}>Zero Fee Protocol:</Text> 100% of blockchain network gas fees are covered by Heron Assets Trustee Institutional Treasury.
                     </Text>
                   </View>
 
@@ -2252,7 +2267,7 @@ function MainAppContent() {
                 </Text>
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.priorityBrandTag}>HERON ASSETS TRUSTEES DISPATCH</Text>
+                <Text style={styles.priorityBrandTag}>HERON ASSETS TRUSTEE DISPATCH</Text>
                 <Text style={styles.priorityPopUpTitle}>
                   {priorityPopUpNotif?.type === 'alert' ? 'Security & Settlement Alert' : 'Operational Confirmation'}
                 </Text>
@@ -2368,7 +2383,7 @@ function MainAppContent() {
             </TouchableOpacity>
             <View style={{ alignItems: 'center' }}>
               <Text style={styles.profileHeaderTitle}>Account & Security</Text>
-              <Text style={styles.profileHeaderSubtitle}>Heron Assets Trustees • Protocol Security</Text>
+              <Text style={styles.profileHeaderSubtitle}>Heron Assets Trustee • Protocol Security</Text>
             </View>
             <TouchableOpacity
               style={styles.profileCloseBtn}
@@ -2873,7 +2888,7 @@ function MainAppContent() {
                     style={[styles.secItemActionBtn, { marginTop: 10, alignSelf: 'flex-start' }]}
                     onPress={async () => {
                       await scheduleLocalNotification(
-                        'Heron Assets Trustees Dispatches',
+                        'Heron Assets Trustee Dispatches',
                         'Push notification gateway operational. Real-time cryptographic settlement alerts active.',
                         { type: 'test' }
                       );

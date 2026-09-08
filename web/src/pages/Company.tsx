@@ -20,7 +20,7 @@ export default function Company() {
 
           <Reveal className="delay-2">
             <p className="page-intro">
-              Heron Assets Trustees is built around a simple idea: sophisticated
+              Heron Assets Trustee is built around a simple idea: sophisticated
               capital deserves a clear operating philosophy.
             </p>
           </Reveal>
