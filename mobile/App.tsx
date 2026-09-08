@@ -28,7 +28,7 @@ import { NavigationBar } from 'expo-navigation-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
-import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/notifications';
+import { registerForPushNotificationsAsync, scheduleLocalNotification, isExpoGo } from './src/services/notifications';
 import {
   ExchangeRatesData,
   DEFAULT_EXCHANGE_RATES,
@@ -523,21 +523,30 @@ function MainAppContent() {
       }
     });
 
-    // Foreground push notification listener
-    const notifSub = Notifications.addNotificationReceivedListener((notification) => {
-      console.log('[Push] Notification received in foreground:', notification.request.content);
-      loadAllData();
-    });
+    let notifSub: any = null;
+    let respSub: any = null;
 
-    // Background / Tray tap notification listener
-    const respSub = Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log('[Push] Notification tapped by user:', response.notification.request.content);
-      setShowNotificationModal(true);
-    });
+    try {
+      if (!isExpoGo) {
+        // Foreground push notification listener
+        notifSub = Notifications.addNotificationReceivedListener((notification) => {
+          console.log('[Push] Notification received in foreground:', notification.request.content);
+          loadAllData();
+        });
+
+        // Background / Tray tap notification listener
+        respSub = Notifications.addNotificationResponseReceivedListener((response) => {
+          console.log('[Push] Notification tapped by user:', response.notification.request.content);
+          setShowNotificationModal(true);
+        });
+      }
+    } catch (listenerErr) {
+      console.log('[Push] Notification listener notice:', listenerErr);
+    }
 
     return () => {
-      notifSub.remove();
-      respSub.remove();
+      if (notifSub && notifSub.remove) notifSub.remove();
+      if (respSub && respSub.remove) respSub.remove();
     };
   }, [currentUser]);
 

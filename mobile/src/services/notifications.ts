@@ -1,19 +1,29 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
-// Configure how notifications appear when the app is in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    priority: Notifications.AndroidNotificationPriority.MAX,
-  }),
-});
+export const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient ||
+  (Constants as any)?.appOwnership === 'expo';
+
+// Configure how notifications appear when the app is in the foreground (safe for standalone/dev builds)
+try {
+  if (!isExpoGo) {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      }),
+    });
+  }
+} catch (handlerErr) {
+  console.log('[Push] Notification handler initialization notice:', handlerErr);
+}
 
 export interface PushRegistrationResult {
   token: string | null;
@@ -24,20 +34,12 @@ export interface PushRegistrationResult {
 /**
  * Register this device for Expo / APNs / FCM Push Notifications.
  * Returns the Expo Push Token if permission is granted on a physical device.
+ * Gracefully bypasses in Expo Go where remote push was deprecated in SDK 53+.
  */
 export async function registerForPushNotificationsAsync(): Promise<PushRegistrationResult> {
-  let token: string | null = null;
-
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('heron-default', {
-      name: 'Heron Assets Trustees Dispatches',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#F0B90B',
-      sound: 'default',
-      enableVibrate: true,
-      showBadge: true,
-    });
+  if (isExpoGo) {
+    console.log('[Push] Running in Expo Go (remote push notifications disabled in Expo Go). Standalone/Dev builds support APNs/FCM.');
+    return { token: null, status: 'simulator' };
   }
 
   if (!Device.isDevice) {
@@ -46,6 +48,20 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
   }
 
   try {
+    if (Platform.OS === 'android') {
+      try {
+        await Notifications.setNotificationChannelAsync('heron-default', {
+          name: 'Heron Assets Trustees Dispatches',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#F0B90B',
+          sound: 'default',
+          enableVibrate: true,
+          showBadge: true,
+        });
+      } catch {}
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -69,7 +85,7 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
       projectId: projectId || undefined,
     });
 
-    token = pushTokenData.data;
+    const token = pushTokenData.data;
     console.log('[Push] Registered Expo Push Token:', token);
 
     return { token, status: 'granted' };
@@ -80,17 +96,23 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
 }
 
 /**
- * Send a local simulation notification for testing in Expo Go or dev mode.
+ * Send a local simulation notification for testing in standalone or dev mode.
  */
 export async function scheduleLocalNotification(title: string, body: string, data: Record<string, any> = {}) {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title,
-      body,
-      data,
-      sound: 'default',
-      color: '#F0B90B',
-    },
-    trigger: null, // Send immediately
-  });
+  try {
+    if (!isExpoGo) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data,
+          sound: 'default',
+          color: '#F0B90B',
+        },
+        trigger: null, // Send immediately
+      });
+    }
+  } catch (err) {
+    console.log('[Push] Local notification schedule notice:', err);
+  }
 }
