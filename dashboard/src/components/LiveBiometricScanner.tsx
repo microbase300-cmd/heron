@@ -180,24 +180,25 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     }
 
     let stream: MediaStream | null = null;
+    let lastError: any = null;
 
+    // Tier 1: Try HD resolution without strict facingMode (facingMode causes NotFoundError on Windows Chrome desktop webcams)
     try {
-      // Tier 1: User-facing HD webcam (standard for laptops/phones)
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: 'user',
         },
         audio: false,
       });
     } catch (err1: any) {
-      console.warn('Tier 1 camera constraints failed, attempting Tier 2 (without facingMode):', err1);
+      console.warn('Tier 1 camera constraints failed, attempting Tier 2 (basic video: true):', err1);
+      lastError = err1;
 
-      // If it's a permission rejection, don't retry - user explicitly blocked it
+      // If explicit permission denial, stop immediately and guide user on Chrome settings
       if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'SecurityError') {
         const permMsg =
-          'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left side of the address bar (next to the URL), change "Camera" to "Allow", and click "Retry Camera Authorization".';
+          'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left side of the address bar (next to localhost:5173), change "Camera" to "Allow", and click "Retry Camera Authorization".';
         setCameraError(permMsg);
         setErrorType('permission');
         setStep('error');
@@ -206,62 +207,46 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         return;
       }
 
-      // If no device exists
-      if (err1.name === 'NotFoundError' || err1.name === 'DevicesNotFoundError') {
-        const notFoundMsg = 'No webcam or optical video device detected. Please connect a working camera and click "Retry Camera Authorization".';
-        setCameraError(notFoundMsg);
-        setErrorType('not_found');
-        setStep('error');
-        setBotDetectorStatus('Optical biometric capture halted: No camera hardware found.');
-        stopCamera();
-        return;
-      }
-
-      // Tier 2: Try without facingMode (fixes desktop USB webcams that don't declare facingMode)
+      // Tier 2: Basic unconstrained video (triggers browser camera selector for ANY connected device)
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
+          video: true,
           audio: false,
         });
       } catch (err2: any) {
-        console.warn('Tier 2 camera constraints failed, attempting Tier 3 (basic video: true):', err2);
-
-        // Tier 3: Basic unconstrained video
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false,
-          });
-        } catch (err3: any) {
-          console.error('All camera acquisition tiers failed:', err3);
-
-          let friendlyMsg = '';
-          if (err3.name === 'NotAllowedError' || err3.name === 'PermissionDeniedError') {
-            friendlyMsg =
-              'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left of your URL bar, toggle "Camera" to "Allow", and click "Retry Camera Authorization".';
-            setErrorType('permission');
-          } else if (err3.name === 'NotFoundError' || err3.name === 'DevicesNotFoundError') {
-            friendlyMsg = 'No camera device detected. Please attach or enable a physical webcam to proceed.';
-            setErrorType('not_found');
-          } else if (err3.name === 'NotReadableError' || err3.name === 'TrackStartError') {
-            friendlyMsg =
-              'Camera hardware is in use by another application (e.g. Zoom, Teams, or another browser tab). Please close other apps and click "Retry Camera Authorization".';
-            setErrorType('in_use');
-          } else {
-            friendlyMsg = `Camera initialization error: ${err3.message || 'Unable to start optical sensor'}. Physical camera is strictly required.`;
-            setErrorType('general');
-          }
-
-          setCameraError(friendlyMsg);
-          setStep('error');
-          setBotDetectorStatus('Optical biometric capture halted: Hardware or permission failure.');
-          stopCamera();
-          return;
-        }
+        console.error('Tier 2 basic camera acquisition failed:', err2);
+        lastError = err2;
       }
+    }
+
+    // If no stream could be acquired after all tiers
+    if (!stream) {
+      const errName = lastError?.name || '';
+      let friendlyMsg = '';
+
+      if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError' || errName === 'SecurityError') {
+        friendlyMsg =
+          'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left of your address bar (next to localhost:5173), toggle "Camera" to "Allow", and click "Retry Camera Authorization".';
+        setErrorType('permission');
+      } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+        friendlyMsg =
+          'No camera hardware could be opened by the browser. If a webcam or mobile camera is attached, please verify Windows Privacy Settings (Settings -> Privacy & Security -> Camera -> turn ON "Let desktop apps access your camera") and click "Retry Camera Authorization".';
+        setErrorType('not_found');
+      } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+        friendlyMsg =
+          'Your camera hardware is currently locked by another application (e.g. Zoom, Microsoft Teams, Skype, or another browser window). Please close other camera apps and click "Retry Camera Authorization".';
+        setErrorType('in_use');
+      } else {
+        friendlyMsg = `Camera initialization error (${errName || 'Unknown'}). Physical camera feed is required for biometric clearance.`;
+        setErrorType('general');
+      }
+
+      setCameraError(friendlyMsg);
+      setStep('error');
+      setBotDetectorStatus('Optical biometric capture halted: Hardware or permission failure.');
+      stopCamera();
+      if (onError) onError(friendlyMsg);
+      return;
     }
 
     // Camera stream acquired successfully
