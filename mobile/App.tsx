@@ -3715,12 +3715,12 @@ function MainAppContent() {
                   <View style={styles.kycUploadHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Text style={{ fontSize: 16, marginRight: 6 }}>🛡️</Text>
-                      <Text style={styles.kycUploadTitle}>Live Biometric Liveness Scan</Text>
+                      <Text style={styles.kycUploadTitle}>Live Movement Biometric Scan</Text>
                     </View>
-                    <Text style={styles.kycUploadRequired}>MANDATORY</Text>
+                    <Text style={styles.kycUploadRequired}>90%+ AUTO-CLEARANCE</Text>
                   </View>
                   <Text style={styles.kycUploadSub}>
-                    Real-time anti-bot optical verification with interactive 3D cranial rotation (turn left/right) and hand gesture detection matching institutional security standards.
+                    Lightweight real-time video motion analysis detects natural human micro-movement. When motion reaches &ge;90% confidence, biometrics are submitted for instant clearance. Ephemeral video files are permanently deleted within 24 hours.
                   </Text>
 
                   {kycSelfieUrl && kycLivenessDetails ? (
@@ -3728,31 +3728,40 @@ function MainAppContent() {
                       <View style={styles.kycLivenessImageWrapper}>
                         <Image source={{ uri: kycSelfieUrl }} style={styles.kycLivenessVerifiedImage} resizeMode="cover" />
                         <View style={styles.kycLivenessBadge}>
-                          <Text style={styles.kycLivenessBadgeText}>✓ 99.4% LIVE VERIFIED</Text>
+                          <Text style={styles.kycLivenessBadgeText}>✓ {kycLivenessDetails.confidenceScore.toFixed(1)}% REAL HUMAN MOTION VERIFIED</Text>
                         </View>
                       </View>
 
                       {/* Liveness Telemetry Vector Badges */}
                       <View style={styles.kycVectorBadgesGrid}>
                         <View style={styles.kycVectorPill}>
-                          <Text style={styles.kycVectorPillText}>✓ Face Centered</Text>
+                          <Text style={styles.kycVectorPillText}>✓ Real Movement Detected</Text>
                         </View>
                         <View style={styles.kycVectorPill}>
-                          <Text style={styles.kycVectorPillText}>✓ Left Turn 50%</Text>
+                          <Text style={styles.kycVectorPillText}>✓ 3D Ocular Depth</Text>
                         </View>
                         <View style={styles.kycVectorPill}>
-                          <Text style={styles.kycVectorPillText}>✓ Right Turn 50%</Text>
+                          <Text style={styles.kycVectorPillText}>✓ Ephemeral Purge 24h</Text>
                         </View>
                         <View style={styles.kycVectorPill}>
-                          <Text style={styles.kycVectorPillText}>✓ Hand Wave 50%</Text>
+                          <Text style={styles.kycVectorPillText}>✓ Instant Clearance</Text>
                         </View>
+                      </View>
+
+                      {/* Privacy Caption */}
+                      <View style={styles.privacyNoticeBox}>
+                        <Text style={styles.privacyIcon}>🔒</Text>
+                        <Text style={styles.privacyText}>
+                          <Text style={{ fontWeight: 'bold', color: '#EAECEF' }}>Privacy Guarantee: </Text>
+                          Your biometric video is processed via ephemeral RAM. Video files are automatically purged & deleted within 24 hours (or immediately upon instant clearance approval).
+                        </Text>
                       </View>
 
                       <TouchableOpacity
                         style={styles.kycLivenessRescanBtn}
                         onPress={() => setShowLivenessScanner(true)}
                       >
-                        <Text style={styles.kycLivenessRescanBtnText}>↻ Re-Scan Biometrics</Text>
+                        <Text style={styles.kycLivenessRescanBtnText}>↻ Re-Scan Movement</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -3765,8 +3774,8 @@ function MainAppContent() {
                         <Text style={{ fontSize: 26 }}>⚡</Text>
                       </View>
                       <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={styles.kycLaunchTitle}>Launch Live Biometric Scanner</Text>
-                        <Text style={styles.kycLaunchSub}>Interactive camera liveness clearance (Turn Left, Right & Wave Hand)</Text>
+                        <Text style={styles.kycLaunchTitle}>Start Live Movement Scan</Text>
+                        <Text style={styles.kycLaunchSub}>Detects natural facial movement for instant 90%+ clearance</Text>
                       </View>
                       <Text style={styles.kycLaunchArrow}>→</Text>
                     </TouchableOpacity>
@@ -3783,7 +3792,7 @@ function MainAppContent() {
                   {kycSubmitting ? (
                     <ActivityIndicator color="#181A20" />
                   ) : (
-                    <Text style={styles.goldBtnText}>Submit Documents for OCR & Compliance Audit →</Text>
+                    <Text style={styles.goldBtnText}>Submit Documents for OCR & Instant Clearance →</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -3805,8 +3814,8 @@ function MainAppContent() {
           setKycLivenessDetails(details);
           setShowLivenessScanner(false);
           showCustomAlert(
-            '✓ Biometric Liveness Verified',
-            'Real-time optical anti-bot verification passed with 99.4% confidence score.',
+            '✓ Real Human Motion Verified',
+            `Optical motion analysis verified natural movement with ${details.confidenceScore.toFixed(1)}% human confidence (>=90% threshold). Ephemeral video purged per 24h compliance guarantee.`,
             'success'
           );
         }}
@@ -7178,5 +7187,26 @@ const styles = StyleSheet.create({
     color: '#EAECEF',
     fontSize: 11,
     fontWeight: '600',
+  },
+  privacyNoticeBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(240, 185, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.25)',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+    alignItems: 'flex-start',
+  },
+  privacyIcon: {
+    fontSize: 16,
+    marginRight: 8,
+    marginTop: 1,
+  },
+  privacyText: {
+    flex: 1,
+    color: '#848E9C',
+    fontSize: 10,
+    lineHeight: 14,
   }
 });

@@ -244,6 +244,14 @@
       "preferredCurrency": "USD",
       "securityLogs": [
         {
+          "id": "sec_1788910816932_hqwg",
+          "timestamp": "2026-09-08T23:40:16.932Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
           "id": "sec_1788910464618_w8lc",
           "timestamp": "2026-09-08T23:34:24.618Z",
           "ip": "192.168.43.***",
@@ -393,14 +401,6 @@
           "ip": "197.210.84.***",
           "device": "Android 15 • Mobile App",
           "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_vance_03",
-          "timestamp": "2026-09-06T05:25:20.520Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
           "status": "Authorized"
         }
       ],
@@ -999,6 +999,13 @@
       "tokenHash": "2a6b0bfa7cb17c44b4e08657e5ec9bc81476eae9e433c33f8fb5db19d07419fa",
       "expiresAt": "2026-09-15T23:34:24.667Z",
       "createdAt": "2026-09-08T23:34:24.667Z"
+    },
+    {
+      "id": "rft_b3a7fcec-3d2e-4d50-a203-16d771746b3f",
+      "userId": "usr_demo_vance",
+      "tokenHash": "341c5f0fd1ce61ecf784094a9ab64bae3824c37b6509b1dee5720013831d4d9c",
+      "expiresAt": "2026-09-15T23:40:16.998Z",
+      "createdAt": "2026-09-08T23:40:16.998Z"
     }
   ],
   "investments": [
