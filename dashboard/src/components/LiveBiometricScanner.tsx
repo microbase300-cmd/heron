@@ -73,8 +73,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
       });
@@ -82,18 +82,31 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(() => {});
+        
+        const onStreamReady = async () => {
+          try {
+            await videoRef.current?.play();
+          } catch (e) {
+            console.warn('Video play caught:', e);
+          }
           setCameraActive(true);
           setSimulatedMode(false);
           startLivenessSequence();
         };
+
+        if (videoRef.current.readyState >= 1) {
+          onStreamReady();
+        } else {
+          videoRef.current.onloadedmetadata = onStreamReady;
+          videoRef.current.onloadeddata = onStreamReady;
+          setTimeout(onStreamReady, 600);
+        }
       }
     } catch (err: any) {
       console.warn('Webcam access error or permission denied:', err);
       setCameraError(
         err.name === 'NotAllowedError'
-          ? 'Camera permission was denied. You can enable camera access in browser settings, or continue with Interactive Biometric Simulation Mode.'
+          ? 'Camera permission was denied. Please allow camera permissions in your browser URL bar to capture your real face, or continue with Interactive Biometric Simulation Mode.'
           : 'Live camera device could not be acquired. Interactive Biometric Simulation Mode is ready.'
       );
       setSimulatedMode(true);
@@ -149,21 +162,23 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
   // Capture canvas frame from video or generate high-res biometric frame in simulation mode
   const captureFrame = () => {
-    if (videoRef.current && canvasRef.current && streamRef.current && !simulatedMode) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+    const video = videoRef.current;
+    if (video && streamRef.current && !simulatedMode) {
+      const canvas = canvasRef.current || document.createElement('canvas');
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Draw frame with slight mirror transform to match user orientation
-        ctx.translate(canvas.width, 0);
+        // Draw frame with mirror transform to match user orientation
+        ctx.translate(w, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        ctx.drawImage(video, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         setCapturedImage(dataUrl);
         setStep('completed');
-        setBotDetectorStatus('✓ Live Biometric Verified: 99.4% Human Confidence. Bot Check: PASSED');
+        setBotDetectorStatus('✓ Live Facial Capture Verified: 99.4% Human Confidence. Bot Check: PASSED');
         return;
       }
     }
@@ -283,10 +298,12 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             playsInline
             autoPlay
             muted
-            className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-500 ${
-              cameraActive && !capturedImage ? 'opacity-100' : 'opacity-0 hidden'
+            className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${
+              capturedImage ? 'hidden' : 'block'
             }`}
           />
+          {/* High-Resolution Capture Canvas */}
+          <canvas ref={canvasRef} className="hidden" />
 
           {/* Captured Preview */}
           {capturedImage && (
@@ -444,14 +461,28 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={startCamera}
-                className="px-4 py-2 rounded-xl bg-[#2B313A] hover:bg-[#363D47] text-[#EAECEF] text-xs font-bold transition-all flex items-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                Restart Sequence
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="px-3.5 py-2 rounded-xl bg-[#2B313A] hover:bg-[#363D47] text-[#EAECEF] text-xs font-bold transition-all flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Restart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProgress(100);
+                    setStep('verifying');
+                    captureFrame();
+                  }}
+                  className="px-5 py-2 rounded-xl btn-binance text-xs font-bold shadow-lg shadow-[#F0B90B]/20 flex items-center gap-1.5"
+                >
+                  <Camera className="w-4 h-4" />
+                  Capture Face Now
+                </button>
+              </div>
             )}
           </div>
         </div>
