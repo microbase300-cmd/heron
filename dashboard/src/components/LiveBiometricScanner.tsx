@@ -122,6 +122,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const turnLeftPassedRef = useRef(false);
   const turnRightPassedRef = useRef(false);
   const waveHandPassedRef = useRef(false);
+  const lastUiUpdateRef = useRef<number>(0);
 
   useEffect(() => {
     isOpenRef.current = isOpen;
@@ -249,14 +250,19 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         curStep === 'wave_hand' ? 'wave_hand' : 'any'
       );
 
-      if (res.faceDetected) {
+      const now = Date.now();
+      const shouldUpdateUi = now - lastUiUpdateRef.current > 50; // Throttle to 20 FPS to prevent render lag
+
+      if (res.faceDetected && shouldUpdateUi) {
         setYawAngle(res.yawAngle);
       }
 
       // Check if device or laptop is actively being shaken/moved
       if (res.isDeviceMoving) {
         stepHoldStartRef.current = null;
-        setBotDetectorStatus('Device movement detected: Please rotate your head, not your laptop.');
+        if (shouldUpdateUi) {
+          setBotDetectorStatus('Device movement detected: Please rotate your head, not your laptop.');
+        }
       } else if (curStep === 'initializing' && res.faceDetected) {
         currentStepRef.current = 'center';
         setStep('center');
@@ -264,7 +270,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
       } else if (res.faceDetected) {
         if (curStep === 'center') {
-          setIsFaceCentered(res.isCentered);
+          if (shouldUpdateUi) setIsFaceCentered(res.isCentered);
 
           if (res.isCentered) {
             if (!stepHoldStartRef.current) {
@@ -282,16 +288,20 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             }
           } else {
             stepHoldStartRef.current = null;
-            setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
+            if (shouldUpdateUi) {
+              setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
+            }
           }
         } else if (curStep === 'turn_left') {
           // Turning head left makes normalizedYaw negative (< 0)
-          // Invariant: device swiping shifts face and features equally, producing 0 delta!
           const leftRotDelta = -res.normalizedYaw;
           const rawLeftProgress = Math.min(100, Math.max(0, Math.round((leftRotDelta / 0.22) * 100)));
           smoothLeftRef.current = smoothLeftRef.current * 0.65 + rawLeftProgress * 0.35;
           const curLeftProgress = Math.round(smoothLeftRef.current);
-          setLeftTurnProgress(curLeftProgress);
+
+          if (shouldUpdateUi) {
+            setLeftTurnProgress(curLeftProgress);
+          }
 
           if (curLeftProgress >= 95) {
             if (!stepHoldStartRef.current) {
@@ -310,7 +320,9 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             }
           } else {
             stepHoldStartRef.current = null;
-            setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}%)`);
+            if (shouldUpdateUi) {
+              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}%)`);
+            }
           }
         } else if (curStep === 'turn_right') {
           // Turning head right makes normalizedYaw positive (> 0)
@@ -318,7 +330,10 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           const rawRightProgress = Math.min(100, Math.max(0, Math.round((rightRotDelta / 0.22) * 100)));
           smoothRightRef.current = smoothRightRef.current * 0.65 + rawRightProgress * 0.35;
           const curRightProgress = Math.round(smoothRightRef.current);
-          setRightTurnProgress(curRightProgress);
+
+          if (shouldUpdateUi) {
+            setRightTurnProgress(curRightProgress);
+          }
 
           if (curRightProgress >= 95) {
             if (!stepHoldStartRef.current) {
@@ -339,14 +354,19 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             }
           } else {
             stepHoldStartRef.current = null;
-            setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}%)`);
+            if (shouldUpdateUi) {
+              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}%)`);
+            }
           }
         } else if (curStep === 'wave_hand') {
           const rawWaveProg = Math.min(100, Math.round((res.handStrokeCount / 4) * 100));
           smoothWaveRef.current = smoothWaveRef.current * 0.70 + rawWaveProg * 0.30;
           const curWave = Math.round(smoothWaveRef.current);
-          setWaveProgress(curWave);
-          setWaveCount(res.handStrokeCount);
+
+          if (shouldUpdateUi) {
+            setWaveProgress(curWave);
+            setWaveCount(res.handStrokeCount);
+          }
 
           if (curWave >= 95 || res.handWaveDetected) {
             if (!stepHoldStartRef.current) {
@@ -367,9 +387,15 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             }
           } else {
             stepHoldStartRef.current = null;
-            setBotDetectorStatus(`Step 4/4: Wave your hand side-to-side in front of camera 👋 (${res.handStrokeCount}/4 strokes)`);
+            if (shouldUpdateUi) {
+              setBotDetectorStatus(`Step 4/4: Wave your hand side-to-side in front of camera 👋 (${res.handStrokeCount}/4 strokes)`);
+            }
           }
         }
+      }
+
+      if (shouldUpdateUi) {
+        lastUiUpdateRef.current = now;
       }
     }
 
@@ -569,26 +595,6 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     } catch {}
   }, [onError, processVisionFrame, stopCamera]);
 
-  // Hardware watcher: poll device list while modal is open
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const checkDevices = async () => {
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-          const devs = await navigator.mediaDevices.enumerateDevices();
-          const cams = devs.filter((d) => d.kind === 'videoinput');
-          if (cams.length > 0 && !streamRef.current && !isStartingRef.current && !capturedImage) {
-            startCamera();
-          }
-        }
-      } catch {}
-    };
-
-    const interval = setInterval(checkDevices, 2500);
-    return () => clearInterval(interval);
-  }, [isOpen, startCamera, capturedImage]);
-
   useEffect(() => {
     if (isOpen) {
       startCamera();
@@ -598,7 +604,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, startCamera, stopCamera]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleDeviceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newId = e.target.value;

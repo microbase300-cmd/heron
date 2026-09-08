@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from './services/api';
 import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, DEFAULT_PLANS } from './types';
 import { TickerBar } from './components/TickerBar';
@@ -58,9 +58,12 @@ export const App: React.FC = () => {
     init();
   }, []);
 
+  const userRef = useRef<User | null>(user);
+  userRef.current = user;
+
   // Fetch dashboard data when user logs in or updates
-  const refreshData = async () => {
-    if (!user) return;
+  const refreshData = useCallback(async () => {
+    if (!userRef.current) return;
     try {
       const [sum, invs, txs, refs, me, pRes, ratesRes] = await Promise.all([
         api.getWalletSummary(),
@@ -75,7 +78,20 @@ export const App: React.FC = () => {
       setInvestments(invs.investments);
       setTransactions(txs.transactions);
       setReferralData(refs);
-      setUser(me.user);
+      // Only update user reference if properties changed to prevent infinite render loops
+      setUser((prev) => {
+        if (!prev) return me.user;
+        if (
+          prev.id === me.user.id &&
+          prev.balance === me.user.balance &&
+          prev.kycStatus === me.user.kycStatus &&
+          prev.name === me.user.name &&
+          prev.forceReverification === me.user.forceReverification
+        ) {
+          return prev;
+        }
+        return me.user;
+      });
       if (pRes?.plans && pRes.plans.length > 0) {
         setPlans(pRes.plans);
       }
@@ -85,15 +101,15 @@ export const App: React.FC = () => {
     } catch (err) {
       console.error('Error refreshing dashboard data:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       refreshData();
-      const interval = setInterval(refreshData, 10000); // 10s live sync
+      const interval = setInterval(refreshData, 12000); // 12s live sync
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user?.id, refreshData]);
 
   const handleLogout = () => {
     api.removeToken();
