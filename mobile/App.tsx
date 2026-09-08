@@ -30,6 +30,13 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
 import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/notifications';
 import {
+  ExchangeRatesData,
+  DEFAULT_EXCHANGE_RATES,
+  convertCurrency,
+  formatCurrency,
+  CURRENCY_SYMBOLS
+} from './src/utils/currency';
+import {
   User,
   WalletSummary,
   Transaction,
@@ -318,7 +325,9 @@ function MainAppContent() {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [pushStatus, setPushStatus] = useState<string>('initializing');
   
-  // Moved down
+  // Live Currency Conversion State
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRatesData>(DEFAULT_EXCHANGE_RATES);
+
   // Operational Data
   const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
   const [investments, setInvestments] = useState<Investment[]>([]);
@@ -445,7 +454,8 @@ function MainAppContent() {
         refRes,
         tickerRes,
         addrRes,
-        secLogRes
+        secLogRes,
+        ratesRes
       ] = await Promise.allSettled([
         mobileApi.getWalletSummary(),
         mobileApi.getMyInvestments(),
@@ -455,7 +465,8 @@ function MainAppContent() {
         mobileApi.getReferrals(),
         mobileApi.getMarketTickers(),
         mobileApi.getDepositAddresses(),
-        mobileApi.getSecurityLogs()
+        mobileApi.getSecurityLogs(),
+        mobileApi.getExchangeRates()
       ]);
 
       if (summaryRes.status === 'fulfilled') setWalletSummary(summaryRes.value);
@@ -463,6 +474,7 @@ function MainAppContent() {
       if (plansRes.status === 'fulfilled') setPlans(plansRes.value.plans || []);
       if (txsRes.status === 'fulfilled') setTransactions(txsRes.value.transactions || []);
       if (secLogRes.status === 'fulfilled' && secLogRes.value?.logs) setSecurityLogsList(secLogRes.value.logs);
+      if (ratesRes.status === 'fulfilled' && ratesRes.value) setExchangeRates(ratesRes.value);
       if (notifRes.status === 'fulfilled') {
         const notifList = notifRes.value.notifications || [];
         setNotifications(notifList);
@@ -722,7 +734,15 @@ function MainAppContent() {
     try {
       await mobileApi.updateProfile({ preferredCurrency: curr });
       setCurrentUser(prev => prev ? { ...prev, preferredCurrency: curr } : null);
-      showCustomAlert('Currency Preference Saved', `Base portfolio valuation is set to ${curr}.`, 'success');
+      const rates = exchangeRates.rates || DEFAULT_EXCHANGE_RATES.rates;
+      const rate = rates[curr] || 1;
+      const avail = walletSummary?.availableBalance ?? currentUser.balance ?? 0;
+      const converted = formatCurrency(avail, curr, rates);
+      showCustomAlert(
+        'Currency Preference Saved',
+        `Base display currency switched to ${curr}. Live available balance: ${converted} (Live Rate: 1 USD = ${rate.toFixed(4)} ${curr}).`,
+        'success'
+      );
     } catch (e: any) {
       showCustomAlert('Update Notice', e.message || 'Could not update currency preference.', 'error');
     }
@@ -1059,6 +1079,8 @@ function MainAppContent() {
   const activeInvestments = investments.filter(i => i.status === 'active');
   const availableBal = walletSummary?.availableBalance ?? currentUser.balance ?? 0;
   const portfolioNav = walletSummary?.totalPortfolioValue ?? (availableBal + (walletSummary?.lockedInInvestments ?? 0));
+  const preferredCurr = currentUser?.preferredCurrency || 'USD';
+  const currentRates = exchangeRates.rates || DEFAULT_EXCHANGE_RATES.rates;
 
   return (
     <SafeAreaView style={[
@@ -1153,13 +1175,21 @@ function MainAppContent() {
             {/* Binance-Style Hero Balance */}
             <View style={styles.heroBalanceCard}>
               <View style={styles.balanceHeader}>
-                <Text style={styles.cardEyebrow}>Total Balance</Text>
+                <Text style={styles.cardEyebrow}>Total Balance ({preferredCurr})</Text>
+                <View style={[styles.kycVerifiedMiniBadge, { backgroundColor: 'rgba(14,203,129,0.15)', borderColor: '#0ECB81', marginLeft: 6 }]}>
+                  <Text style={[styles.kycVerifiedMiniText, { color: '#0ECB81' }]}>LIVE FOREX</Text>
+                </View>
                 <Text style={styles.eyeIcon}>👁️</Text>
               </View>
               <Text style={styles.navAmount}>
-                <Text style={styles.navAmountSymbol}>$ </Text>
-                {portfolioNav.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                <Text style={styles.navAmountSymbol}>{CURRENCY_SYMBOLS[preferredCurr] || '$'} </Text>
+                {formatCurrency(portfolioNav, preferredCurr, currentRates, false)}
               </Text>
+              {preferredCurr !== 'USD' && (
+                <Text style={[styles.pnlText, { color: '#F0B90B', fontWeight: '600', marginBottom: 2 }]}>
+                  ≈ ${portfolioNav.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD • 1 USD = {(currentRates[preferredCurr] || 1).toFixed(4)} {preferredCurr}
+                </Text>
+              )}
               <Text style={styles.pnlText}>Today's PNL: <Text style={{ color: '#0ECB81' }}>+$124.50 (+1.25%)</Text></Text>
             </View>
 
@@ -2623,13 +2653,19 @@ function MainAppContent() {
             {/* TAB 4: SETTINGS & PREFERENCES */}
             {profileTab === 'preferences' && (
               <View style={styles.profileSectionContent}>
-                {/* Base Currency Selection */}
+                {/* Base Currency Selection & Live Forex Engine */}
                 <View style={styles.secItemCardColumn}>
-                  <Text style={styles.secItemTitle}>Base Valuation Currency</Text>
-                  <Text style={styles.secItemSub}>Preferred currency for portfolio calculations</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={styles.secItemTitle}>Base Valuation Currency</Text>
+                    <View style={[styles.kycVerifiedMiniBadge, { backgroundColor: 'rgba(14,203,129,0.15)', borderColor: '#0ECB81' }]}>
+                      <Text style={[styles.kycVerifiedMiniText, { color: '#0ECB81' }]}>LIVE FOREX</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.secItemSub}>Live exchange rates for real-time portfolio recalculation</Text>
                   <View style={styles.currencyRow}>
-                    {['USD', 'EUR', 'GBP'].map(curr => {
-                      const active = (currentUser.preferredCurrency || 'USD') === curr;
+                    {(['USD', 'EUR', 'GBP'] as const).map(curr => {
+                      const active = preferredCurr === curr;
+                      const rate = currentRates[curr] || (curr === 'EUR' ? 0.8604 : curr === 'GBP' ? 0.7386 : 1);
                       return (
                         <TouchableOpacity
                           key={curr}
@@ -2639,9 +2675,28 @@ function MainAppContent() {
                           <Text style={[styles.currencyBtnText, active && styles.currencyBtnTextActive]}>
                             {curr === 'USD' ? '$ USD' : curr === 'EUR' ? '€ EUR' : '£ GBP'}
                           </Text>
+                          <Text style={[styles.currencyRateSubtext, active && styles.currencyRateSubtextActive]}>
+                            {curr === 'USD' ? '1.0000' : `1:${rate.toFixed(4)}`}
+                          </Text>
                         </TouchableOpacity>
                       );
                     })}
+                  </View>
+
+                  {/* Live Converted Balance Simulator */}
+                  <View style={styles.currencySimulatorBox}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={styles.simulatorLabel}>Live Available Balance</Text>
+                      <Text style={styles.simulatorUsdBase}>Base: ${availableBal.toFixed(2)} USD</Text>
+                    </View>
+                    <Text style={styles.simulatorValuation}>
+                      {formatCurrency(availableBal, preferredCurr, currentRates)}
+                    </Text>
+                    <Text style={styles.simulatorFooter}>
+                      {preferredCurr !== 'USD'
+                        ? `Live Spot Rate: 1 USD = ${(currentRates[preferredCurr] || 1).toFixed(4)} ${preferredCurr} • Open Forex Feed`
+                        : 'Base Benchmark: United States Dollar (USD)'}
+                    </Text>
                   </View>
                 </View>
 
@@ -5489,6 +5544,45 @@ const styles = StyleSheet.create({
   currencyBtnTextActive: {
     color: '#F0B90B',
     fontWeight: 'bold',
+  },
+  currencyRateSubtext: {
+    fontSize: 10,
+    color: '#848E9C',
+    marginTop: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  currencyRateSubtextActive: {
+    color: '#F0B90B',
+    fontWeight: 'bold',
+  },
+  currencySimulatorBox: {
+    backgroundColor: '#181A20',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  simulatorLabel: {
+    fontSize: 11,
+    color: '#848E9C',
+  },
+  simulatorUsdBase: {
+    fontSize: 11,
+    color: '#848E9C',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  simulatorValuation: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+    marginVertical: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  simulatorFooter: {
+    fontSize: 10,
+    color: '#F0B90B',
+    marginTop: 2,
   },
   vipLimitsBox: {
     backgroundColor: '#1E2329',

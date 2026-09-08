@@ -14,6 +14,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { User } from '../types';
+import { formatCurrency, DEFAULT_EXCHANGE_RATES } from '../utils/currency';
 
 interface SidebarProps {
   currentTab: string;
@@ -23,6 +24,8 @@ interface SidebarProps {
   onOpenDeposit: () => void;
   isMobileOpen?: boolean;
   onClose?: () => void;
+  preferredCurrency?: string;
+  rates?: Record<string, number>;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -32,7 +35,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   onOpenDeposit,
   isMobileOpen = false,
-  onClose
+  onClose,
+  preferredCurrency,
+  rates
 }) => {
   const navItems = [
     { id: 'overview', label: 'Portfolio Overview', icon: LayoutDashboard },
@@ -87,8 +92,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-pulse"></span>
             </div>
             <div className="text-lg font-sans font-bold text-[#EAECEF] tracking-tight">
-              ${user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(user.balance, preferredCurrency || user.preferredCurrency || 'USD', rates || DEFAULT_EXCHANGE_RATES.rates)}
             </div>
+            {(preferredCurrency || user.preferredCurrency) && (preferredCurrency || user.preferredCurrency) !== 'USD' && (
+              <div className="text-[10px] text-[#848E9C] font-mono mt-0.5">
+                ≈ ${user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+              </div>
+            )}
             <div className="mt-2.5 flex items-center gap-2">
               <button 
                 onClick={() => {

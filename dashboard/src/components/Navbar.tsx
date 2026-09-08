@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, ArrowDownLeft, Menu, ShieldCheck } from 'lucide-react';
 import { User } from '../types';
 import { NotificationCenter } from './NotificationCenter';
+import { CURRENCY_SYMBOLS } from '../utils/currency';
 
 interface NavbarProps {
   currentTab: string;
@@ -11,6 +12,7 @@ interface NavbarProps {
   onOpenMobileNav?: () => void;
   onOpenProfile?: () => void;
   onRefreshData?: () => void;
+  preferredCurrency?: string;
 }
 
 const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
@@ -31,7 +33,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenInvest,
   onOpenMobileNav,
   onOpenProfile,
-  onRefreshData
+  onRefreshData,
+  preferredCurrency
 }) => {
   const meta = TAB_TITLES[currentTab] || TAB_TITLES.overview;
 
@@ -62,6 +65,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Preferred Base Currency Indicator */}
+        {preferredCurrency && (
+          <button
+            onClick={onOpenProfile}
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/40 text-xs font-mono font-semibold text-[#F0B90B] transition-all cursor-pointer"
+            title={`Active Base Valuation Currency: ${preferredCurrency}. Click to adjust in Preferences.`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0ECB81] animate-pulse"></span>
+            <span>{CURRENCY_SYMBOLS[preferredCurrency as keyof typeof CURRENCY_SYMBOLS] || '$'} {preferredCurrency}</span>
+          </button>
+        )}
+
         {/* Account & Security Profile Quick Access */}
         {onOpenProfile && (
           <button

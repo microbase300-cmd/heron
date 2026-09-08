@@ -145,6 +145,61 @@ class MarketDataService {
       return points;
     }
   }
+
+  private cachedRates: { base: string; rates: Record<string, number>; lastUpdated: string } | null = null;
+  private lastRatesFetchedAt: number = 0;
+  private readonly RATES_CACHE_TTL_MS = 60000; // 60 seconds
+
+  /**
+   * Fetches real-time fiat exchange rates (USD base -> EUR, GBP)
+   */
+  public async getExchangeRates(): Promise<{ base: string; rates: Record<string, number>; lastUpdated: string }> {
+    const now = Date.now();
+    if (this.cachedRates && now - this.lastRatesFetchedAt < this.RATES_CACHE_TTL_MS) {
+      return this.cachedRates;
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+      const res = await fetch('https://open.er-api.com/v6/latest/USD', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json() as any;
+        if (data && data.rates) {
+          const rates: Record<string, number> = {
+            USD: 1.0,
+            EUR: typeof data.rates.EUR === 'number' ? Number(data.rates.EUR.toFixed(6)) : 0.860364,
+            GBP: typeof data.rates.GBP === 'number' ? Number(data.rates.GBP.toFixed(6)) : 0.738631,
+          };
+          this.cachedRates = {
+            base: 'USD',
+            rates,
+            lastUpdated: new Date().toISOString(),
+          };
+          this.lastRatesFetchedAt = now;
+          return this.cachedRates;
+        }
+      }
+    } catch (err: any) {
+      console.warn('⚠️ [Market Data] Forex rates live feed error, serving fallback:', err.message);
+    }
+
+    const fallback = {
+      base: 'USD',
+      rates: {
+        USD: 1.0,
+        EUR: 0.860364,
+        GBP: 0.738631,
+      },
+      lastUpdated: new Date().toISOString(),
+    };
+    return this.cachedRates || fallback;
+  }
 }
 
 export const marketDataService = new MarketDataService();

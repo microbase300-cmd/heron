@@ -18,16 +18,21 @@ import {
   Eye,
   EyeOff,
   ArrowUpRight,
-  X
+  X,
+  RefreshCw,
+  TrendingUp,
+  DollarSign
 } from 'lucide-react';
 import { User, WhitelistedWallet, SecurityLogItem } from '../types';
 import { api } from '../services/api';
+import { ExchangeRatesData, convertCurrency, formatCurrency, CURRENCY_SYMBOLS, CURRENCY_NAMES } from '../utils/currency';
 
 interface ProfileViewProps {
   user: User | null;
   onUpdateUser?: (updated: User) => void;
   onNavigate?: (tab: string) => void;
   onOpenWithdraw?: (prefilledAddress?: string) => void;
+  exchangeRates?: ExchangeRatesData;
 }
 
 const DEFAULT_WHITELISTED_WALLETS: WhitelistedWallet[] = [
@@ -61,7 +66,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   user,
   onUpdateUser,
   onNavigate,
-  onOpenWithdraw
+  onOpenWithdraw,
+  exchangeRates
 }) => {
   const [activeTab, setActiveTab] = useState<'security' | 'wallets' | 'activity' | 'preferences'>('security');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -77,6 +83,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.twoFactorEnabled ?? true);
   const [whitelistEnabled, setWhitelistEnabled] = useState(user?.whitelistEnabled ?? true);
   const [preferredCurrency, setPreferredCurrency] = useState(user?.preferredCurrency || 'USD');
+  const [currencySaving, setCurrencySaving] = useState(false);
+  const [currencySuccess, setCurrencySuccess] = useState<string | null>(null);
+
+  // Sync preferred currency with user profile updates
+  useEffect(() => {
+    if (user?.preferredCurrency) {
+      setPreferredCurrency(user.preferredCurrency);
+    }
+  }, [user?.preferredCurrency]);
+
+  const handleSelectCurrency = async (curr: string) => {
+    setPreferredCurrency(curr);
+    setCurrencySaving(true);
+    setCurrencySuccess(null);
+    try {
+      const res = await api.updateProfile({ preferredCurrency: curr });
+      if (res?.user && onUpdateUser) {
+        onUpdateUser(res.user);
+      } else if (onUpdateUser && user) {
+        onUpdateUser({ ...user, preferredCurrency: curr });
+      }
+      setCurrencySuccess(`Valuation currency changed to ${curr} (${CURRENCY_SYMBOLS[curr] || '$'})`);
+      setTimeout(() => setCurrencySuccess(null), 3500);
+    } catch (err: any) {
+      console.error('Failed to update preferred currency:', err);
+    } finally {
+      setCurrencySaving(false);
+    }
+  };
 
   // Change Password Modal
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
@@ -820,28 +855,83 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {activeTab === 'preferences' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Currency & Interface Card */}
+            {/* Currency & Live Converter Card */}
             <div className="rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 space-y-4">
-              <h4 className="text-sm font-sans font-bold text-[#EAECEF] flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-[#F0B90B]" />
-                <span>Base Display Currency</span>
-              </h4>
-              <p className="text-xs text-[#848E9C]">Select your primary fiat reference unit for dashboard calculations.</p>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-sans font-bold text-[#EAECEF] flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#F0B90B]" />
+                  <span>Base Display Currency & Live Converter</span>
+                </h4>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#0ECB81]/10 text-[#0ECB81] border border-[#0ECB81]/30 text-[10px] font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0ECB81] animate-pulse"></span>
+                  Live Forex Rates
+                </div>
+              </div>
+              <p className="text-xs text-[#848E9C]">
+                Select your primary fiat valuation unit. All portfolio balances, yields, and statistics dynamically recalculate across your dashboard using real-time forex exchange rates.
+              </p>
+
+              {currencySuccess && (
+                <div className="p-3 rounded-xl bg-[#0ECB81]/10 border border-[#0ECB81]/30 text-xs text-[#0ECB81] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{currencySuccess}</span>
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-3 pt-2">
-                {['USD', 'EUR', 'GBP'].map(curr => (
-                  <button
-                    key={curr}
-                    onClick={() => setPreferredCurrency(curr)}
-                    className={`py-2.5 rounded-xl text-xs font-mono font-bold border transition-all ${
-                      preferredCurrency === curr
-                        ? 'bg-[#F0B90B] text-[#181A20] border-[#F0B90B]'
-                        : 'bg-[#181A20] text-[#848E9C] border-[#2B313A] hover:text-[#EAECEF]'
-                    }`}
-                  >
-                    {curr} ({curr === 'USD' ? '$' : curr === 'EUR' ? '€' : '£'})
-                  </button>
-                ))}
+                {(['USD', 'EUR', 'GBP'] as const).map(curr => {
+                  const isSelected = preferredCurrency === curr;
+                  const rate = (exchangeRates?.rates && exchangeRates.rates[curr]) || (curr === 'EUR' ? 0.860364 : curr === 'GBP' ? 0.738631 : 1.0);
+                  return (
+                    <button
+                      key={curr}
+                      onClick={() => handleSelectCurrency(curr)}
+                      disabled={currencySaving}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#F0B90B] text-[#181A20] border-[#F0B90B] shadow-lg shadow-[#F0B90B]/10'
+                          : 'bg-[#181A20] text-[#848E9C] border-[#2B313A] hover:border-[#363D47] hover:text-[#EAECEF]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono font-bold text-xs">
+                          {curr} ({CURRENCY_SYMBOLS[curr]})
+                        </span>
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                      </div>
+                      <div className={`text-[10px] font-sans ${isSelected ? 'text-[#181A20]/80 font-medium' : 'text-[#848E9C]'}`}>
+                        {CURRENCY_NAMES[curr]}
+                      </div>
+                      <div className={`text-[10px] font-mono mt-1 ${isSelected ? 'text-[#181A20] font-bold' : 'text-[#F0B90B]'}`}>
+                        {curr === 'USD' ? '1.0000 USD' : `1 USD = ${rate.toFixed(4)}`}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Live Converted Balance Simulator */}
+              <div className="p-4 rounded-xl bg-[#181A20] border border-[#2B313A] space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#848E9C] flex items-center gap-1.5 font-sans">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#0ECB81]" />
+                    Live Account Balance Equivalent
+                  </span>
+                  <span className="font-mono font-semibold text-[#848E9C]">
+                    Base: ${Number(user?.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between pt-1">
+                  <span className="text-xl font-mono font-bold text-[#EAECEF]">
+                    {formatCurrency(user?.balance ?? 0, preferredCurrency, exchangeRates?.rates)}
+                  </span>
+                  <span className="text-xs font-mono text-[#F0B90B]">
+                    {preferredCurrency !== 'USD' ? `Rate: 1 USD = ${((exchangeRates?.rates && exchangeRates.rates[preferredCurrency]) || 1).toFixed(4)} ${preferredCurrency}` : 'Benchmark Base (USD)'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#848E9C]">
+                  Exchange rate timestamp: {exchangeRates?.lastUpdated ? new Date(exchangeRates.lastUpdated).toLocaleTimeString() : 'Real-time Live'} • Powered by Open Forex API
+                </p>
               </div>
             </div>
 

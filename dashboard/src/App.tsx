@@ -14,6 +14,7 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AuthModal } from './components/AuthModal';
 import { LayoutDashboard, Timer, TrendingUp, ArrowDownLeft, Menu } from 'lucide-react';
+import { ExchangeRatesData, DEFAULT_EXCHANGE_RATES } from './utils/currency';
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -23,6 +24,7 @@ export const App: React.FC = () => {
   const [summary, setSummary] = useState<WalletSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRatesData>(DEFAULT_EXCHANGE_RATES);
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
@@ -33,10 +35,16 @@ export const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        // Load plans
-        const pRes = await api.getPlans();
+        // Load plans & live forex rates
+        const [pRes, ratesRes] = await Promise.all([
+          api.getPlans(),
+          api.getExchangeRates()
+        ]);
         if (pRes?.plans && pRes.plans.length > 0) {
           setPlans(pRes.plans);
+        }
+        if (ratesRes) {
+          setExchangeRates(ratesRes);
         }
 
         // Check if existing token
@@ -54,13 +62,14 @@ export const App: React.FC = () => {
   const refreshData = async () => {
     if (!user) return;
     try {
-      const [sum, invs, txs, refs, me, pRes] = await Promise.all([
+      const [sum, invs, txs, refs, me, pRes, ratesRes] = await Promise.all([
         api.getWalletSummary(),
         api.getMyInvestments(),
         api.getTransactions(),
         api.getReferralData(),
         api.getMe(),
-        api.getPlans()
+        api.getPlans(),
+        api.getExchangeRates()
       ]);
       setSummary(sum);
       setInvestments(invs.investments);
@@ -69,6 +78,9 @@ export const App: React.FC = () => {
       setUser(me.user);
       if (pRes?.plans && pRes.plans.length > 0) {
         setPlans(pRes.plans);
+      }
+      if (ratesRes) {
+        setExchangeRates(ratesRes);
       }
     } catch (err) {
       console.error('Error refreshing dashboard data:', err);
@@ -109,6 +121,8 @@ export const App: React.FC = () => {
           onOpenDeposit={() => setIsDepositOpen(true)}
           isMobileOpen={isMobileSidebarOpen}
           onClose={() => setIsMobileSidebarOpen(false)}
+          preferredCurrency={user?.preferredCurrency || 'USD'}
+          rates={exchangeRates.rates}
         />
 
         {/* Main Content Area */}
@@ -120,6 +134,7 @@ export const App: React.FC = () => {
             onOpenInvest={() => setCurrentTab('invest')}
             onOpenProfile={() => setCurrentTab('profile')}
             onOpenMobileNav={() => setIsMobileSidebarOpen(true)}
+            preferredCurrency={user?.preferredCurrency || 'USD'}
           />
 
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 no-scrollbar">
@@ -131,6 +146,8 @@ export const App: React.FC = () => {
                   user={user}
                   onNavigate={setCurrentTab}
                   onOpenDeposit={() => setIsDepositOpen(true)}
+                  preferredCurrency={user?.preferredCurrency || 'USD'}
+                  exchangeRates={exchangeRates}
                 />
               )}
 
@@ -196,6 +213,7 @@ export const App: React.FC = () => {
                   onOpenWithdraw={(_addr) => {
                     setIsWithdrawOpen(true);
                   }}
+                  exchangeRates={exchangeRates}
                 />
               )}
             </div>
@@ -264,6 +282,8 @@ export const App: React.FC = () => {
         onClose={() => setIsWithdrawOpen(false)}
         availableBalance={user?.balance ?? 0}
         onWithdrawSuccess={refreshData}
+        preferredCurrency={user?.preferredCurrency || 'USD'}
+        rates={exchangeRates.rates}
       />
 
       <AuthModal

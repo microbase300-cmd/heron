@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import { X, ArrowUpRight, Check, AlertCircle, KeyRound, Clock, ArrowLeft, Send } from 'lucide-react';
 import { api } from '../services/api';
+import { formatCurrency } from '../utils/currency';
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableBalance: number;
   onWithdrawSuccess: () => void;
+  preferredCurrency?: string;
+  rates?: Record<string, number>;
 }
 
 export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   isOpen,
   onClose,
   availableBalance,
-  onWithdrawSuccess
+  onWithdrawSuccess,
+  preferredCurrency = 'USD',
+  rates
 }) => {
   const [step, setStep] = useState<'details' | 'otp'>('details');
   const [asset, setAsset] = useState('USDT (TRC-20)');
@@ -129,7 +134,10 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
             <div>
               <div className="flex justify-between text-xs font-mono text-[#848E9C] mb-1.5">
                 <span>Withdrawal Asset</span>
-                <span className="text-[#EAECEF]">Available: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <span className="text-[#EAECEF]">
+                  Available: {formatCurrency(availableBalance, preferredCurrency, rates)}
+                  {preferredCurrency !== 'USD' && ` (≈ $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD)`}
+                </span>
               </div>
               <select
                 value={asset}

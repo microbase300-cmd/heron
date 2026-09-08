@@ -20,6 +20,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
 
+## [1.6.2] - 2026-09-08
+### Added & Enhanced
+- **Live Base Currency Conversion Engine Across Ecosystem (`backend/`, `dashboard/`, `mobile/`)**:
+  - **Backend Live Forex Service (`backend/src/services/marketData.ts` & `backend/src/routes/market.ts`)**:
+    - Implemented `getExchangeRates()` querying live open forex rates (`https://open.er-api.com/v6/latest/USD`) with 60-second in-memory TTL caching and institutional fallbacks (`USD: 1.0, EUR: 0.860364, GBP: 0.738631`).
+    - Added REST endpoint `GET /api/market/exchange-rates` delivering live base rates and ISO-8601 update timestamps to all clients with zero CORS or rate-limit friction.
+  - **Shared Currency Conversion Utilities (`dashboard/src/utils/currency.ts` & `mobile/src/utils/currency.ts`)**:
+    - Created type definitions (`SupportedCurrency`, `ExchangeRatesData`) and constants (`CURRENCY_SYMBOLS`, `CURRENCY_NAMES`, `DEFAULT_EXCHANGE_RATES`).
+    - Implemented `convertCurrency(amountUsd, targetCurrency, rates)` preserving exact decimal math.
+    - Implemented `formatCurrency(amountUsd, targetCurrency, rates, includeSymbol)` for locale-formatted currency values.
+    - Implemented `formatCurrencyDual(amountUsd, targetCurrency, rates)` for dual valuation representations.
+  - **Dashboard Web Client (`dashboard/src/`)**:
+    - **Navbar (`Navbar.tsx`)**: Added live currency pill button (`EUR (€)`, `GBP (£)`) with pulsating green indicator, displaying active valuation base and routing to Preferences.
+    - **Sidebar (`Sidebar.tsx`)**: Converted Quick Balance widget to display converted amount and dual rate subtext (`≈ $45,000.00 USD`).
+    - **Overview View (`OverviewView.tsx`)**:
+      - Updated Net Asset Value (NAV) banner to display converted balance according to the user's preferred currency (`€38,716.38 EUR`) with live rate equivalent subtext (`≈ $45,000.00 USD • Live Rate: 1 USD = 0.8604 EUR`).
+      - Updated all 4 portfolio stat cards (Available Balance, In Smart Escrow, Yield Disbursed, Affiliate Revenue) to dynamically recalculate and format in the selected currency.
+    - **Preferences & Limits (`ProfileView.tsx`)**:
+      - Replaced simple buttons with full interactive currency cards showing live spot rates (`1 USD = 0.8604 EUR`, `1 USD = 0.7386 GBP`).
+      - Added instant persistence via `api.updateProfile({ preferredCurrency: curr })` and state propagation (`onUpdateUser`) triggering immediate dashboard re-rendering.
+      - Integrated Live Converted Balance Simulator box previewing the user's live balance in real time alongside exchange rate source timestamps.
+    - **Withdrawal Terminal (`WithdrawModal.tsx`)**: Added dual-currency available balance display with live forex rate conversion.
+  - **Mobile Client (`mobile/App.tsx` & `mobile/src/services/api.ts`)**:
+    - Added `mobileApi.getExchangeRates()` and wired automatic background forex updates into `loadAllData()`.
+    - Enhanced Hero Total Balance card to display converted amount with live currency symbol and `≈ $USD` spot rate equivalence badge.
+    - Upgraded Tab 4 (Settings & Preferences) Base Valuation Currency selector with live forex rate labels and real-time converted balance simulator box.
+    - Updated `handleSelectCurrency` with live balance recalculation alert confirming the new valuation amount and live spot rate.
+
 ## [1.6.1] - 2026-09-08
 ### Fixed & Enhanced
 - **Login & Session Log Audit Trail Across Ecosystem (`backend/`, `dashboard/`, `mobile/`)**:

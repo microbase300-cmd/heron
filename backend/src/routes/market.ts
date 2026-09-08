@@ -31,4 +31,14 @@ router.get('/history/:symbol', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/market/exchange-rates
+router.get('/exchange-rates', async (_req: Request, res: Response) => {
+  try {
+    const rates = await marketDataService.getExchangeRates();
+    res.json(rates);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch live exchange rates.' });
+  }
+});
+
 export default router;

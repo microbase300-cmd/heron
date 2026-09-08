@@ -15,6 +15,7 @@ import {
 import { WalletSummary, Investment, User } from '../types';
 import { PortfolioYieldChart } from './charts/PortfolioYieldChart';
 import { AssetAllocationChart } from './charts/AssetAllocationChart';
+import { formatCurrency, DEFAULT_EXCHANGE_RATES, CURRENCY_SYMBOLS } from '../utils/currency';
 
 interface OverviewViewProps {
   summary: WalletSummary | null;
@@ -22,6 +23,8 @@ interface OverviewViewProps {
   user: User | null;
   onNavigate: (tab: string) => void;
   onOpenDeposit: () => void;
+  preferredCurrency?: string;
+  exchangeRates?: { base: string; rates: Record<string, number>; lastUpdated: string };
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -29,10 +32,21 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   investments,
   user,
   onNavigate,
-  onOpenDeposit
+  onOpenDeposit,
+  preferredCurrency,
+  exchangeRates
 }) => {
   const activeInvestments = investments.filter(i => i.status === 'active');
+  const activeCurrency = preferredCurrency || user?.preferredCurrency || 'USD';
+  const rates = exchangeRates?.rates || DEFAULT_EXCHANGE_RATES.rates;
+  const currentRate = rates[activeCurrency] || 1;
+
   const totalNAV = summary?.totalPortfolioValue ?? (user?.balance ?? 0);
+  const availableBalance = summary?.availableBalance ?? (user?.balance ?? 0);
+  const lockedBalance = summary?.lockedInInvestments ?? 0;
+  const yieldDisbursed = summary?.totalProfitAccrued ?? 0;
+  const affiliateRevenue = summary?.totalReferralEarnings ?? 0;
+
   const btcEquivalent = (totalNAV / 68420).toFixed(4);
   const ethEquivalent = (totalNAV / 3540).toFixed(3);
 
@@ -47,15 +61,20 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           <div>
             <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-[#F0B90B] uppercase tracking-widest mb-1.5 font-bold">
               <Sparkles className="w-3.5 h-3.5 text-[#F0B90B]" />
-              <span>Net Asset Value • Sovereign Reserve</span>
+              <span>Net Asset Value • Sovereign Reserve ({activeCurrency})</span>
             </div>
             <div className="text-2xl sm:text-3xl lg:text-4xl font-sans font-bold text-[#EAECEF] tracking-tight flex flex-wrap items-baseline gap-2.5 sm:gap-3.5">
-              ${totalNAV.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(totalNAV, activeCurrency, rates)}
               <span className="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30 flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 +15.5% Accrued
               </span>
             </div>
+            {activeCurrency !== 'USD' && (
+              <div className="mt-1.5 text-xs text-[#F0B90B] font-mono">
+                ≈ ${totalNAV.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD • Live Rate: 1 USD = {currentRate.toFixed(4)} {activeCurrency}
+              </div>
+            )}
             <div className="mt-2.5 flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs text-[#848E9C] font-mono">
               <span>≈ {btcEquivalent} BTC</span>
               <span>•</span>
@@ -94,9 +113,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <Wallet className="w-3.5 h-3.5 text-[#F0B90B]" />
           </div>
           <div className="text-xl sm:text-2xl font-sans font-bold text-[#EAECEF] tracking-tight">
-            ${(summary?.availableBalance ?? user?.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {formatCurrency(availableBalance, activeCurrency, rates)}
           </div>
-          <div className="text-[10px] text-[#848E9C] mt-1">Instant withdrawal readiness</div>
+          <div className="text-[10px] text-[#848E9C] mt-1">
+            {activeCurrency !== 'USD' ? `≈ $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD` : 'Instant withdrawal readiness'}
+          </div>
         </div>
 
         <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all">
@@ -105,7 +126,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <Lock className="w-3.5 h-3.5 text-[#F0B90B]" />
           </div>
           <div className="text-xl sm:text-2xl font-sans font-bold text-[#EAECEF] tracking-tight">
-            ${(summary?.lockedInInvestments ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {formatCurrency(lockedBalance, activeCurrency, rates)}
           </div>
           <div className="text-[10px] text-[#F0B90B] mt-1 font-medium">
             {activeInvestments.length} active investment{activeInvestments.length === 1 ? '' : 's'} compounding
@@ -118,7 +139,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <TrendingUp className="w-3.5 h-3.5 text-[#0ECB81]" />
           </div>
           <div className="text-xl sm:text-2xl font-sans font-bold text-[#0ECB81] tracking-tight">
-            +${(summary?.totalProfitAccrued ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            +{formatCurrency(yieldDisbursed, activeCurrency, rates)}
           </div>
           <div className="text-[10px] text-[#848E9C] mt-1">Net programmatic profit payout</div>
         </div>
@@ -129,7 +150,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <Users className="w-3.5 h-3.5 text-[#F0B90B]" />
           </div>
           <div className="text-xl sm:text-2xl font-sans font-bold text-[#F0B90B] tracking-tight">
-            ${(summary?.totalReferralEarnings ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {formatCurrency(affiliateRevenue, activeCurrency, rates)}
           </div>
           <div className="text-[10px] text-[#848E9C] mt-1">Up to 30% instant network tier</div>
         </div>

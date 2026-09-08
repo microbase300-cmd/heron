@@ -292,6 +292,41 @@ class ApiService {
       return { logs: fallbackLogs };
     }
   }
+
+  async getExchangeRates(): Promise<{ base: string; rates: Record<string, number>; lastUpdated: string }> {
+    try {
+      return await this.request<{ base: string; rates: Record<string, number>; lastUpdated: string }>('/market/exchange-rates');
+    } catch {
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.rates) {
+            return {
+              base: 'USD',
+              rates: {
+                USD: 1.0,
+                EUR: typeof data.rates.EUR === 'number' ? Number(data.rates.EUR.toFixed(6)) : 0.860364,
+                GBP: typeof data.rates.GBP === 'number' ? Number(data.rates.GBP.toFixed(6)) : 0.738631,
+              },
+              lastUpdated: new Date().toISOString(),
+            };
+          }
+        }
+      } catch {
+        // fallback
+      }
+      return {
+        base: 'USD',
+        rates: {
+          USD: 1.0,
+          EUR: 0.860364,
+          GBP: 0.738631,
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    }
+  }
 }
 
 export const api = new ApiService();
