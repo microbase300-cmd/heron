@@ -74,6 +74,19 @@ export interface KycOcrResult {
   scannedAt: string;
 }
 
+export interface LivenessDetails {
+  botDetected: boolean;
+  turnLeftPassed: boolean;
+  turnRightPassed: boolean;
+  waveHandPassed?: boolean;
+  nodPassed?: boolean;
+  blinkPassed?: boolean;
+  smilePassed?: boolean;
+  capturedLive: boolean;
+  confidenceScore: number;
+  videoUrl?: string;
+}
+
 export interface KycSubmission {
   id: string;
   userId: string;
@@ -97,6 +110,7 @@ export interface KycSubmission {
   reviewedAt?: string;
   ocrResult?: KycOcrResult;
   livenessVerified?: boolean;
+  livenessDetails?: LivenessDetails;
   submittedAt?: string;
 }
 

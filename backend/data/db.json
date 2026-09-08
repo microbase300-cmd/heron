@@ -244,6 +244,14 @@
       "preferredCurrency": "USD",
       "securityLogs": [
         {
+          "id": "sec_1788909808404_8nma",
+          "timestamp": "2026-09-08T23:23:28.404Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
           "id": "sec_1788908808355_yheh",
           "timestamp": "2026-09-08T23:06:48.356Z",
           "ip": "192.168.43.***",
@@ -969,6 +977,13 @@
       "tokenHash": "f8b82e46209d623b8cf9ce7ad3b0c734eb29a2c457770906add913ffa124a2c2",
       "expiresAt": "2026-09-15T23:06:48.393Z",
       "createdAt": "2026-09-08T23:06:48.393Z"
+    },
+    {
+      "id": "rft_65f983f1-eaeb-4a36-81c4-5b38cec008cc",
+      "userId": "usr_demo_vance",
+      "tokenHash": "7a37ed3a57f44b36b342a5a56e26094807365160203a46047256e1abea0473e9",
+      "expiresAt": "2026-09-15T23:23:28.458Z",
+      "createdAt": "2026-09-08T23:23:28.459Z"
     }
   ],
   "investments": [
