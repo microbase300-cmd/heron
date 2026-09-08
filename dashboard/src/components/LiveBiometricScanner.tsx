@@ -54,6 +54,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const [progress, setProgress] = useState(0);
   const [botDetectorStatus, setBotDetectorStatus] = useState('Initializing Biometric Optical Feed...');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -161,8 +163,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     timeoutsRef.current.push(t1);
   }, [clearAllTimers, captureFrame]);
 
-  // Start real hardware camera with multi-stage fallback constraints
-  const startCamera = useCallback(async () => {
+  // Start real hardware camera with multi-stage fallback constraints and device enumeration
+  const startCamera = useCallback(async (forcedDeviceId?: string) => {
     clearAllTimers();
     setCameraError(null);
     setCapturedImage(null);
@@ -179,43 +181,89 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
       return;
     }
 
+    // Refresh and inspect all connected video devices
+    let vDevices: MediaDeviceInfo[] = [];
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      vDevices = devices.filter((d) => d.kind === 'videoinput');
+      setVideoDevices(vDevices);
+    } catch (enumErr) {
+      console.warn('Could not enumerate media devices:', enumErr);
+    }
+
     let stream: MediaStream | null = null;
     let lastError: any = null;
+    const targetDevId = forcedDeviceId || selectedDeviceId;
 
-    // Tier 1: Try HD resolution without strict facingMode (facingMode causes NotFoundError on Windows Chrome desktop webcams)
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-    } catch (err1: any) {
-      console.warn('Tier 1 camera constraints failed, attempting Tier 2 (basic video: true):', err1);
-      lastError = err1;
-
-      // If explicit permission denial, stop immediately and guide user on Chrome settings
-      if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'SecurityError') {
-        const permMsg =
-          'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left side of the address bar (next to localhost:5173), change "Camera" to "Allow", and click "Retry Camera Authorization".';
-        setCameraError(permMsg);
-        setErrorType('permission');
-        setStep('error');
-        setBotDetectorStatus('Optical biometric capture halted: Camera permission blocked.');
-        stopCamera();
-        return;
-      }
-
-      // Tier 2: Basic unconstrained video (triggers browser camera selector for ANY connected device)
+    // Strategy A: If specific camera selected
+    if (targetDevId) {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: { deviceId: { exact: targetDevId } },
           audio: false,
         });
-      } catch (err2: any) {
-        console.error('Tier 2 basic camera acquisition failed:', err2);
-        lastError = err2;
+      } catch (devErr: any) {
+        console.warn(`Target camera ${targetDevId} failed, falling back:`, devErr);
+        lastError = devErr;
+      }
+    }
+
+    // Strategy B: Standard HD resolution feed (without facingMode)
+    if (!stream) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (err1: any) {
+        console.warn('HD camera constraints failed, attempting basic video:', err1);
+        lastError = err1;
+
+        // If user explicitly blocked Chrome permission, halt immediately
+        if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'SecurityError') {
+          const permMsg =
+            'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left side of the address bar (next to localhost:5173), change "Camera" to "Allow", and click "Retry Camera Authorization".';
+          setCameraError(permMsg);
+          setErrorType('permission');
+          setStep('error');
+          setBotDetectorStatus('Optical biometric capture halted: Camera permission blocked.');
+          stopCamera();
+          return;
+        }
+
+        // Strategy C: Basic unconstrained video feed
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        } catch (err2: any) {
+          console.warn('Basic unconstrained camera acquisition failed:', err2);
+          lastError = err2;
+
+          // Strategy D: Try iterating each enumerated device individually
+          if (vDevices.length > 0) {
+            for (const d of vDevices) {
+              if (d.deviceId) {
+                try {
+                  stream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: d.deviceId } },
+                    audio: false,
+                  });
+                  if (stream) {
+                    setSelectedDeviceId(d.deviceId);
+                    break;
+                  }
+                } catch {
+                  // Continue to next device
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -249,10 +297,26 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
       return;
     }
 
-    // Camera stream acquired successfully
+    // Camera stream acquired successfully!
     streamRef.current = stream;
     setCameraActive(true);
     setCameraError(null);
+
+    // Re-query labels now that permission is granted
+    try {
+      const updatedDevices = await navigator.mediaDevices.enumerateDevices();
+      const updatedVideoDevices = updatedDevices.filter((d) => d.kind === 'videoinput');
+      setVideoDevices(updatedVideoDevices);
+      const activeTrack = stream.getVideoTracks()[0];
+      if (activeTrack) {
+        const settings = activeTrack.getSettings();
+        if (settings.deviceId) {
+          setSelectedDeviceId(settings.deviceId);
+        }
+      }
+    } catch {
+      // Ignore
+    }
 
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
@@ -273,16 +337,31 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         videoRef.current.onloadeddata = handleVideoReady;
       }
     }
-  }, [clearAllTimers, onError, startLivenessSequence, stopCamera]);
+  }, [clearAllTimers, onError, selectedDeviceId, startLivenessSequence, stopCamera]);
 
   useEffect(() => {
-    if (isOpen) {
-      startCamera();
-    } else {
+    if (!isOpen) {
       stopCamera();
+      return;
     }
+
+    startCamera();
+
+    // Auto-detect when camera is plugged in, hotkey is pressed, or mobile phone connects
+    const handleDeviceChange = async () => {
+      console.log('🔄 Hardware device change detected, auto-initiating camera handshake...');
+      startCamera();
+    };
+
+    if (navigator.mediaDevices?.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+    }
+
     return () => {
       stopCamera();
+      if (navigator.mediaDevices?.removeEventListener) {
+        navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
+      }
     };
   }, [isOpen, startCamera, stopCamera]);
 
@@ -347,14 +426,33 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-colors"
-            title="Cancel Verification"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {videoDevices.length > 1 && (
+              <select
+                value={selectedDeviceId}
+                onChange={(e) => {
+                  setSelectedDeviceId(e.target.value);
+                  startCamera(e.target.value);
+                }}
+                className="bg-[#181A20] border border-[#2B313A] text-[#EAECEF] text-[11px] rounded-lg px-2 py-1 outline-none focus:border-[#F0B90B] font-mono cursor-pointer"
+                title="Switch Camera Source"
+              >
+                {videoDevices.map((d, i) => (
+                  <option key={d.deviceId || i} value={d.deviceId}>
+                    📷 {d.label || `Camera ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-colors"
+              title="Cancel Verification"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Camera / Viewfinder Box */}
@@ -411,6 +509,31 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   <div className="pt-2 border-t border-[#2B313A] text-[10px] text-[#0ECB81] flex items-center gap-1.5 font-bold">
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                     <span>Click the tune / slider icon in Chrome address bar to toggle Camera to "Allow".</span>
+                  </div>
+                )}
+                {errorType === 'not_found' && (
+                  <div className="pt-2.5 border-t border-[#2B313A] space-y-2">
+                    <div className="text-[11px] font-bold text-[#F0B90B] uppercase">
+                      Hardware Activation Checklist:
+                    </div>
+                    <ul className="text-[11px] text-[#848E9C] space-y-1.5 list-none pl-0">
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#0ECB81] font-bold">1.</span>
+                        <span><strong className="text-[#EAECEF]">Laptop Webcam Hotkey:</strong> Press <kbd className="px-1.5 py-0.5 rounded bg-[#2B313A] text-[#0ECB81] font-bold">Fn + F10</kbd> (or the key with a camera icon) to power on your built-in webcam.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#0ECB81] font-bold">2.</span>
+                        <span><strong className="text-[#EAECEF]">Mobile Camera as Webcam:</strong> If using a mobile phone, verify Windows Phone Link has <span className="text-[#0ECB81]">"Use as a connected camera"</span> turned on, or connect your phone webcam app (e.g. DroidCam/Camo).</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#0ECB81] font-bold">3.</span>
+                        <span><strong className="text-[#EAECEF]">Windows Privacy:</strong> Open <strong className="text-[#EAECEF]">Settings → Privacy & security → Camera</strong> and ensure <span className="text-[#0ECB81]">"Let desktop apps access your camera"</span> is toggled ON.</span>
+                      </li>
+                    </ul>
+                    <div className="pt-1.5 text-[10px] text-[#0ECB81] flex items-center gap-2 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-ping" />
+                      <span>Live Hardware Watcher active: Auto-detects the second your camera powers on!</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -556,7 +679,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={startCamera}
+                  onClick={() => startCamera()}
                   className="px-5 py-2 rounded-xl btn-binance text-xs font-bold shadow-lg shadow-[#F0B90B]/20 flex items-center gap-1.5"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -567,7 +690,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               <>
                 <button
                   type="button"
-                  onClick={startCamera}
+                  onClick={() => startCamera()}
                   className="px-4 py-2 rounded-xl bg-[#2B313A] hover:bg-[#363D47] text-[#EAECEF] text-xs font-bold transition-all flex items-center gap-1.5"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
