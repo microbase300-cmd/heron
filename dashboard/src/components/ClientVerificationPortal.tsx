@@ -356,6 +356,23 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
         </div>
       )}
 
+      {/* Top Portal Error Alert (if triggered outside form) */}
+      {!showForm && errorMessage && (
+        <div className="p-4 rounded-2xl bg-[#F6465D]/15 border border-[#F6465D]/30 flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-xs font-mono text-[#F6465D]">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="text-xs font-mono text-[#F0B90B] underline hover:text-[#FCD535] shrink-0"
+          >
+            Review Form
+          </button>
+        </div>
+      )}
+
       {/* Submission Form */}
       {showForm && (
         <form onSubmit={handleSubmit} className="glass-panel p-6 sm:p-8 rounded-2xl border border-[#2B313A] bg-[#1E2329] space-y-6 animate-fadeIn">
@@ -732,10 +749,15 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
       <LiveBiometricScanner
         isOpen={showBiometricModal}
         onClose={() => setShowBiometricModal(false)}
+        onError={(err) => {
+          setErrorMessage(`Biometric verification cancelled: ${err}`);
+          setShowForm(true);
+        }}
         onCaptureComplete={(photoUrl, details) => {
           setSelfieUrl(photoUrl);
           setLivenessDetails(details);
           setShowBiometricModal(false);
+          setErrorMessage(null);
         }}
       />
     </div>
