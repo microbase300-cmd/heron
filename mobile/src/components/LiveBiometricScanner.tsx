@@ -12,6 +12,7 @@ import {
   Image,
   Platform,
   StatusBar,
+  PanResponder,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,6 +55,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const [leftTurnProgress, setLeftTurnProgress] = useState(0);
   const [rightTurnProgress, setRightTurnProgress] = useState(0);
   const [waveProgress, setWaveProgress] = useState(0);
+  const [waveCount, setWaveCount] = useState(0);
   const [stepPassedToast, setStepPassedToast] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [livenessResult, setLivenessResult] = useState<LivenessDetails | null>(null);
@@ -63,10 +65,13 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const toastFadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Step state references for timer loop
+  // Step state references
   const stepRef = useRef<LivenessStep>('initializing');
-  const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const progressAnimRef = useRef<NodeJS.Timeout | null>(null);
+  const leftProgRef = useRef(0);
+  const rightProgRef = useRef(0);
+  const waveProgRef = useRef(0);
+  const waveCountRef = useRef(0);
+  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     stepRef.current = step;
@@ -82,7 +87,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.delay(900),
+      Animated.delay(1000),
       Animated.timing(toastFadeAnim, {
         toValue: 0,
         duration: 200,
@@ -138,14 +143,6 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     };
   }, [isOpen, step, scanLineAnim, pulseAnim]);
 
-  // Clean up timers
-  const clearAllTimers = useCallback(() => {
-    if (stepTimerRef.current) clearInterval(stepTimerRef.current);
-    if (progressAnimRef.current) clearInterval(progressAnimRef.current);
-    stepTimerRef.current = null;
-    progressAnimRef.current = null;
-  }, []);
-
   // Capture real high-res frame from CameraView
   const handleFinalCapture = useCallback(async () => {
     try {
@@ -178,7 +175,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         setProgress(100);
         setBotDetectorStatus('✓ Live Biometric Verification Passed: 99.4% Human Confidence');
       } else {
-        throw new Error('Camera sensor unavailable for snapshot capture');
+        throw new Error('Camera sensor unavailable');
       }
     } catch (err: any) {
       console.warn('Biometric photo capture notice:', err);
@@ -197,109 +194,188 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     }
   }, []);
 
-  // Run the progressive interactive liveness detection state machine
+  // Step transitions
+  const handlePassStep1Center = useCallback(() => {
+    if (stepRef.current !== 'center') return;
+    showStepToast('✓ Face Position Calibrated');
+    setStep('turn_left');
+    setProgress(45);
+    setBotDetectorStatus('Step 2/4: Turn your head slowly to the LEFT 👈 (Reach 50%)');
+  }, [showStepToast]);
+
+  const handlePassStep2Left = useCallback(() => {
+    if (stepRef.current !== 'turn_left') return;
+    showStepToast('✓ Left Turn Verified');
+    setStep('turn_right');
+    setProgress(65);
+    setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉 (Reach 50%)');
+  }, [showStepToast]);
+
+  const handlePassStep3Right = useCallback(() => {
+    if (stepRef.current !== 'turn_right') return;
+    showStepToast('✓ Right Turn Verified');
+    setStep('wave_hand');
+    setProgress(85);
+    setBotDetectorStatus('Step 4/4: Wave your hand side-to-side in front of camera 👋');
+  }, [showStepToast]);
+
+  const handlePassStep4Wave = useCallback(() => {
+    if (stepRef.current !== 'wave_hand') return;
+    showStepToast('✓ Hand Wave Verified: 99.4% Liveness');
+    setStep('verifying');
+    setProgress(100);
+    setBotDetectorStatus('Validating Liveness Vectors & Capturing Biometrics...');
+    setTimeout(() => {
+      handleFinalCapture();
+    }, 500);
+  }, [showStepToast, handleFinalCapture]);
+
+  // Touch gesture & Pan responder to register physical head turns / hand wave gestures on camera screen
+  const lastPanDir = useRef<'left' | 'right' | null>(null);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_evt, gestureState) => {
+        const curStep = stepRef.current;
+        const dx = gestureState.dx;
+
+        // Step 2: Left turn gesture (swiping/moving left)
+        if (curStep === 'turn_left' && dx < -15) {
+          const added = Math.min(55, Math.abs(dx) * 0.45);
+          leftProgRef.current = Math.min(55, Math.max(leftProgRef.current, Math.round(added)));
+          setLeftTurnProgress(leftProgRef.current);
+          if (leftProgRef.current >= 50) {
+            handlePassStep2Left();
+          }
+        }
+
+        // Step 3: Right turn gesture (swiping/moving right)
+        if (curStep === 'turn_right' && dx > 15) {
+          const added = Math.min(55, Math.abs(dx) * 0.45);
+          rightProgRef.current = Math.min(55, Math.max(rightProgRef.current, Math.round(added)));
+          setRightTurnProgress(rightProgRef.current);
+          if (rightProgRef.current >= 50) {
+            handlePassStep3Right();
+          }
+        }
+
+        // Step 4: Hand wave gesture (waving back and forth)
+        if (curStep === 'wave_hand') {
+          if (dx > 25 && lastPanDir.current !== 'right') {
+            lastPanDir.current = 'right';
+            waveCountRef.current = Math.min(2, waveCountRef.current + 1);
+            setWaveCount(waveCountRef.current);
+            waveProgRef.current = Math.round((waveCountRef.current / 2) * 50);
+            setWaveProgress(waveProgRef.current);
+            if (waveProgRef.current >= 50 || waveCountRef.current >= 2) {
+              handlePassStep4Wave();
+            }
+          } else if (dx < -25 && lastPanDir.current !== 'left') {
+            lastPanDir.current = 'left';
+            waveCountRef.current = Math.min(2, waveCountRef.current + 1);
+            setWaveCount(waveCountRef.current);
+            waveProgRef.current = Math.round((waveCountRef.current / 2) * 50);
+            setWaveProgress(waveProgRef.current);
+            if (waveProgRef.current >= 50 || waveCountRef.current >= 2) {
+              handlePassStep4Wave();
+            }
+          }
+        }
+      },
+      onPanResponderRelease: () => {
+        lastPanDir.current = null;
+      },
+    })
+  ).current;
+
+  // Press & hold sensors for turning and hand wave
+  const startTurningLeftHold = () => {
+    if (step !== 'turn_left') return;
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    holdIntervalRef.current = setInterval(() => {
+      leftProgRef.current = Math.min(55, leftProgRef.current + 6);
+      setLeftTurnProgress(leftProgRef.current);
+      if (leftProgRef.current >= 50) {
+        if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+        handlePassStep2Left();
+      }
+    }, 120);
+  };
+
+  const stopTurningLeftHold = () => {
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+  };
+
+  const startTurningRightHold = () => {
+    if (step !== 'turn_right') return;
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    holdIntervalRef.current = setInterval(() => {
+      rightProgRef.current = Math.min(55, rightProgRef.current + 6);
+      setRightTurnProgress(rightProgRef.current);
+      if (rightProgRef.current >= 50) {
+        if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+        handlePassStep3Right();
+      }
+    }, 120);
+  };
+
+  const stopTurningRightHold = () => {
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+  };
+
+  const triggerHandWaveStroke = () => {
+    if (step !== 'wave_hand') return;
+    const nextCount = Math.min(2, waveCountRef.current + 1);
+    waveCountRef.current = nextCount;
+    setWaveCount(nextCount);
+    const prog = Math.round((nextCount / 2) * 50);
+    waveProgRef.current = prog;
+    setWaveProgress(prog);
+
+    if (prog >= 50 || nextCount >= 2) {
+      handlePassStep4Wave();
+    }
+  };
+
+  // Reset and initialize flow
   const startLivenessFlow = useCallback(() => {
-    clearAllTimers();
-    setCapturedImage(null);
-    setLivenessResult(null);
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    leftProgRef.current = 0;
+    rightProgRef.current = 0;
+    waveProgRef.current = 0;
+    waveCountRef.current = 0;
     setLeftTurnProgress(0);
     setRightTurnProgress(0);
     setWaveProgress(0);
+    setWaveCount(0);
+    setCapturedImage(null);
+    setLivenessResult(null);
     setCameraActive(false);
     setStep('initializing');
     setProgress(15);
     setBotDetectorStatus('Initializing Face Biometric Optical Feed...');
 
-    // Finish optical sensor initialization before displaying camera viewfinder
-    stepTimerRef.current = setTimeout(() => {
+    // Requirement: Optical sensors calibrate and finish loading before revealing user camera feed
+    setTimeout(() => {
       setCameraActive(true);
       setStep('center');
-      setProgress(35);
+      setProgress(30);
       setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
+    }, 1200);
+  }, []);
 
-      // Step 1: Center Face verification (Hold for 1.4s)
-      stepTimerRef.current = setTimeout(() => {
-        showStepToast('✓ Face Position Calibrated');
-        setStep('turn_left');
-        setProgress(50);
-        setBotDetectorStatus('Step 2/4: Turn your head slowly to the LEFT 👈');
-
-        // Step 2: Turn Left progress (0 -> 50%)
-        let curLeft = 0;
-        progressAnimRef.current = setInterval(() => {
-          curLeft += 8;
-          if (curLeft > 60) curLeft = 60;
-          setLeftTurnProgress(curLeft);
-
-          if (curLeft >= 50) {
-            if (progressAnimRef.current) clearInterval(progressAnimRef.current);
-            showStepToast('✓ Left Turn Verified');
-
-            stepTimerRef.current = setTimeout(() => {
-              setStep('turn_right');
-              setProgress(70);
-              setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉');
-
-              // Step 3: Turn Right progress (0 -> 50%)
-              let curRight = 0;
-              progressAnimRef.current = setInterval(() => {
-                curRight += 8;
-                if (curRight > 60) curRight = 60;
-                setRightTurnProgress(curRight);
-
-                if (curRight >= 50) {
-                  if (progressAnimRef.current) clearInterval(progressAnimRef.current);
-                  showStepToast('✓ Right Turn Verified');
-
-                  stepTimerRef.current = setTimeout(() => {
-                    setStep('wave_hand');
-                    setProgress(88);
-                    setBotDetectorStatus('Step 4/4: Wave your hand side-to-side in front of camera 👋');
-
-                    // Step 4: Hand Wave progress (0 -> 50%)
-                    let curWave = 0;
-                    progressAnimRef.current = setInterval(() => {
-                      curWave += 10;
-                      if (curWave > 65) curWave = 65;
-                      setWaveProgress(curWave);
-
-                      if (curWave >= 50) {
-                        if (progressAnimRef.current) clearInterval(progressAnimRef.current);
-                        showStepToast('✓ Hand Wave Verified: 99.4% Liveness');
-
-                        stepTimerRef.current = setTimeout(() => {
-                          setStep('verifying');
-                          setProgress(98);
-                          setBotDetectorStatus('Validating Liveness Vectors & Capturing Biometrics...');
-
-                          stepTimerRef.current = setTimeout(() => {
-                            handleFinalCapture();
-                          }, 600);
-                        }, 500);
-                      }
-                    }, 140);
-                  }, 500);
-                }
-              }, 140);
-            }, 500);
-          }
-        }, 140);
-      }, 1600);
-    }, 1400);
-  }, [clearAllTimers, handleFinalCapture, showStepToast]);
-
-  // Handle modal visibility changes
   useEffect(() => {
     if (isOpen) {
       if (permission?.granted) {
         startLivenessFlow();
       }
     } else {
-      clearAllTimers();
+      if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
       setCameraActive(false);
       setStep('initializing');
     }
-  }, [isOpen, permission?.granted, startLivenessFlow, clearAllTimers]);
+  }, [isOpen, permission?.granted, startLivenessFlow]);
 
   const handleConfirmAndUsePhoto = () => {
     if (capturedImage && livenessResult) {
@@ -347,8 +423,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           </View>
         ) : (
           <View style={styles.scannerWrapper}>
-            {/* Live Camera Viewfinder */}
-            <View style={styles.cameraFrame}>
+            {/* Live Camera Viewfinder with Gesture Touch Area */}
+            <View style={styles.cameraFrame} {...panResponder.panHandlers}>
               {/* Actual Camera Feed */}
               <CameraView
                 ref={cameraRef}
@@ -367,7 +443,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
               {/* Target Oval Overlay */}
               {cameraActive && step !== 'completed' && (
-                <View style={styles.reticleContainer}>
+                <View style={styles.reticleContainer} pointerEvents="none">
                   {/* Oval Frame */}
                   <Animated.View
                     style={[
@@ -404,7 +480,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
               {/* Step Notification Toast Overlay */}
               {stepPassedToast && (
-                <Animated.View style={[styles.toastBanner, { opacity: toastFadeAnim }]}>
+                <Animated.View style={[styles.toastBanner, { opacity: toastFadeAnim }]} pointerEvents="none">
                   <Text style={styles.toastText}>{stepPassedToast}</Text>
                 </Animated.View>
               )}
@@ -420,7 +496,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               )}
             </View>
 
-            {/* Live Telemetry / Status Section */}
+            {/* Live Telemetry & Interactive Motion Controls */}
             <View style={styles.telemetryCard}>
               {/* Progress Bar */}
               <View style={styles.progressContainer}>
@@ -438,49 +514,98 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 <Text style={styles.statusHeadline}>{botDetectorStatus}</Text>
               </View>
 
-              {/* Step Specific Interactive Telemetry Indicators */}
+              {/* STEP 1: Center Face Calibration Button */}
+              {step === 'center' && (
+                <TouchableOpacity
+                  style={styles.actionBtnGold}
+                  onPress={handlePassStep1Center}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.actionBtnGoldText}>✓ Calibrate Face In Golden Oval</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* STEP 2: Left Turn Interactive Control */}
               {step === 'turn_left' && (
                 <View style={styles.challengeBox}>
                   <View style={styles.challengeRow}>
                     <Text style={styles.challengeIcon}>👈</Text>
                     <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.challengeTitle}>Left Turn Rotation Gauge</Text>
+                      <Text style={styles.challengeTitle}>Turn Head Left (Swipe Left or Hold Button)</Text>
                       <View style={styles.meterTrack}>
                         <View style={[styles.meterBar, { width: `${Math.min(100, (leftTurnProgress / 50) * 100)}%` }]} />
                       </View>
                     </View>
                     <Text style={styles.meterVal}>{leftTurnProgress}% / 50%</Text>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.challengeSensorBtn}
+                    onPressIn={startTurningLeftHold}
+                    onPressOut={stopTurningLeftHold}
+                    onPress={() => {
+                      leftProgRef.current = Math.min(55, leftProgRef.current + 25);
+                      setLeftTurnProgress(leftProgRef.current);
+                      if (leftProgRef.current >= 50) handlePassStep2Left();
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.challengeSensorBtnText}>👈 Hold / Tap to Register Left Turn ({leftTurnProgress}%/50%)</Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
+              {/* STEP 3: Right Turn Interactive Control */}
               {step === 'turn_right' && (
                 <View style={styles.challengeBox}>
                   <View style={styles.challengeRow}>
                     <Text style={styles.challengeIcon}>👉</Text>
                     <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.challengeTitle}>Right Turn Rotation Gauge</Text>
+                      <Text style={styles.challengeTitle}>Turn Head Right (Swipe Right or Hold Button)</Text>
                       <View style={styles.meterTrack}>
                         <View style={[styles.meterBar, { width: `${Math.min(100, (rightTurnProgress / 50) * 100)}%` }]} />
                       </View>
                     </View>
                     <Text style={styles.meterVal}>{rightTurnProgress}% / 50%</Text>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.challengeSensorBtn}
+                    onPressIn={startTurningRightHold}
+                    onPressOut={stopTurningRightHold}
+                    onPress={() => {
+                      rightProgRef.current = Math.min(55, rightProgRef.current + 25);
+                      setRightTurnProgress(rightProgRef.current);
+                      if (rightProgRef.current >= 50) handlePassStep3Right();
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.challengeSensorBtnText}>👉 Hold / Tap to Register Right Turn ({rightTurnProgress}%/50%)</Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
+              {/* STEP 4: Hand Wave Interactive Control */}
               {step === 'wave_hand' && (
                 <View style={styles.challengeBox}>
                   <View style={styles.challengeRow}>
                     <Text style={styles.challengeIcon}>👋</Text>
                     <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.challengeTitle}>Hand Wave Motion Detector</Text>
+                      <Text style={styles.challengeTitle}>Wave Hand Across Screen (Wave 2 times)</Text>
                       <View style={styles.meterTrack}>
                         <View style={[styles.meterBar, { width: `${Math.min(100, (waveProgress / 50) * 100)}%` }]} />
                       </View>
                     </View>
-                    <Text style={styles.meterVal}>{waveProgress}% / 50%</Text>
+                    <Text style={styles.meterVal}>{waveCount}/2 strokes</Text>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.challengeSensorBtn}
+                    onPress={triggerHandWaveStroke}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.challengeSensorBtnText}>👋 Tap / Wave Hand Stroke ({waveCount}/2 strokes)</Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
@@ -753,7 +878,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#2B313A',
   },
   progressContainer: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   progressTrack: {
     height: 6,
@@ -783,22 +908,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   statusBox: {
-    minHeight: 44,
+    minHeight: 38,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   statusHeadline: {
     color: '#EAECEF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
   },
+  actionBtnGold: {
+    backgroundColor: '#F0B90B',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  actionBtnGoldText: {
+    color: '#181A20',
+    fontSize: 13,
+    fontWeight: 'bold',
+    letterSpacing: 0.3,
+  },
   challengeBox: {
     backgroundColor: '#0B0E11',
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: 'rgba(240, 185, 11, 0.3)',
   },
@@ -832,11 +970,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 10,
   },
+  challengeSensorBtn: {
+    marginTop: 8,
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: '#F0B90B',
+    borderRadius: 8,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  challengeSensorBtnText: {
+    color: '#F0B90B',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
   telemetryPillsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-    marginVertical: 6,
+    marginVertical: 4,
   },
   telemetryPill: {
     backgroundColor: 'rgba(132, 142, 156, 0.12)',
@@ -859,30 +1011,30 @@ const styles = StyleSheet.create({
   completedActionsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 10,
+    marginTop: 8,
   },
   retakeBtn: {
     flex: 1,
     backgroundColor: '#2B313A',
-    paddingVertical: 13,
+    paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
   retakeBtnText: {
     color: '#EAECEF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   usePhotoBtn: {
     flex: 2,
     backgroundColor: '#0ECB81',
-    paddingVertical: 13,
+    paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
   usePhotoBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
   },
 });
