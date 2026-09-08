@@ -354,6 +354,13 @@
       "tokenHash": "b7fc93055e639dec103edcad7453004b8846f4f08438ae156ddbba6592b865af",
       "expiresAt": "2026-09-14T03:31:27.130Z",
       "createdAt": "2026-09-07T03:31:27.134Z"
+    },
+    {
+      "id": "rft_709f41fe-62b1-49be-bfd7-d27933fd057d",
+      "userId": "usr_demo_vance",
+      "tokenHash": "4927e8692ee4a1c1b01b715990d48e56e85ddc64c98ee34cc8ba3288c09bb5b2",
+      "expiresAt": "2026-09-15T00:35:41.246Z",
+      "createdAt": "2026-09-08T00:35:41.248Z"
     }
   ],
   "investments": [
@@ -671,7 +678,7 @@
       "userId": null,
       "targetEmail": null,
       "title": "Institutional Smart Contract Protocol Activated",
-      "message": "Welcome to Heron Assets Trustees. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.",
+      "message": "Welcome to Heron Digital Capital. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.",
       "type": "announcement",
       "sender": "Chief Risk Officer",
       "readBy": [],
