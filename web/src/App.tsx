@@ -25,7 +25,7 @@ function Navbar() {
         <Link className="brand" to="/" onClick={closeMenu} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
           <img
             src="/heron_logo.jpg"
-            alt="Heron Assets"
+            alt="Heron Assets Trustees"
             style={{
               width: '28px',
               height: '28px',
@@ -147,7 +147,7 @@ function Footer({
             <div className="footer-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <img
                 src="/heron_logo.jpg"
-                alt="Heron Assets"
+                alt="Heron Assets Trustees"
                 style={{
                   width: '34px',
                   height: '34px',
@@ -157,7 +157,7 @@ function Footer({
                   boxShadow: '0 0 12px rgba(240, 185, 11, 0.25)',
                 }}
               />
-              <span>HERON ASSETS</span>
+              <span>HERON ASSETS TRUSTEES</span>
             </div>
             <p
               className="body"

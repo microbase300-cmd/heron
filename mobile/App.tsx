@@ -188,7 +188,7 @@ function CustomAlertModal({
           </View>
 
           {/* Security & Protocol Subtitle */}
-          <Text style={styles.customAlertBrandTag}>HERON CAPITAL PROTOCOL</Text>
+          <Text style={styles.customAlertBrandTag}>HERON ASSETS TRUSTEES</Text>
 
           {/* Dialog Title */}
           <Text style={styles.customAlertTitle}>{alert.title}</Text>
@@ -675,7 +675,7 @@ function MainAppContent() {
             <View style={styles.logoBadgeBig}>
               <Image source={require('./assets/heron_logo.jpg')} style={styles.logoImageBig} resizeMode="cover" />
             </View>
-            <Text style={styles.authBrandTitle}>HERON DIGITAL CAPITAL</Text>
+            <Text style={styles.authBrandTitle}>HERON ASSETS TRUSTEES</Text>
             <Text style={styles.authBrandSub}>INSTITUTIONAL CRYPTO WEALTH</Text>
 
             {/* Toggle Login / Register */}
@@ -1307,7 +1307,7 @@ function MainAppContent() {
                 <TouchableOpacity
                   style={[styles.secondaryActionBtn, { flex: 1, paddingVertical: 14 }]}
                   onPress={() => {
-                    const link = referralData?.referralLink || `https://heroncapital.com/register?ref=${currentUser.referralCode}`;
+                    const link = referralData?.referralLink || `https://heronassetstrustees.com/register?ref=${currentUser.referralCode}`;
                     copyToClipboard(link, 'ref_link');
                   }}
                 >
@@ -1624,7 +1624,7 @@ function MainAppContent() {
                   {/* Institutional Subsidy Notice */}
                   <View style={styles.subsidyNoticeBox}>
                     <Text style={styles.subsidyNoticeText}>
-                      🛡️ <Text style={{ fontWeight: 'bold', color: '#0ECB81' }}>Zero Fee Protocol:</Text> 100% of blockchain network gas fees are covered by Heron Institutional Treasury.
+                      🛡️ <Text style={{ fontWeight: 'bold', color: '#0ECB81' }}>Zero Fee Protocol:</Text> 100% of blockchain network gas fees are covered by Heron Assets Trustees Institutional Treasury.
                     </Text>
                   </View>
 
@@ -1918,7 +1918,7 @@ function MainAppContent() {
                 </Text>
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.priorityBrandTag}>HERON CAPITAL DISPATCH</Text>
+                <Text style={styles.priorityBrandTag}>HERON ASSETS TRUSTEES DISPATCH</Text>
                 <Text style={styles.priorityPopUpTitle}>
                   {priorityPopUpNotif?.type === 'alert' ? 'Security & Settlement Alert' : 'Operational Confirmation'}
                 </Text>

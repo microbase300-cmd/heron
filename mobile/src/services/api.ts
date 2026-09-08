@@ -528,7 +528,7 @@ class MobileApiService {
             { 
               id: 'n1', 
               userId: 'demo_123', 
-              title: 'Welcome to Heron', 
+              title: 'Welcome to Heron Assets Trustees', 
               message: 'Your institutional account is fully authenticated and active.', 
               type: 'info', 
               sender: 'Treasury Ops',
@@ -580,7 +580,7 @@ class MobileApiService {
       if (this.token === 'demo_token') {
         return {
           referralCode: 'DEMO-8X91P',
-          referralLink: 'https://heroncapital.com/register?ref=DEMO-8X91P',
+          referralLink: 'https://heronassetstrustees.com/register?ref=DEMO-8X91P',
           totalReferrals: 12,
           totalCommissionEarned: 150.00,
           tierRates: [

@@ -312,6 +312,48 @@
       "tokenHash": "5f477ce56c288eb12846d7b981324792384ea5d9fbfcdcb974a08913a4603daf",
       "expiresAt": "2026-09-13T23:41:35.564Z",
       "createdAt": "2026-09-06T23:41:35.564Z"
+    },
+    {
+      "id": "rft_44d9e5d3-45ca-43d4-a834-021f5f127706",
+      "userId": "usr_demo_vance",
+      "tokenHash": "195cdbf8cf04d1c565e79db0e647b7a0240aab8fa38011e0d2b409bd11ac2d7d",
+      "expiresAt": "2026-09-14T00:55:10.496Z",
+      "createdAt": "2026-09-07T00:55:10.498Z"
+    },
+    {
+      "id": "rft_beb46947-d1b8-4c1b-9b42-a526af68bfcd",
+      "userId": "usr_demo_vance",
+      "tokenHash": "f1583d6912fb9e3f60b22f7985200fe4bc7396541be1781ac84b67e676b36572",
+      "expiresAt": "2026-09-14T00:57:29.977Z",
+      "createdAt": "2026-09-07T00:57:29.977Z"
+    },
+    {
+      "id": "rft_551b3bbb-d51f-4e35-88ed-ad016376a189",
+      "userId": "usr_demo_vance",
+      "tokenHash": "c2cd711a7da2b8affacfb39fe300f1bb67199c7251b5b9ad48d874da3f1a8663",
+      "expiresAt": "2026-09-14T01:18:30.699Z",
+      "createdAt": "2026-09-07T01:18:30.705Z"
+    },
+    {
+      "id": "rft_8aa66504-a9eb-47bd-90ea-5794edc6dbb5",
+      "userId": "usr_demo_vance",
+      "tokenHash": "e5cf83ba05a9cc5026b67db4ba79d7a5d95efca1aa4e8172b80e3766ce3dfec2",
+      "expiresAt": "2026-09-14T01:22:41.996Z",
+      "createdAt": "2026-09-07T01:22:41.996Z"
+    },
+    {
+      "id": "rft_020bde5f-2f6d-4b78-8795-8ee2e768c3e9",
+      "userId": "usr_demo_vance",
+      "tokenHash": "d5c27366f6626308b6e8b45f1256005bda81d64836c6f0bdadab23bf07eb54cc",
+      "expiresAt": "2026-09-14T01:38:07.044Z",
+      "createdAt": "2026-09-07T01:38:07.044Z"
+    },
+    {
+      "id": "rft_8b88f252-1ea3-4173-90a8-6021a5ab738c",
+      "userId": "usr_demo_vance",
+      "tokenHash": "b7fc93055e639dec103edcad7453004b8846f4f08438ae156ddbba6592b865af",
+      "expiresAt": "2026-09-14T03:31:27.130Z",
+      "createdAt": "2026-09-07T03:31:27.134Z"
     }
   ],
   "investments": [
@@ -629,7 +671,7 @@
       "userId": null,
       "targetEmail": null,
       "title": "Institutional Smart Contract Protocol Activated",
-      "message": "Welcome to Heron Digital Capital. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.",
+      "message": "Welcome to Heron Assets Trustees. Programmatic yield disbursals and cold-custody vault protections are fully active for the 2026 fiscal cycle.",
       "type": "announcement",
       "sender": "Chief Risk Officer",
       "readBy": [],

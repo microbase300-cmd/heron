@@ -39,11 +39,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess }) => {
         <div className="text-center mb-8">
           <img
             src="/heron_logo.jpg"
-            alt="Heron Digital Capital"
+            alt="Heron Assets Trustees"
             className="inline-block w-16 h-16 rounded-full object-cover border border-[#F0B90B]/50 mb-4 shadow-xl shadow-[#F0B90B]/20"
           />
           <h1 className="font-sans text-2xl font-extrabold text-[#EAECEF] tracking-tight">
-            HERON DIGITAL CAPITAL
+            HERON ASSETS TRUSTEES
           </h1>
           <p className="text-xs font-mono text-[#F0B90B] uppercase tracking-widest mt-1">
             Executive Operations & Settlement Portal
