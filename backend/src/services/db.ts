@@ -173,26 +173,7 @@ class DatabaseService {
       adminUser.passwordHash = defaultPasswordHash;
     }
 
-    // 2. Ensure primary investor exists
-    const primaryEmail = 'alex.vance@vanceholdings.com';
-    let primaryUser = schema.users.find(u => u.email.toLowerCase() === primaryEmail);
-    if (!primaryUser) {
-      primaryUser = {
-        id: 'usr_investor_vance',
-        email: primaryEmail,
-        name: 'Alexander Vance',
-        passwordHash: defaultPasswordHash,
-        role: 'user',
-        balance: 45000.00,
-        referralCode: 'HERON-VANCE',
-        referredBy: null,
-        status: 'active',
-        createdAt: new Date().toISOString()
-      };
-      schema.users.push(primaryUser);
-    }
-
-    // 3. Ensure all users have roles and statuses
+    // 2. Ensure all users have roles and statuses
     schema.users.forEach(u => {
       if (!u.role) u.role = 'user';
       if (!u.status) u.status = 'active';
@@ -259,98 +240,9 @@ class DatabaseService {
       }
     });
 
-    // 8. Ensure KYC Submissions initialized
-    if (!schema.kycSubmissions || schema.kycSubmissions.length === 0) {
-      const now = Date.now();
-      schema.kycSubmissions = [
-        {
-          id: 'kyc_sub_demo_01',
-          userId: 'usr_investor_001',
-          userEmail: 'investor@heronassets.com',
-          userName: 'Dr. Michael Vance',
-          userUid: 'HAT-89240182',
-          documentType: 'passport',
-          issuingCountry: 'USA',
-          documentNumber: 'P89240182',
-          fullName: 'MICHAEL VANCE',
-          dob: '1984-06-22',
-          expiryDate: '2032-11-15',
-          frontDocumentUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&auto=format&fit=crop&q=80',
-          backDocumentUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=80',
-          selfieUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80',
-          status: 'verified',
-          adminNotes: 'Automated OCR verification passed with 98.6% confidence. Security threads and ICAO MRZ checksum verified.',
-          reviewedBy: 'Chief Compliance Officer',
-          reviewedAt: new Date(now - 86400000 * 5).toISOString(),
-          ocrResult: {
-            confidenceScore: 98.6,
-            documentType: 'passport',
-            extractedFullName: 'MICHAEL VANCE',
-            extractedDocumentNumber: 'P89240182',
-            extractedDob: '1984-06-22',
-            extractedExpiryDate: '2032-11-15',
-            extractedCountry: 'USA',
-            mrzDetected: true,
-            mrzChecksumValid: true,
-            mrzRawString: 'P<USAVANCE<<MICHAEL<<<<<<<<<<<<<<<<<<<<<<<<<\nP892401824USA8406225M3211158<<<<<<<<<<<<<<02',
-            faceDetected: true,
-            faceMatchScore: 97.4,
-            antiSpoofingPass: true,
-            tamperRiskLevel: 'LOW',
-            discrepancies: [
-              '✓ Extracted identity matches account profile (100% match)',
-              '✓ ICAO 9303 MRZ checksum verified with US Department of State algorithms',
-              '✓ Biometric facial comparison matches passport portrait (97.4% match)',
-              '✓ Document expiration valid until 2032'
-            ],
-            scannedAt: new Date(now - 86400000 * 5).toISOString()
-          },
-          submittedAt: new Date(now - 86400000 * 5).toISOString(),
-          updatedAt: new Date(now - 86400000 * 5).toISOString()
-        },
-        {
-          id: 'kyc_sub_demo_02',
-          userId: 'usr_downline_49201',
-          userEmail: 'clara.vance@genevacapital.ch',
-          userName: 'Clara Vance',
-          userUid: 'HAT-50912481',
-          documentType: 'national_id',
-          issuingCountry: 'CHE',
-          documentNumber: 'ID77281902',
-          fullName: 'CLARA VANCE',
-          dob: '1991-03-14',
-          expiryDate: '2030-08-20',
-          frontDocumentUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80',
-          backDocumentUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=80',
-          selfieUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-          status: 'pending',
-          ocrResult: {
-            confidenceScore: 96.2,
-            documentType: 'national_id',
-            extractedFullName: 'CLARA VANCE',
-            extractedDocumentNumber: 'ID77281902',
-            extractedDob: '1991-03-14',
-            extractedExpiryDate: '2030-08-20',
-            extractedCountry: 'CHE',
-            mrzDetected: true,
-            mrzChecksumValid: true,
-            mrzRawString: 'IDCHEID77281902<<<<<<<<<<<<<<<\n9103144F3008208CHE<<<<<<<<<<<6\nVANCE<<CLARA<<<<<<<<<<<<<<<<<<<<<<<<<<<',
-            faceDetected: true,
-            faceMatchScore: 95.8,
-            antiSpoofingPass: true,
-            tamperRiskLevel: 'LOW',
-            discrepancies: [
-              '✓ Extracted name matches registered account (100% match)',
-              '✓ Swiss Cantonal Identity hologram detected',
-              '✓ Credential valid until 2030-08-20',
-              'ℹ Awaiting Compliance Officer Clearance'
-            ],
-            scannedAt: new Date(now - 3600000 * 3).toISOString()
-          },
-          submittedAt: new Date(now - 3600000 * 3).toISOString(),
-          updatedAt: new Date(now - 3600000 * 3).toISOString()
-        }
-      ];
+    // 7. Ensure KYC Submissions initialized
+    if (!schema.kycSubmissions) {
+      schema.kycSubmissions = [];
     }
 
     this.save(schema);
@@ -387,142 +279,12 @@ class DatabaseService {
       createdAt: new Date(now - 86400000 * 10).toISOString()
     };
 
-    const initialInvestor: User = {
-      id: 'usr_investor_001',
-      email: 'investor@heronassets.com',
-      name: 'Alexander Sterling',
-      passwordHash: initialPasswordHash,
-      role: 'user',
-      balance: 14500.00,
-      referralCode: 'HERON-8821',
-      referredBy: null,
-      status: 'active',
-      createdAt: new Date(now - 86400000 * 5).toISOString()
-    };
-
-    const referrerUser: User = {
-      id: 'usr_downline_49201',
-      email: 'clara.vance@genevacapital.ch',
-      name: 'Clara Vance',
-      passwordHash: initialPasswordHash,
-      role: 'user',
-      balance: 3200.00,
-      referralCode: 'CLARA-9921',
-      referredBy: 'HERON-8821',
-      status: 'active',
-      createdAt: new Date(now - 86400000 * 3).toISOString()
-    };
-
-    const activeInvestment: Investment = {
-      id: 'inv_prem_9381',
-      userId: initialInvestor.id,
-      planId: 'premium',
-      planName: 'Premium Plan',
-      amount: 8000.00,
-      rate: 0.155,
-      durationHours: 72,
-      expectedProfit: 1240.00,
-      totalPayout: 9240.00,
-      status: 'active',
-      startedAt: new Date(now - 3600000 * 20).toISOString(),
-      expiresAt: new Date(now + 3600000 * 52).toISOString(),
-      completedAt: null
-    };
-
-    const completedInvestment: Investment = {
-      id: 'inv_std_4120',
-      userId: initialInvestor.id,
-      planId: 'standard',
-      planName: 'Standard Plan',
-      amount: 3000.00,
-      rate: 0.095,
-      durationHours: 48,
-      expectedProfit: 285.00,
-      totalPayout: 3285.00,
-      status: 'completed',
-      startedAt: new Date(now - 3600000 * 50).toISOString(),
-      expiresAt: new Date(now - 3600000 * 2).toISOString(),
-      completedAt: new Date(now - 3600000 * 2).toISOString()
-    };
-
-    const transactions: Transaction[] = [
-      {
-        id: 'tx_dep_109284',
-        userId: initialInvestor.id,
-        type: 'deposit',
-        amount: 25000.00,
-        asset: 'USDT',
-        status: 'completed',
-        txHash: '0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a',
-        note: 'Deposit via TRC-20 Smart Contract',
-        createdAt: new Date(now - 86400000 * 4).toISOString()
-      },
-      {
-        id: 'tx_inv_lock_01',
-        userId: initialInvestor.id,
-        type: 'investment_lock',
-        amount: 3000.00,
-        asset: 'USD',
-        status: 'completed',
-        txHash: '0x10b741ad5c2901a8efbc01289547aa2810a9bf4910cf91a823bf902840182741',
-        note: 'Allocated to Standard Plan (48h)',
-        createdAt: new Date(now - 3600000 * 50).toISOString()
-      },
-      {
-        id: 'tx_yield_01',
-        userId: initialInvestor.id,
-        type: 'yield_payout',
-        amount: 3285.00,
-        asset: 'USD',
-        status: 'completed',
-        txHash: '0x991a0c88ef290bca2957110195ab47c819a82bbef49910cf91a823bf90184719',
-        note: 'Standard Plan Matured: Principal $3,000 + Yield $285',
-        createdAt: new Date(now - 3600000 * 2).toISOString()
-      },
-      {
-        id: 'tx_inv_lock_02',
-        userId: initialInvestor.id,
-        type: 'investment_lock',
-        amount: 8000.00,
-        asset: 'USD',
-        status: 'completed',
-        txHash: '0x33cf81b10a2894ca91028374928174aa910cbe88102819cf8192801928472918',
-        note: 'Allocated to Premium Plan (72h)',
-        createdAt: new Date(now - 3600000 * 20).toISOString()
-      },
-      {
-        id: 'tx_ref_01',
-        userId: initialInvestor.id,
-        type: 'referral_bonus',
-        amount: 320.00,
-        asset: 'USD',
-        status: 'completed',
-        txHash: '0x77ab102948ca9182740182739481726354819201948271049281740294817263',
-        note: 'Referral Bonus: Clara Vance invested in Standard Plan (16% of $2,000)',
-        createdAt: new Date(now - 86400000 * 2).toISOString()
-      }
-    ];
-
-    const referralCommissions: ReferralCommission[] = [
-      {
-        id: 'ref_comm_101',
-        referrerId: initialInvestor.id,
-        referredUserId: referrerUser.id,
-        referredUserEmail: referrerUser.email,
-        planId: 'standard',
-        depositAmount: 2000.00,
-        rate: 0.16,
-        commissionAmount: 320.00,
-        createdAt: new Date(now - 86400000 * 2).toISOString()
-      }
-    ];
-
     return {
-      users: [adminUser, initialInvestor, referrerUser],
+      users: [adminUser],
       refreshTokens: [],
-      investments: [activeInvestment, completedInvestment],
-      transactions,
-      referralCommissions,
+      investments: [],
+      transactions: [],
+      referralCommissions: [],
       planConfigs: PLANS,
       notifications: [
         {

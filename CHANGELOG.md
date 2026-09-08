@@ -19,6 +19,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
 
+## [1.8.0] - 2026-09-08
+### Production Transition & Full Error Propagation
+- **Removal of Demo Accounts, Mock Fallbacks, and Simulation Modes (`mobile/`, `dashboard/`, `backend/`)**:
+  - **Mobile Client (`mobile/src/services/api.ts`)**:
+    - Purged `demo_123`, `demo_new`, and `demo_token` authentication fallbacks. Unreachable servers, invalid credentials, or network drops now propagate genuine, human-readable errors (`Cannot reach server...` or exact server responses) directly to UI alert dialogs rather than silently activating mock mode.
+    - Removed offline fallback for `sendRegistrationOtp` (which previously returned synthetic `devOtp: '123456'`).
+    - Stripped all `if (this.token === 'demo_token')` blocks across `getWalletSummary()`, `submitDeposit()`, `requestWithdrawalOtp()`, `submitWithdrawal()`, `getPlans()`, `getMyInvestments()`, `createInvestment()`, `getNotifications()`, `getReferrals()`, and `getTransactions()`.
+    - Removed synthetic success catches in `updateProfile()`, `changePassword()`, `addWhitelistedWallet()`, and `deleteWhitelistedWallet()`, ensuring all state updates reflect actual server persistence.
+    - Cleaned up `getSecurityLogs()` and `registerPushToken()` to use direct backend API endpoints.
+  - **Web Dashboard (`dashboard/src/services/api.ts`, `dashboard/src/components/ClientVerificationPortal.tsx`)**:
+    - Removed demo simulation fallbacks in `updateProfile()`, `changePassword()`, `addWhitelistedWallet()`, and `deleteWhitelistedWallet()`.
+    - Removed `loadDemoDocuments()` and the "Fill Demo Sample Data" button from `ClientVerificationPortal.tsx`, enforcing real identity documents and live biometric camera capture.
+  - **Backend Database Sanitization (`backend/src/services/db.ts`, `backend/data/db.json`)**:
+    - Removed auto-seeding of mock primary investor (`usr_investor_vance` / `alex.vance@vanceholdings.com`) and mock KYC submissions (`kyc_sub_demo_01`, `kyc_sub_demo_02`) from `ensureDefaults()`.
+    - Refactored `seedInitial()` to strictly seed only the institutional administrator (`admin@heronassets.com`), leaving all investment, transaction, and KYC submission tables clean.
+    - Sanitized `backend/data/db.json`: Purged demo accounts `usr_demo_882194` (Alexander Sterling), `usr_demo_vance` (Alexander Vance), and `usr_downline_49201` (Clara Vance), along with all associated transactions, investments, and notifications, while preserving active live user accounts (`admin@heronassets.com`, `microbase300@gmail.com`, `microbase1221@gmail.com`, `joseph@gmail.com`, etc.).
+
 ## [1.7.1] - 2026-09-08
 ### Added & Enhanced
 - **Live Biometric Facial Capture with Anti-Bot Liveness Detection & Global World Countries Selector (`dashboard/`, `backend/`, `admin/`)**:

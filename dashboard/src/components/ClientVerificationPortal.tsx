@@ -116,26 +116,6 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
     }
   };
 
-  // Helper to load realistic demo mock sample documents
-  const loadDemoDocuments = () => {
-    setFullName(user.name || 'Alexander Wright');
-    setDocumentNumber(documentType === 'passport' ? 'P883920194' : 'DL94028105');
-    setIssuingCountry('United States');
-    setDob('1988-06-15');
-    setExpiryDate('2031-10-20');
-    setFrontDocUrl('https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=60');
-    setBackDocUrl(documentType !== 'passport' ? 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=60' : '');
-    setSelfieUrl('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=60');
-    setLivenessDetails({
-      botDetected: false,
-      turnLeftPassed: true,
-      turnRightPassed: true,
-      smilePassed: true,
-      capturedLive: true,
-      confidenceScore: 99.4
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -379,25 +359,14 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
       {/* Submission Form */}
       {showForm && (
         <form onSubmit={handleSubmit} className="glass-panel p-6 sm:p-8 rounded-2xl border border-[#2B313A] bg-[#1E2329] space-y-6 animate-fadeIn">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2B313A] pb-4">
-            <div>
-              <h3 className="text-sm font-mono font-bold uppercase text-[#EAECEF] tracking-wide flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#F0B90B]" />
-                Identity Document & Biometric Submission
-              </h3>
-              <p className="text-xs text-[#848E9C] font-mono mt-0.5">
-                Processed with algorithmic OCR extraction and anti-spoofing facial verification.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={loadDemoDocuments}
-              className="px-3 py-1.5 rounded-lg bg-[#F0B90B]/10 hover:bg-[#F0B90B]/20 text-[#F0B90B] border border-[#F0B90B]/30 text-xs font-mono font-bold transition-all flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Fill Demo Sample Data
-            </button>
+          <div className="border-b border-[#2B313A] pb-4">
+            <h3 className="text-sm font-mono font-bold uppercase text-[#EAECEF] tracking-wide flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#F0B90B]" />
+              Identity Document & Biometric Submission
+            </h3>
+            <p className="text-xs text-[#848E9C] font-mono mt-0.5">
+              Processed with algorithmic OCR extraction and anti-spoofing facial verification.
+            </p>
           </div>
 
           {errorMessage && (

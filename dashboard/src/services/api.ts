@@ -197,100 +197,35 @@ class ApiService {
 
   // Profile & Security
   async updateProfile(updates: Partial<User>): Promise<{ message: string; user: User }> {
-    try {
-      return await this.request<{ message: string; user: User }>('/auth/profile', {
-        method: 'PUT',
-        body: JSON.stringify(updates)
-      });
-    } catch {
-      // Local demo fallback
-      return {
-        message: 'Profile configuration updated locally.',
-        user: updates as User
-      };
-    }
+    return this.request<{ message: string; user: User }>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
-    try {
-      return await this.request<{ message: string }>('/auth/change-password', {
-        method: 'PUT',
-        body: JSON.stringify({ currentPassword, newPassword })
-      });
-    } catch (e: any) {
-      if (this.getToken() === 'demo_token' || !this.getToken()) {
-        return { message: 'Security password changed successfully (Simulation Mode).' };
-      }
-      throw e;
-    }
+    return this.request<{ message: string }>('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
   }
 
   async addWhitelistedWallet(wallet: { asset: string; network: string; address: string; label: string }): Promise<{ message: string; wallet: WhitelistedWallet }> {
-    try {
-      return await this.request<{ message: string; wallet: WhitelistedWallet }>('/auth/whitelist-wallet', {
-        method: 'POST',
-        body: JSON.stringify(wallet)
-      });
-    } catch {
-      const mockWallet: WhitelistedWallet = {
-        id: `w_${Date.now()}`,
-        ...wallet,
-        addedAt: new Date().toISOString()
-      };
-      return {
-        message: 'Withdrawal destination whitelisted successfully (Simulation).',
-        wallet: mockWallet
-      };
-    }
+    return this.request<{ message: string; wallet: WhitelistedWallet }>('/auth/whitelist-wallet', {
+      method: 'POST',
+      body: JSON.stringify(wallet)
+    });
   }
 
   async deleteWhitelistedWallet(id: string): Promise<{ message: string }> {
-    try {
-      return await this.request<{ message: string }>(`/auth/whitelist-wallet/${id}`, {
-        method: 'DELETE'
-      });
-    } catch {
-      return { message: 'Whitelisted address deleted (Simulation).' };
-    }
+    return this.request<{ message: string }>(`/auth/whitelist-wallet/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   async getSecurityLogs(): Promise<{ logs: SecurityLogItem[] }> {
-    const fallbackLogs: SecurityLogItem[] = [
-      {
-        id: 'sec_1',
-        timestamp: new Date().toISOString(),
-        ip: '197.210.84.***',
-        device: 'Windows 11 • Chrome 128',
-        location: 'New York, US [Cloudflare Edge]',
-        status: 'Authorized'
-      },
-      {
-        id: 'sec_2',
-        timestamp: new Date(Date.now() - 3600000 * 8).toISOString(),
-        ip: '197.210.84.***',
-        device: 'Android 15 • Mobile App',
-        location: 'New York, US [Mobile Node]',
-        status: 'Authorized'
-      },
-      {
-        id: 'sec_3',
-        timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
-        ip: '104.28.19.***',
-        device: 'macOS Sonoma • Safari 17',
-        location: 'London, UK [Secured Gateway]',
-        status: 'Authorized'
-      }
-    ];
-
-    try {
-      const res = await this.request<{ logs: SecurityLogItem[] }>('/auth/security-logs');
-      if (res && res.logs && res.logs.length > 0) {
-        return res;
-      }
-      return { logs: fallbackLogs };
-    } catch {
-      return { logs: fallbackLogs };
-    }
+    const res = await this.request<{ logs: SecurityLogItem[] }>('/auth/security-logs');
+    return { logs: res?.logs || [] };
   }
 
   async getExchangeRates(): Promise<{ base: string; rates: Record<string, number>; lastUpdated: string }> {
