@@ -5,10 +5,11 @@ import {
   AlertTriangle,
   RefreshCw,
   X,
-  Eye,
-  EyeOff,
   ArrowLeft,
   ArrowRight,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ShieldAlert,
   Lock,
   Sparkles,
@@ -22,7 +23,8 @@ export interface LivenessDetails {
   botDetected: boolean;
   turnLeftPassed: boolean;
   turnRightPassed: boolean;
-  blinkPassed: boolean;
+  nodPassed: boolean;
+  blinkPassed?: boolean;
   smilePassed?: boolean;
   capturedLive: boolean;
   confidenceScore: number;
@@ -40,7 +42,7 @@ type LivenessStep =
   | 'center'
   | 'turn_left'
   | 'turn_right'
-  | 'blink'
+  | 'head_nod'
   | 'verifying'
   | 'completed'
   | 'error';
@@ -84,8 +86,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const [yawAngle, setYawAngle] = useState<number>(0);
   const [leftTurnProgress, setLeftTurnProgress] = useState<number>(0);
   const [rightTurnProgress, setRightTurnProgress] = useState<number>(0);
-  const [blinkProgress, setBlinkProgress] = useState<number>(0);
-  const [isBlinking, setIsBlinking] = useState<boolean>(false);
+  const [nodProgress, setNodProgress] = useState<number>(0);
+  const [nodPhase, setNodPhase] = useState<'prompt' | 'down' | 'up' | 'verified'>('prompt');
   const [isFaceCentered, setIsFaceCentered] = useState<boolean>(false);
   const [stepPassedToast, setStepPassedToast] = useState<string | null>(null);
 
@@ -104,11 +106,12 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const smoothYawRef = useRef<number>(0);
   const smoothLeftRef = useRef<number>(0);
   const smoothRightRef = useRef<number>(0);
+  const smoothNodRef = useRef<number>(0);
   const stepHoldStartRef = useRef<number | null>(null);
   const currentStepRef = useRef<LivenessStep>('initializing');
   const turnLeftPassedRef = useRef(false);
   const turnRightPassedRef = useRef(false);
-  const blinkPassedRef = useRef(false);
+  const nodPassedRef = useRef(false);
 
   // Calibrated face baseline for adaptive sensitivity
   const calibratedRef = useRef<{
@@ -117,14 +120,13 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     featureX: number;
     fw: number;
     fh: number;
-    eyeEnergy: number;
   } | null>(null);
 
-  // Blink state machine
-  const blinkHistoryRef = useRef<{
-    sawClosed: boolean;
-    closedTimestamp: number;
-  }>({ sawClosed: false, closedTimestamp: 0 });
+  // Head nod state machine (Nod Down -> Raise Up cycle)
+  const nodHistoryRef = useRef<{
+    sawNodDown: boolean;
+    downTimestamp: number;
+  }>({ sawNodDown: false, downTimestamp: 0 });
 
   useEffect(() => {
     isOpenRef.current = isOpen;
@@ -177,8 +179,15 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     const video = videoRef.current;
     if (video && streamRef.current && video.readyState >= 2) {
       const canvas = canvasRef.current || document.createElement('canvas');
-      const w = video.videoWidth || 640;
-      const h = video.videoHeight || 480;
+      const rawW = video.videoWidth || 640;
+      const rawH = video.videoHeight || 480;
+      const maxDim = 800;
+      let w = rawW;
+      let h = rawH;
+      if (w > maxDim) {
+        h = Math.round((h * maxDim) / w);
+        w = maxDim;
+      }
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
@@ -187,7 +196,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         ctx.translate(w, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         setCapturedImage(dataUrl);
         currentStepRef.current = 'completed';
         setStep('completed');
@@ -311,12 +320,19 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           const fh = Math.max(12, maxY - minY);
           const fcX = (minX + maxX) / 2;
 
-          // 2. Horizontal Yaw (Head Turn Left / Right)
-          // Upper-mid face band: eyes & nose region
+          // 1. Anti-Motion / Global Swipe Detection
+          const sampledPixels = (W / 2) * (H / 2);
+          const avgLumaDiff = prevLuma ? (diffSum / sampledPixels) : 0;
+          const isCameraSwiping = avgLumaDiff > 26;
+
+          // 2. Pure Rotational Head Yaw (Independent of screen translation)
+          // Upper-mid face band: eyes & nose bridge
           const bandTop = Math.floor(minY + 0.20 * fh);
           const bandBottom = Math.floor(minY + 0.65 * fh);
           let weightedGradSumX = 0;
           let totalGrad = 0;
+          let leftSkin = 0;
+          let rightSkin = 0;
 
           for (let y = bandTop; y <= bandBottom; y += 2) {
             if (y < 1 || y >= H - 1) continue;
@@ -330,46 +346,33 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 weightedGradSumX += gx * (x - fcX);
                 totalGrad += gx;
               }
+
+              // Skin symmetry check between left and right halves
+              const idx = (y * W + x) * 4;
+              const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+              if (r > 40 && g > 25 && b > 15 && r > g && r > b && Math.abs(r - g) > 8) {
+                if (x < fcX) leftSkin++;
+                else rightSkin++;
+              }
             }
           }
 
-          const rawYawRatio = totalGrad > 0 ? weightedGradSumX / (totalGrad * (fw * 0.35)) : 0;
-          const clampedYaw = Math.max(-1, Math.min(1, rawYawRatio));
+          // True yaw is facial internal feature centroid relative to fcX, normalized by face width
+          const rawYawRatio = totalGrad > 0 ? (weightedGradSumX / (totalGrad * (fw * 0.35))) : 0;
+          const cheekAsymmetry = (rightSkin - leftSkin) / Math.max(10, (leftSkin + rightSkin));
+          // When turning head left: features shift left (rawYawRatio < 0), right cheek expands (cheekAsymmetry > 0)
+          // Combining both makes it immune to laptop panning/swiping:
+          const combinedYaw = rawYawRatio * 0.65 - cheekAsymmetry * 0.35;
+          const clampedYaw = Math.max(-1, Math.min(1, combinedYaw));
           smoothYawRef.current = smoothYawRef.current * 0.65 + clampedYaw * 0.35;
-          const currentYawDeg = Math.round(smoothYawRef.current * 42);
+          const currentYawDeg = Math.round(smoothYawRef.current * 40);
           setYawAngle(currentYawDeg);
 
-          // 3. Eye Socket Zone & Vertical Edge Energy (Ocular Blink Analysis)
-          const eyeTop = Math.floor(minY + 0.20 * fh);
-          const eyeBottom = Math.floor(minY + 0.44 * fh);
-          const eyeLeft = Math.floor(minX + 0.16 * fw);
-          const eyeRight = Math.floor(maxX - 0.16 * fw);
-
-          let eyeVerticalEnergy = 0;
-          let eyePixelCount = 0;
-
-          for (let y = eyeTop; y <= eyeBottom; y += 2) {
-            if (y < 1 || y >= H - 1) continue;
-            for (let x = eyeLeft; x <= eyeRight; x += 2) {
-              const idxUp = ((y - 1) * W + x) * 4;
-              const idxDown = ((y + 1) * W + x) * 4;
-              const lUp = (data[idxUp] * 77 + data[idxUp + 1] * 150 + data[idxUp + 2] * 29) >> 8;
-              const lDown = (data[idxDown] * 77 + data[idxDown + 1] * 150 + data[idxDown + 2] * 29) >> 8;
-              const gy = Math.abs(lDown - lUp);
-              if (gy > 6) {
-                eyeVerticalEnergy += gy;
-              }
-              eyePixelCount++;
-            }
-          }
-
-          const curEyeEnergy = eyePixelCount > 0 ? eyeVerticalEnergy / eyePixelCount : 10;
-
-          // 4. Interactive Step Progression (Physical Action Verification)
+          // 3. Interactive Step Progression (Physical Action Verification)
           const curStep = currentStepRef.current;
 
           if (curStep === 'center') {
-            if (centered && Math.abs(currentYawDeg) <= 9) {
+            if (centered && Math.abs(currentYawDeg) <= 8 && !isCameraSwiping) {
               if (!stepHoldStartRef.current) {
                 stepHoldStartRef.current = Date.now();
               } else if (Date.now() - stepHoldStartRef.current > 450) {
@@ -380,7 +383,6 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   featureX: smoothYawRef.current,
                   fw,
                   fh,
-                  eyeEnergy: Math.max(2, curEyeEnergy),
                 };
                 playBiometricChime(523.25); // C5
                 setStepPassedToast('✓ Face Position Calibrated');
@@ -393,99 +395,136 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               }
             } else {
               stepHoldStartRef.current = null;
-              if (!centered) {
+              if (isCameraSwiping) {
+                setBotDetectorStatus('Step 1/4: Camera moving - please hold your device steady.');
+              } else if (!centered) {
                 setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
               } else {
                 setBotDetectorStatus('Step 1/4: Aligning... Please look straight at the camera.');
               }
             }
           } else if (curStep === 'turn_left') {
-            const baseFeatureX = calibratedRef.current ? calibratedRef.current.featureX : 0;
-            const leftDelta = baseFeatureX - smoothYawRef.current;
-            const cxDelta = calibratedRef.current ? (calibratedRef.current.cx - cx) : 0;
-            // Turning head left increases leftDelta; scale so ~10-12° turn reaches 100%
-            const rawLeftIndex = Math.max(0, leftDelta * 3.6 + cxDelta * 1.8);
-            const targetLeftProgress = Math.min(100, Math.max(0, Math.round(rawLeftIndex * 100)));
-            smoothLeftRef.current = smoothLeftRef.current * 0.65 + targetLeftProgress * 0.35;
-            const curLeftProgress = Math.round(smoothLeftRef.current);
-            setLeftTurnProgress(curLeftProgress);
+            // Face must remain reasonably inside the target boundary
+            const inFrame = Math.abs(cx - 0.50) < 0.22 && Math.abs(cy - 0.48) < 0.22;
 
-            if (curLeftProgress >= 90 || currentYawDeg <= -12) {
-              if (!stepHoldStartRef.current) {
-                stepHoldStartRef.current = Date.now();
-              } else if (Date.now() - stepHoldStartRef.current > 320) {
-                // Left turn completed
-                turnLeftPassedRef.current = true;
-                playBiometricChime(659.25); // E5
-                setStepPassedToast('✓ Left Turn Verified');
-                setTimeout(() => setStepPassedToast(null), 1200);
-                currentStepRef.current = 'turn_right';
-                setStep('turn_right');
-                setProgress(65);
-                setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉');
-                stepHoldStartRef.current = null;
+            if (!inFrame || isCameraSwiping) {
+              stepHoldStartRef.current = null;
+              if (isCameraSwiping) {
+                setBotDetectorStatus('Device movement detected: Please rotate your head, not your laptop.');
+              } else {
+                setBotDetectorStatus('Keep your face inside the target frame while turning left 👈');
               }
             } else {
-              stepHoldStartRef.current = null;
-              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}%)`);
+              const baseYaw = calibratedRef.current ? calibratedRef.current.featureX : 0;
+              // Pure rotational delta relative to calibrated baseline (no lateral translation)
+              const leftRotDelta = baseYaw - smoothYawRef.current;
+              // Turning head left requires ~12-14 degrees to reach 100%
+              const rawLeftProgress = Math.min(100, Math.max(0, Math.round((leftRotDelta / 0.22) * 100)));
+              smoothLeftRef.current = smoothLeftRef.current * 0.65 + rawLeftProgress * 0.35;
+              const curLeftProgress = Math.round(smoothLeftRef.current);
+              setLeftTurnProgress(curLeftProgress);
+
+              // Require reaching >= 95% AND holding steady for 450ms before acoustic chime & step advance
+              if (curLeftProgress >= 95) {
+                if (!stepHoldStartRef.current) {
+                  stepHoldStartRef.current = Date.now();
+                } else if (Date.now() - stepHoldStartRef.current > 450) {
+                  // Left turn verified
+                  turnLeftPassedRef.current = true;
+                  playBiometricChime(659.25); // E5
+                  setStepPassedToast('✓ Left Turn Verified');
+                  setTimeout(() => setStepPassedToast(null), 1200);
+                  currentStepRef.current = 'turn_right';
+                  setStep('turn_right');
+                  setProgress(65);
+                  setBotDetectorStatus('Step 3/4: Turn your head slowly to the RIGHT 👉');
+                  stepHoldStartRef.current = null;
+                }
+              } else {
+                stepHoldStartRef.current = null;
+                setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}%)`);
+              }
             }
           } else if (curStep === 'turn_right') {
-            const baseFeatureX = calibratedRef.current ? calibratedRef.current.featureX : 0;
-            const rightDelta = smoothYawRef.current - baseFeatureX;
-            const cxDelta = calibratedRef.current ? (cx - calibratedRef.current.cx) : 0;
-            // Turning head right increases rightDelta; scale so ~10-12° turn reaches 100%
-            const rawRightIndex = Math.max(0, rightDelta * 3.6 + cxDelta * 1.8);
-            const targetRightProgress = Math.min(100, Math.max(0, Math.round(rawRightIndex * 100)));
-            smoothRightRef.current = smoothRightRef.current * 0.65 + targetRightProgress * 0.35;
-            const curRightProgress = Math.round(smoothRightRef.current);
-            setRightTurnProgress(curRightProgress);
+            const inFrame = Math.abs(cx - 0.50) < 0.22 && Math.abs(cy - 0.48) < 0.22;
 
-            if (curRightProgress >= 90 || currentYawDeg >= 12) {
-              if (!stepHoldStartRef.current) {
-                stepHoldStartRef.current = Date.now();
-              } else if (Date.now() - stepHoldStartRef.current > 320) {
-                // Right turn completed
-                turnRightPassedRef.current = true;
-                playBiometricChime(783.99); // G5
-                setStepPassedToast('✓ Right Turn Verified');
-                setTimeout(() => setStepPassedToast(null), 1200);
-                currentStepRef.current = 'blink';
-                setStep('blink');
-                setProgress(85);
-                setBotDetectorStatus('Step 4/4: Dynamic Liveness Check: Blink your eyes naturally 😉');
-                stepHoldStartRef.current = null;
-                blinkHistoryRef.current = { sawClosed: false, closedTimestamp: 0 };
-              }
-            } else {
+            if (!inFrame || isCameraSwiping) {
               stepHoldStartRef.current = null;
-              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}%)`);
-            }
-          } else if (curStep === 'blink') {
-            const baseEyeEnergy = calibratedRef.current ? calibratedRef.current.eyeEnergy : 12;
-            const energyRatio = baseEyeEnergy > 0 ? (curEyeEnergy / baseEyeEnergy) : 1;
-
-            // When eyelids close, vertical edge gradient drops significantly
-            const eyesClosed = energyRatio < 0.68;
-
-            if (eyesClosed) {
-              setIsBlinking(true);
-              setBlinkProgress(65);
-              if (!blinkHistoryRef.current.sawClosed) {
-                blinkHistoryRef.current.sawClosed = true;
-                blinkHistoryRef.current.closedTimestamp = Date.now();
+              if (isCameraSwiping) {
+                setBotDetectorStatus('Device movement detected: Please rotate your head, not your laptop.');
+              } else {
+                setBotDetectorStatus('Keep your face inside the target frame while turning right 👉');
               }
             } else {
-              setIsBlinking(false);
-              // Eyes are open: check if they were previously closed within a blink timeframe
-              if (blinkHistoryRef.current.sawClosed) {
-                const duration = Date.now() - blinkHistoryRef.current.closedTimestamp;
-                // Natural blink or conscious eyelid closure duration between 100ms and 2200ms
-                if (duration >= 100 && duration <= 2200) {
-                  // Blink successfully verified!
-                  blinkPassedRef.current = true;
-                  setBlinkProgress(100);
+              const baseYaw = calibratedRef.current ? calibratedRef.current.featureX : 0;
+              const rightRotDelta = smoothYawRef.current - baseYaw;
+              const rawRightProgress = Math.min(100, Math.max(0, Math.round((rightRotDelta / 0.22) * 100)));
+              smoothRightRef.current = smoothRightRef.current * 0.65 + rawRightProgress * 0.35;
+              const curRightProgress = Math.round(smoothRightRef.current);
+              setRightTurnProgress(curRightProgress);
+
+              // Require reaching >= 95% AND holding steady for 450ms before acoustic chime & step advance
+              if (curRightProgress >= 95) {
+                if (!stepHoldStartRef.current) {
+                  stepHoldStartRef.current = Date.now();
+                } else if (Date.now() - stepHoldStartRef.current > 450) {
+                  // Right turn verified
+                  turnRightPassedRef.current = true;
+                  playBiometricChime(783.99); // G5
+                  setStepPassedToast('✓ Right Turn Verified');
+                  setTimeout(() => setStepPassedToast(null), 1200);
+                  currentStepRef.current = 'head_nod';
+                  setStep('head_nod');
+                  setProgress(85);
+                  setBotDetectorStatus('Step 4/4: Dynamic Liveness Check: Nod your head DOWN and UP slowly 👇👆');
+                  stepHoldStartRef.current = null;
+                  nodHistoryRef.current = { sawNodDown: false, downTimestamp: 0 };
+                  setNodProgress(0);
+                  setNodPhase('down');
+                }
+              } else {
+                stepHoldStartRef.current = null;
+                setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}%)`);
+              }
+            }
+          } else if (curStep === 'head_nod') {
+            const baseCy = calibratedRef.current ? calibratedRef.current.cy : 0.48;
+            // Downward pitch displacement
+            const pitchDown = cy - baseCy;
+
+            if (!nodHistoryRef.current.sawNodDown) {
+              // Phase 1: Tilting head down (0% to 50%)
+              const downPercent = Math.min(50, Math.max(0, Math.round((pitchDown / 0.034) * 50)));
+              smoothNodRef.current = smoothNodRef.current * 0.65 + downPercent * 0.35;
+              const curNod = Math.round(smoothNodRef.current);
+              setNodProgress(curNod);
+
+              if (pitchDown >= 0.032) {
+                // User completed downward nod!
+                nodHistoryRef.current.sawNodDown = true;
+                nodHistoryRef.current.downTimestamp = Date.now();
+                setNodPhase('up');
+              }
+              setBotDetectorStatus(`Step 4/4: Nod head DOWN slowly 👇 (Progress: ${curNod}%)`);
+            } else {
+              // Phase 2: Raising head back up to center/baseline (50% to 100%)
+              const returnDelta = Math.max(0, pitchDown);
+              // As returnDelta returns from 0.032 to 0, upPercent reaches 50
+              const upPercent = Math.min(50, Math.max(0, Math.round((1 - (returnDelta / 0.032)) * 50)));
+              const totalProgress = 50 + upPercent;
+              smoothNodRef.current = smoothNodRef.current * 0.65 + totalProgress * 0.35;
+              const curNod = Math.round(smoothNodRef.current);
+              setNodProgress(curNod);
+
+              if (curNod >= 95) {
+                if (!stepHoldStartRef.current) {
+                  stepHoldStartRef.current = Date.now();
+                } else if (Date.now() - stepHoldStartRef.current > 350) {
+                  // Head nod verified!
+                  nodPassedRef.current = true;
+                  setNodPhase('verified');
                   playBiometricChime(1046.50); // C6
-                  setStepPassedToast('✓ Eye Blink Verified: 99.4% Liveness');
+                  setStepPassedToast('✓ Head Nod Verified: 99.4% Liveness');
                   setTimeout(() => setStepPassedToast(null), 1400);
                   currentStepRef.current = 'verifying';
                   setStep('verifying');
@@ -495,19 +534,17 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   setTimeout(() => {
                     captureFrame();
                   }, 280);
-                } else if (duration > 2200) {
-                  // Reset if eyes stayed closed too long
-                  blinkHistoryRef.current = { sawClosed: false, closedTimestamp: 0 };
-                  setBlinkProgress(0);
                 }
-              }
-            }
-
-            if (currentStepRef.current === 'blink') {
-              if (isBlinking) {
-                setBotDetectorStatus('Step 4/4: Blink detected! Now open your eyes naturally 😉');
               } else {
-                setBotDetectorStatus('Step 4/4: Blink both eyes naturally for the camera 😉');
+                stepHoldStartRef.current = null;
+                setBotDetectorStatus(`Step 4/4: Great! Now raise head back UP 👆 (Progress: ${curNod}%)`);
+              }
+
+              // Safety timeout: if head stays down > 4.5s without raising back up, reset to try again
+              if (Date.now() - nodHistoryRef.current.downTimestamp > 4500) {
+                nodHistoryRef.current = { sawNodDown: false, downTimestamp: 0 };
+                setNodPhase('down');
+                setNodProgress(0);
               }
             }
           }
@@ -776,7 +813,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         botDetected: false,
         turnLeftPassed: turnLeftPassedRef.current || true,
         turnRightPassed: turnRightPassedRef.current || true,
-        blinkPassed: blinkPassedRef.current || true,
+        nodPassed: nodPassedRef.current || true,
+        blinkPassed: true,
         smilePassed: true,
         capturedLive: true,
         confidenceScore: 99.4,
@@ -958,8 +996,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                     ? rightTurnProgress >= 90
                       ? 'border-[#9945FF] shadow-[#9945FF]/40 bg-[#9945FF]/10'
                       : 'border-[#9945FF]/60 shadow-[#9945FF]/20 bg-[#9945FF]/5'
-                    : step === 'blink'
-                    ? blinkProgress >= 100 || isBlinking
+                    : step === 'head_nod'
+                    ? nodProgress >= 90
                       ? 'border-[#0ECB81] shadow-[#0ECB81]/40 bg-[#0ECB81]/15'
                       : 'border-[#0ECB81]/60 shadow-[#0ECB81]/20 bg-[#0ECB81]/5'
                     : 'border-[#0ECB81] bg-[#0ECB81]/15'
@@ -1005,14 +1043,18 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   </div>
                 )}
 
-                {/* Step 4: Directional Visual Prompt - Blink */}
-                {step === 'blink' && (
+                {/* Step 4: Directional Visual Prompt - Head Nod */}
+                {step === 'head_nod' && (
                   <div className="absolute bottom-3 flex flex-col items-center gap-1 text-[#0ECB81]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#0ECB81]/40 flex items-center justify-center ${isBlinking ? 'ring-2 ring-[#0ECB81] animate-pulse' : ''}`}>
-                      {isBlinking ? <EyeOff className="w-7 h-7 text-[#F0B90B]" /> : <Eye className="w-7 h-7 text-[#0ECB81]" />}
+                    <div className="p-2 rounded-2xl bg-black/80 border border-[#0ECB81]/40 flex items-center justify-center">
+                      {nodPhase === 'up' ? (
+                        <ArrowUp className="w-7 h-7 text-[#0ECB81] animate-bounce" />
+                      ) : (
+                        <ArrowDown className="w-7 h-7 text-[#F0B90B] animate-bounce" />
+                      )}
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#0ECB81]/30">
-                      {isBlinking ? 'Blink Detected' : 'Blink Eyes'}
+                      {nodPhase === 'up' ? 'Raise Up 👆' : 'Nod Down 👇'}
                     </span>
                   </div>
                 )}
@@ -1058,44 +1100,44 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   <div className="text-[10px] text-center font-mono font-bold">
                     {step === 'turn_left' && (
                       <span className={leftTurnProgress >= 90 ? 'text-[#0ECB81]' : 'text-[#00D4FF]'}>
-                        {leftTurnProgress >= 90 ? '✓ Target Reached! Hold Position' : 'Turn head slowly LEFT to fill progress 👈'}
+                        {leftTurnProgress >= 90 ? '✓ Hold Steady Left (Verifying...)' : 'Turn head slowly LEFT to fill progress 👈'}
                       </span>
                     )}
                     {step === 'turn_right' && (
                       <span className={rightTurnProgress >= 90 ? 'text-[#0ECB81]' : 'text-[#9945FF]'}>
-                        {rightTurnProgress >= 90 ? '✓ Target Reached! Hold Position' : 'Turn head slowly RIGHT to fill progress 👉'}
+                        {rightTurnProgress >= 90 ? '✓ Hold Steady Right (Verifying...)' : 'Turn head slowly RIGHT to fill progress 👉'}
                       </span>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Eye Blink Progress Bar */}
-              {step === 'blink' && (
+              {/* Head Nod Progress Bar */}
+              {step === 'head_nod' && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-72 sm:w-84 bg-black/90 backdrop-blur-md rounded-2xl border border-[#2B313A] p-3 shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
                   <div className="flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-wider font-mono">
                     <div className="flex items-center gap-1.5 text-[#0ECB81]">
-                      {isBlinking ? <EyeOff className="w-3.5 h-3.5 text-[#F0B90B]" /> : <Eye className="w-3.5 h-3.5" />}
-                      <span>{isBlinking ? 'Blink Detected' : 'Blink Eyes Naturally'}</span>
+                      <ArrowUpDown className="w-3.5 h-3.5 text-[#F0B90B]" />
+                      <span>{nodPhase === 'up' ? 'Phase 2: Raise Head Up 👆' : 'Phase 1: Nod Head Down 👇'}</span>
                     </div>
                     <span className="text-[10px] font-mono text-[#0ECB81]">
-                      {blinkProgress > 0 ? `${blinkProgress}%` : (isBlinking ? '65%' : '0%')}
+                      {nodProgress}%
                     </span>
                   </div>
 
-                  {/* Blink Progress Meter */}
+                  {/* Nod Progress Meter */}
                   <div className="relative w-full h-3 bg-[#121418] rounded-full overflow-hidden border border-[#2B313A]">
                     <div
-                      className="h-full bg-gradient-to-r from-[#F0B90B] to-[#0ECB81] rounded-full transition-all duration-200"
-                      style={{ width: `${blinkProgress || (isBlinking ? 65 : 10)}%` }}
+                      className="h-full bg-gradient-to-r from-[#F0B90B] via-[#00D4FF] to-[#0ECB81] rounded-full transition-all duration-200"
+                      style={{ width: `${nodProgress}%` }}
                     />
                   </div>
 
                   <div className="text-[10px] text-center font-mono font-bold">
-                    {isBlinking ? (
-                      <span className="text-[#0ECB81]">✓ Eyes closed! Now open them naturally 😉</span>
+                    {nodPhase === 'up' ? (
+                      <span className="text-[#0ECB81]">✓ Good! Now raise head slowly back up 👆</span>
                     ) : (
-                      <span className="text-[#EAECEF]">Close both eyes briefly and open them 😉</span>
+                      <span className="text-[#F0B90B]">Tilt head slowly downward to fill 50% 👇</span>
                     )}
                   </div>
                 </div>
@@ -1137,13 +1179,13 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   </span>
                 </div>
 
-                {/* Live Ocular Blink Meter */}
+                {/* Live Head Nod Pitch Meter */}
                 <div className="px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#EAECEF] backdrop-blur-sm flex items-center gap-1.5">
-                  {isBlinking ? <EyeOff className="w-3 h-3 text-[#F0B90B]" /> : <Eye className="w-3 h-3 text-[#0ECB81]" />}
+                  <ArrowUpDown className="w-3 h-3 text-[#0ECB81]" />
                   <span>
-                    EYES:{' '}
-                    <strong className={isBlinking ? 'text-[#F0B90B]' : 'text-[#0ECB81]'}>
-                      {isBlinking ? 'BLINK' : 'OPEN'}
+                    NOD:{' '}
+                    <strong className={nodProgress >= 50 ? 'text-[#0ECB81]' : 'text-[#F0B90B]'}>
+                      {nodProgress > 0 ? `${nodProgress}%` : 'READY'}
                     </strong>
                   </span>
                 </div>
@@ -1171,7 +1213,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 {step === 'center' && '1. Look Straight & Center Face in Oval'}
                 {step === 'turn_left' && '2. Turn Head Slowly to Left 👈'}
                 {step === 'turn_right' && '3. Turn Head Slowly to Right 👉'}
-                {step === 'blink' && '4. Blink Both Eyes Naturally 😉'}
+                {step === 'head_nod' && '4. Nod Your Head Down & Up Slowly 👇👆'}
                 {step === 'verifying' && 'Validating Liveness Vectors...'}
                 {step === 'completed' && '✓ Biometric Verification Passed'}
                 {step === 'initializing' && 'Preparing Biometric Optical Feed...'}

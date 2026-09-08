@@ -49,6 +49,7 @@ export interface KycSubmission {
     botDetected: boolean;
     turnLeftPassed: boolean;
     turnRightPassed: boolean;
+    nodPassed?: boolean;
     blinkPassed?: boolean;
     smilePassed?: boolean;
     capturedLive: boolean;

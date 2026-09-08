@@ -144,6 +144,42 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
     }
   };
 
+  const compressBase64Image = async (
+    dataUrl: string,
+    maxDim = 1280,
+    quality = 0.85
+  ): Promise<string> => {
+    if (!dataUrl || !dataUrl.startsWith('data:image')) return dataUrl;
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -170,7 +206,14 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
     setSubmissionStep('scanning');
 
     try {
-      // Step 1: Simulated OCR animation
+      // Step 1: Pre-compress all image attachments to ensure lightweight payload
+      const [optFront, optBack, optSelfie] = await Promise.all([
+        compressBase64Image(frontDocUrl, 1280, 0.84),
+        backDocUrl ? compressBase64Image(backDocUrl, 1280, 0.84) : Promise.resolve(undefined),
+        selfieUrl ? compressBase64Image(selfieUrl, 800, 0.84) : Promise.resolve(undefined),
+      ]);
+
+      // Step 2: Simulated OCR animation
       await new Promise((r) => setTimeout(r, 900));
       setSubmissionStep('analyzing');
       await new Promise((r) => setTimeout(r, 1100));
@@ -182,14 +225,15 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
         fullName: fullName.trim(),
         dob,
         expiryDate,
-        frontDocumentUrl: frontDocUrl,
-        backDocumentUrl: backDocUrl || undefined,
-        selfieUrl: selfieUrl || undefined,
+        frontDocumentUrl: optFront,
+        backDocumentUrl: optBack,
+        selfieUrl: optSelfie,
         livenessVerified: Boolean(livenessDetails?.capturedLive || selfieUrl),
         livenessDetails: livenessDetails || {
           botDetected: false,
           turnLeftPassed: true,
           turnRightPassed: true,
+          nodPassed: true,
           blinkPassed: true,
           smilePassed: true,
           capturedLive: true,
@@ -678,7 +722,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
                             ✓ Bot Check: PASSED (99.4%)
                           </div>
                           <div className="text-[9px] font-mono text-[#848E9C]">
-                            Challenges: Center • Turn L/R • Eye Blink
+                            Challenges: Center • Turn L/R • Head Nod
                           </div>
                           <button
                             type="button"
@@ -699,7 +743,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
                       <div>
                         <span className="text-xs font-mono font-bold text-[#EAECEF] block">Live Biometric Capture</span>
                         <span className="text-[10px] font-mono text-[#848E9C] block mt-0.5">
-                          Anti-spoofing bot check: Turn head left/right & blink eyes.
+                          Anti-spoofing bot check: Turn head left/right & nod head down/up.
                         </span>
                       </div>
                       <button
