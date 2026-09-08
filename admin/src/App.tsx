@@ -12,6 +12,7 @@ import { EscrowMandatesView } from './components/EscrowMandatesView';
 import { PlanConfigView } from './components/PlanConfigView';
 import { DepositWalletsView } from './components/DepositWalletsView';
 import { NotificationsDeskView } from './components/NotificationsDeskView';
+import { KycComplianceDeskView } from './components/KycComplianceDeskView';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getStoredUser());
@@ -25,6 +26,7 @@ export function App() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [plans, setPlans] = useState<PlanConfig[]>([]);
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
+  const [pendingKycCount, setPendingKycCount] = useState<number>(0);
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -39,6 +41,7 @@ export function App() {
         investmentsData,
         plansData,
         tickersData,
+        kycData,
       ] = await Promise.allSettled([
         adminApi.getMetrics(),
         adminApi.getUsers(),
@@ -46,6 +49,7 @@ export function App() {
         adminApi.getInvestments(),
         adminApi.getPlans(),
         adminApi.getMarketTickers(),
+        adminApi.getKycSubmissions('pending'),
       ]);
 
       if (metricsData.status === 'fulfilled') setMetrics(metricsData.value);
@@ -54,6 +58,7 @@ export function App() {
       if (investmentsData.status === 'fulfilled') setInvestments(investmentsData.value);
       if (plansData.status === 'fulfilled') setPlans(plansData.value);
       if (tickersData.status === 'fulfilled') setTickers(tickersData.value);
+      if (kycData.status === 'fulfilled') setPendingKycCount(kycData.value.pendingCount || kycData.value.submissions?.length || 0);
     } catch (err) {
       console.warn('Data sync notice:', err);
     } finally {
@@ -102,6 +107,7 @@ export function App() {
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
           pendingCount={pendingCount}
+          pendingKycCount={pendingKycCount}
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8">
@@ -138,6 +144,12 @@ export function App() {
               <TransactionDeskView
                 transactions={transactions}
                 onRefreshTransactions={fetchAllData}
+              />
+            )}
+
+            {currentTab === 'kyc' && (
+              <KycComplianceDeskView
+                onRefresh={fetchAllData}
               />
             )}
 

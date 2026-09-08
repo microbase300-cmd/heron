@@ -1,4 +1,4 @@
-import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig, DEFAULT_PLANS, WhitelistedWallet, SecurityLogItem } from '../types';
+import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig, DEFAULT_PLANS, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, KycDocumentType } from '../types';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -326,6 +326,35 @@ class ApiService {
         lastUpdated: new Date().toISOString(),
       };
     }
+  }
+
+  // KYC Verification
+  async getKycStatus(): Promise<{
+    status: KycStatus;
+    submission?: KycSubmission;
+    kycRejectionReason?: string;
+    forceReverification?: boolean;
+    forceReverificationReason?: string;
+    kycLevel?: string;
+  }> {
+    return this.request('/kyc/status');
+  }
+
+  async submitKyc(data: {
+    documentType: KycDocumentType;
+    issuingCountry: string;
+    documentNumber: string;
+    fullName: string;
+    dob: string;
+    expiryDate: string;
+    frontDocumentUrl: string;
+    backDocumentUrl?: string;
+    selfieUrl?: string;
+  }): Promise<{ message: string; submission: KycSubmission }> {
+    return this.request('/kyc/submit', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   }
 }
 

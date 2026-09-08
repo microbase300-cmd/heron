@@ -52,6 +52,8 @@ export interface SecurityLogItem {
   status: 'Authorized' | 'Blocked' | 'Challenge';
 }
 
+export type KycStatus = 'unverified' | 'pending' | 'verified' | 'rejected' | 'action_required';
+
 export interface User {
   id: string;
   email: string;
@@ -62,6 +64,10 @@ export interface User {
   createdAt: string;
   uid?: string;
   kycLevel?: 'unverified' | 'tier1' | 'tier2';
+  kycStatus?: KycStatus;
+  kycRejectionReason?: string;
+  forceReverification?: boolean;
+  forceReverificationReason?: string;
   vipLevel?: string;
   antiPhishingCode?: string;
   twoFactorEnabled?: boolean;
@@ -88,9 +94,12 @@ export interface Transaction {
   type: 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus' | 'investment_lock' | 'admin_adjustment';
   amount: number;
   asset: string;
-  status: 'completed' | 'pending' | 'rejected';
+  status: 'completed' | 'pending' | 'rejected' | 'pending_kyc';
   txHash: string;
   note: string;
+  verificationHold?: boolean;
+  holdReason?: string;
+  heldAt?: string;
   createdAt: string;
 }
 

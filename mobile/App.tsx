@@ -349,7 +349,7 @@ function MainAppContent() {
   const [investmentFilter, setInvestmentFilter] = useState<'all' | 'active' | 'matured' | 'completed' | 'cancelled'>('all');
 
   // Ledger tab filter
-  const [ledgerFilter, setLedgerFilter] = useState<'all' | 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus'>('all');
+  const [ledgerFilter, setLedgerFilter] = useState<'all' | 'deposit' | 'withdrawal' | 'yield_payout' | 'referral_bonus' | 'pending_kyc'>('all');
 
   // Modal form states
   const [depositAsset, setDepositAsset] = useState('USDT (TRC-20)');
@@ -1193,6 +1193,35 @@ function MainAppContent() {
               <Text style={styles.pnlText}>Today's PNL: <Text style={{ color: '#0ECB81' }}>+$124.50 (+1.25%)</Text></Text>
             </View>
 
+            {/* Institutional Compliance Alert Banner */}
+            {(currentUser.forceReverification || currentUser.kycStatus === 'action_required' || currentUser.kycStatus === 'rejected' || transactions.some(t => t.status === 'pending_kyc')) && (
+              <TouchableOpacity
+                style={[
+                  styles.complianceAlertBanner,
+                  currentUser.kycStatus === 'rejected' && { borderColor: 'rgba(246, 70, 93, 0.5)', backgroundColor: 'rgba(246, 70, 93, 0.08)' }
+                ]}
+                onPress={() => setShowProfileModal(true)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.complianceAlertIconBox}>
+                  <Text style={{ fontSize: 16 }}>{currentUser.kycStatus === 'rejected' ? '✕' : '⚠️'}</Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={[styles.complianceAlertTitle, currentUser.kycStatus === 'rejected' && { color: '#F6465D' }]}>
+                    {currentUser.forceReverification || currentUser.kycStatus === 'action_required'
+                      ? 'Institutional Compliance: Identity Re-Verification Mandate'
+                      : currentUser.kycStatus === 'rejected'
+                      ? 'Verification Rejected: Action Required'
+                      : 'Settlement Notice: Active Compliance KYC Hold'}
+                  </Text>
+                  <Text style={styles.complianceAlertSub}>
+                    {currentUser.forceReverificationReason || currentUser.kycRejectionReason || 'One or more transaction settlements are held pending compliance audit. Tap to review.'}
+                  </Text>
+                </View>
+                <Text style={styles.complianceAlertArrow}>→</Text>
+              </TouchableOpacity>
+            )}
+
             {/* Binance-Style Action Grid */}
             <View style={styles.actionGridRow}>
               <TouchablePlatform style={styles.actionGridBtn} onPress={() => setShowDepositModal(true)}>
@@ -1240,8 +1269,30 @@ function MainAppContent() {
                 <View style={{ marginLeft: 10 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.securityBannerTitle}>Account & Security Center</Text>
-                    <View style={styles.kycVerifiedMiniBadge}>
-                      <Text style={styles.kycVerifiedMiniText}>KYC TIER 2</Text>
+                    <View style={[
+                      styles.kycVerifiedMiniBadge,
+                      currentUser.kycStatus === 'verified' && { backgroundColor: 'rgba(14,203,129,0.15)', borderColor: '#0ECB81' },
+                      currentUser.kycStatus === 'pending' && { backgroundColor: 'rgba(240,185,11,0.15)', borderColor: '#F0B90B' },
+                      currentUser.kycStatus === 'rejected' && { backgroundColor: 'rgba(246,70,93,0.15)', borderColor: '#F6465D' },
+                      (currentUser.forceReverification || currentUser.kycStatus === 'action_required') && { backgroundColor: 'rgba(240,185,11,0.15)', borderColor: '#F0B90B' },
+                    ]}>
+                      <Text style={[
+                        styles.kycVerifiedMiniText,
+                        currentUser.kycStatus === 'verified' && { color: '#0ECB81' },
+                        currentUser.kycStatus === 'pending' && { color: '#F0B90B' },
+                        currentUser.kycStatus === 'rejected' && { color: '#F6465D' },
+                        (currentUser.forceReverification || currentUser.kycStatus === 'action_required') && { color: '#F0B90B' },
+                      ]}>
+                        {currentUser.forceReverification || currentUser.kycStatus === 'action_required'
+                          ? 'ACTION REQ'
+                          : currentUser.kycStatus === 'pending'
+                          ? 'KYC PENDING'
+                          : currentUser.kycStatus === 'rejected'
+                          ? 'KYC REJECTED'
+                          : currentUser.kycStatus === 'verified'
+                          ? 'KYC TIER 2'
+                          : 'UNVERIFIED'}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.securityBannerSub}>
@@ -1645,6 +1696,7 @@ function MainAppContent() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipScroll}>
               {[
                 { id: 'all', label: `All (${transactions.length})` },
+                ...(transactions.some(t => t.status === 'pending_kyc') ? [{ id: 'pending_kyc', label: `KYC Holds (${transactions.filter(t => t.status === 'pending_kyc').length})` }] : []),
                 { id: 'deposit', label: `Deposits (${transactions.filter(t => t.type === 'deposit').length})` },
                 { id: 'withdrawal', label: `Withdrawals (${transactions.filter(t => t.type === 'withdrawal').length})` },
                 { id: 'yield_payout', label: `Yield (${transactions.filter(t => t.type === 'yield_payout').length})` },
@@ -1663,7 +1715,7 @@ function MainAppContent() {
             </ScrollView>
 
             {(() => {
-              const filteredTxs = transactions.filter(t => ledgerFilter === 'all' || t.type === ledgerFilter);
+              const filteredTxs = transactions.filter(t => ledgerFilter === 'all' ? true : ledgerFilter === 'pending_kyc' ? t.status === 'pending_kyc' : t.type === ledgerFilter);
               if (filteredTxs.length === 0) {
                 return (
                   <View style={styles.emptyCard}>
@@ -1692,11 +1744,24 @@ function MainAppContent() {
                   )}
 
                   <View style={styles.txFooter}>
-                    <Text style={[styles.txStatus, tx.status === 'completed' && { color: '#0ECB81' }]}>
-                      {tx.status.toUpperCase()}
+                    <Text style={[
+                      styles.txStatus,
+                      tx.status === 'completed' && { color: '#0ECB81' },
+                      tx.status === 'pending_kyc' && { color: '#F0B90B' },
+                      tx.status === 'rejected' && { color: '#F6465D' },
+                    ]}>
+                      {tx.status === 'pending_kyc' ? '⚠️ KYC HOLD' : tx.status.toUpperCase()}
                     </Text>
                     <Text style={styles.txDate}>{new Date(tx.createdAt).toLocaleDateString()}</Text>
                   </View>
+
+                  {tx.status === 'pending_kyc' && (
+                    <View style={styles.txHoldReasonBox}>
+                      <Text style={styles.txHoldReasonText}>
+                        🔒 Compliance Hold: {tx.holdReason || 'Settlement paused pending identity re-verification audit.'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               ));
             })()}
@@ -2334,13 +2399,60 @@ function MainAppContent() {
 
               {/* Status Badges Row */}
               <View style={styles.profileBadgeRow}>
-                <View style={styles.profileKycBadge}>
-                  <Text style={styles.profileKycBadgeText}>✓ KYC LEVEL 2 VERIFIED</Text>
+                <View style={[
+                  styles.profileKycBadge,
+                  currentUser.kycStatus === 'verified' && { backgroundColor: 'rgba(14, 203, 129, 0.15)', borderColor: 'rgba(14, 203, 129, 0.4)' },
+                  currentUser.kycStatus === 'pending' && { backgroundColor: 'rgba(240, 185, 11, 0.15)', borderColor: 'rgba(240, 185, 11, 0.4)' },
+                  currentUser.kycStatus === 'rejected' && { backgroundColor: 'rgba(246, 70, 93, 0.15)', borderColor: 'rgba(246, 70, 93, 0.4)' },
+                  (currentUser.forceReverification || currentUser.kycStatus === 'action_required') && { backgroundColor: 'rgba(240, 185, 11, 0.15)', borderColor: 'rgba(240, 185, 11, 0.4)' },
+                ]}>
+                  <Text style={[
+                    styles.profileKycBadgeText,
+                    currentUser.kycStatus === 'verified' && { color: '#0ECB81' },
+                    currentUser.kycStatus === 'pending' && { color: '#F0B90B' },
+                    currentUser.kycStatus === 'rejected' && { color: '#F6465D' },
+                    (currentUser.forceReverification || currentUser.kycStatus === 'action_required') && { color: '#F0B90B' },
+                  ]}>
+                    {currentUser.forceReverification || currentUser.kycStatus === 'action_required'
+                      ? '⚠️ ACTION REQUIRED'
+                      : currentUser.kycStatus === 'pending'
+                      ? '⏳ KYC PENDING'
+                      : currentUser.kycStatus === 'rejected'
+                      ? '✕ KYC REJECTED'
+                      : currentUser.kycStatus === 'verified'
+                      ? '✓ KYC LEVEL 2 VERIFIED'
+                      : '○ KYC UNVERIFIED'}
+                  </Text>
                 </View>
                 <View style={styles.profileVipBadge}>
                   <Text style={styles.profileVipBadgeText}>👑 {currentUser.vipLevel || 'VIP 1 INSTITUTIONAL'}</Text>
                 </View>
               </View>
+
+              {/* KYC Re-verification or Rejection Notice */}
+              {currentUser.forceReverification && (
+                <View style={styles.profileKycAlertBox}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Text style={{ fontSize: 13 }}>⚠️</Text>
+                    <Text style={styles.profileKycAlertTitle}>MANDATORY KYC RE-VERIFICATION</Text>
+                  </View>
+                  <Text style={styles.profileKycAlertDesc}>
+                    {currentUser.forceReverificationReason || 'Compliance desk has flagged your account for mandatory credential re-verification. Please visit the web verification desk.'}
+                  </Text>
+                </View>
+              )}
+
+              {!currentUser.forceReverification && currentUser.kycStatus === 'rejected' && (
+                <View style={[styles.profileKycAlertBox, { borderColor: 'rgba(246, 70, 93, 0.4)', backgroundColor: 'rgba(246, 70, 93, 0.08)' }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Text style={{ fontSize: 13 }}>✕</Text>
+                    <Text style={[styles.profileKycAlertTitle, { color: '#F6465D' }]}>VERIFICATION REJECTED</Text>
+                  </View>
+                  <Text style={styles.profileKycAlertDesc}>
+                    {currentUser.kycRejectionReason || 'Your previous document submission was rejected by compliance. Please review requirements and re-submit on the web portal.'}
+                  </Text>
+                </View>
+              )}
 
               {/* Security Health Score */}
               <View style={styles.profileSecurityScoreCard}>
@@ -5656,5 +5768,73 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#EAECEF',
     marginTop: 4,
+  },
+  complianceAlertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(240, 185, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.35)',
+    borderRadius: 14,
+    padding: 12,
+    marginHorizontal: 8,
+    marginBottom: 16,
+  },
+  complianceAlertIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  complianceAlertTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 0.3,
+  },
+  complianceAlertSub: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  complianceAlertArrow: {
+    fontSize: 14,
+    color: '#848E9C',
+    marginLeft: 6,
+  },
+  profileKycAlertBox: {
+    marginTop: 12,
+    backgroundColor: 'rgba(240, 185, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.35)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  profileKycAlertTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 0.5,
+  },
+  profileKycAlertDesc: {
+    fontSize: 10.5,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 15,
+  },
+  txHoldReasonBox: {
+    marginTop: 6,
+  },
+  txHoldReasonText: {
+    fontSize: 9.5,
+    color: '#F0B90B',
+    backgroundColor: 'rgba(240, 185, 11, 0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.2)',
   }
 });

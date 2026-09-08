@@ -8,21 +8,24 @@ import {
   ExternalLink,
   Wallet,
   Bell,
-  UserCheck
+  UserCheck,
+  ShieldCheck
 } from 'lucide-react';
 
-export type AdminTab = 'metrics' | 'investor_portfolios' | 'users' | 'transactions' | 'wallets' | 'notifications' | 'investments' | 'plans';
+export type AdminTab = 'metrics' | 'investor_portfolios' | 'users' | 'transactions' | 'kyc' | 'wallets' | 'notifications' | 'investments' | 'plans';
 
 interface AdminSidebarProps {
   currentTab: AdminTab;
   onSelectTab: (tab: AdminTab) => void;
   pendingCount: number;
+  pendingKycCount?: number;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   currentTab,
   onSelectTab,
   pendingCount,
+  pendingKycCount = 0,
 }) => {
   const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number }[] = [
     { id: 'metrics', label: 'Platform Executive', icon: LayoutDashboard },
@@ -33,6 +36,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       label: 'Settlement Ledger',
       icon: CreditCard,
       badge: pendingCount > 0 ? pendingCount : undefined,
+    },
+    {
+      id: 'kyc',
+      label: 'KYC & Compliance Desk',
+      icon: ShieldCheck,
+      badge: pendingKycCount > 0 ? pendingKycCount : undefined,
     },
     { id: 'wallets', label: 'Deposit Wallets', icon: Wallet },
     { id: 'notifications', label: 'Broadcasts & Messages', icon: Bell },

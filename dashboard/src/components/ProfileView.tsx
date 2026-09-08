@@ -21,10 +21,12 @@ import {
   X,
   RefreshCw,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Scan
 } from 'lucide-react';
 import { User, WhitelistedWallet, SecurityLogItem } from '../types';
 import { api } from '../services/api';
+import { ClientVerificationPortal } from './ClientVerificationPortal';
 import { ExchangeRatesData, convertCurrency, formatCurrency, CURRENCY_SYMBOLS, CURRENCY_NAMES } from '../utils/currency';
 
 interface ProfileViewProps {
@@ -69,7 +71,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onOpenWithdraw,
   exchangeRates
 }) => {
-  const [activeTab, setActiveTab] = useState<'security' | 'wallets' | 'activity' | 'preferences'>('security');
+  const [activeTab, setActiveTab] = useState<'security' | 'verification' | 'wallets' | 'activity' | 'preferences'>('security');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Profile fields state
@@ -375,11 +377,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </div>
                 )}
 
-                {/* Level 2 KYC Badge */}
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30">
+                {/* Dynamic KYC Badge */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('verification')}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold transition-all ${
+                    user?.kycStatus === 'verified'
+                      ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30 hover:bg-[#0ECB81]/25'
+                      : user?.kycStatus === 'pending'
+                      ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/40 animate-pulse'
+                      : (user?.kycStatus === 'action_required' || user?.kycStatus === 'rejected' || user?.forceReverification)
+                      ? 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30 hover:bg-[#F6465D]/25'
+                      : 'bg-[#2B313A] text-[#848E9C] hover:text-[#EAECEF]'
+                  }`}
+                  title="Click to view verification status"
+                >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  Level 2 Verified
-                </span>
+                  {user?.kycStatus === 'verified'
+                    ? 'Level 2 Verified'
+                    : user?.kycStatus === 'pending'
+                    ? 'Verification Pending'
+                    : (user?.kycStatus === 'action_required' || user?.kycStatus === 'rejected' || user?.forceReverification)
+                    ? 'KYC Action Required'
+                    : 'Unverified (Tier 1)'}
+                </button>
 
                 {/* VIP Institutional Tier */}
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30">
@@ -438,6 +459,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       <div className="border-b border-[#2B313A] flex gap-2 sm:gap-6 overflow-x-auto no-scrollbar">
         {[
           { id: 'security', label: 'Security & Protection', icon: ShieldCheck },
+          { id: 'verification', label: 'Identity Verification (KYC)', icon: Scan },
           { id: 'wallets', label: 'Whitelisted Wallets', icon: Wallet },
           { id: 'activity', label: 'Login & Session Log', icon: History },
           { id: 'preferences', label: 'Preferences & Limits', icon: Sliders },
@@ -462,6 +484,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </div>
 
       {/* 3. TAB CONTENT */}
+
+      {/* TAB: IDENTITY VERIFICATION & OCR CLEARANCE */}
+      {activeTab === 'verification' && user && (
+        <ClientVerificationPortal
+          user={user}
+          onVerificationUpdated={async () => {
+            const res = await api.getMe();
+            if (res?.user && onUpdateUser) onUpdateUser(res.user);
+          }}
+        />
+      )}
 
       {/* TAB A: SECURITY & PROTECTION CENTER */}
       {activeTab === 'security' && (

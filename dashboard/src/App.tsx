@@ -143,6 +143,7 @@ export const App: React.FC = () => {
                 <OverviewView
                   summary={summary}
                   investments={investments}
+                  transactions={transactions}
                   user={user}
                   onNavigate={setCurrentTab}
                   onOpenDeposit={() => setIsDepositOpen(true)}

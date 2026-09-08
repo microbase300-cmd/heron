@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem } from '../types';
+import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus } from '../types';
 import { pushService } from './pushNotificationService';
 
 export const DEFAULT_DEPOSIT_ADDRESSES: Record<string, DepositAddressConfig> = {
@@ -107,6 +107,7 @@ interface DatabaseSchema {
   planConfigs: Record<PlanId, PlanConfig>;
   notifications: NotificationMessage[];
   depositAddresses: Record<string, DepositAddressConfig>;
+  kycSubmissions: KycSubmission[];
 }
 
 const DB_FILE = path.join(__dirname, '../../data/db.json');
@@ -132,6 +133,7 @@ class DatabaseService {
           planConfigs: parsed.planConfigs || PLANS,
           notifications: parsed.notifications || [],
           depositAddresses: parsed.depositAddresses || DEFAULT_DEPOSIT_ADDRESSES,
+          kycSubmissions: parsed.kycSubmissions || [],
         };
         this.ensureDefaults(schema);
         return schema;
@@ -256,6 +258,100 @@ class DatabaseService {
         ];
       }
     });
+
+    // 8. Ensure KYC Submissions initialized
+    if (!schema.kycSubmissions || schema.kycSubmissions.length === 0) {
+      const now = Date.now();
+      schema.kycSubmissions = [
+        {
+          id: 'kyc_sub_demo_01',
+          userId: 'usr_investor_001',
+          userEmail: 'investor@heronassets.com',
+          userName: 'Dr. Michael Vance',
+          userUid: 'HAT-89240182',
+          documentType: 'passport',
+          issuingCountry: 'USA',
+          documentNumber: 'P89240182',
+          fullName: 'MICHAEL VANCE',
+          dob: '1984-06-22',
+          expiryDate: '2032-11-15',
+          frontDocumentUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&auto=format&fit=crop&q=80',
+          backDocumentUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=80',
+          selfieUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80',
+          status: 'verified',
+          adminNotes: 'Automated OCR verification passed with 98.6% confidence. Security threads and ICAO MRZ checksum verified.',
+          reviewedBy: 'Chief Compliance Officer',
+          reviewedAt: new Date(now - 86400000 * 5).toISOString(),
+          ocrResult: {
+            confidenceScore: 98.6,
+            documentType: 'passport',
+            extractedFullName: 'MICHAEL VANCE',
+            extractedDocumentNumber: 'P89240182',
+            extractedDob: '1984-06-22',
+            extractedExpiryDate: '2032-11-15',
+            extractedCountry: 'USA',
+            mrzDetected: true,
+            mrzChecksumValid: true,
+            mrzRawString: 'P<USAVANCE<<MICHAEL<<<<<<<<<<<<<<<<<<<<<<<<<\nP892401824USA8406225M3211158<<<<<<<<<<<<<<02',
+            faceDetected: true,
+            faceMatchScore: 97.4,
+            antiSpoofingPass: true,
+            tamperRiskLevel: 'LOW',
+            discrepancies: [
+              '✓ Extracted identity matches account profile (100% match)',
+              '✓ ICAO 9303 MRZ checksum verified with US Department of State algorithms',
+              '✓ Biometric facial comparison matches passport portrait (97.4% match)',
+              '✓ Document expiration valid until 2032'
+            ],
+            scannedAt: new Date(now - 86400000 * 5).toISOString()
+          },
+          submittedAt: new Date(now - 86400000 * 5).toISOString(),
+          updatedAt: new Date(now - 86400000 * 5).toISOString()
+        },
+        {
+          id: 'kyc_sub_demo_02',
+          userId: 'usr_downline_49201',
+          userEmail: 'clara.vance@genevacapital.ch',
+          userName: 'Clara Vance',
+          userUid: 'HAT-50912481',
+          documentType: 'national_id',
+          issuingCountry: 'CHE',
+          documentNumber: 'ID77281902',
+          fullName: 'CLARA VANCE',
+          dob: '1991-03-14',
+          expiryDate: '2030-08-20',
+          frontDocumentUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80',
+          backDocumentUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=80',
+          selfieUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
+          status: 'pending',
+          ocrResult: {
+            confidenceScore: 96.2,
+            documentType: 'national_id',
+            extractedFullName: 'CLARA VANCE',
+            extractedDocumentNumber: 'ID77281902',
+            extractedDob: '1991-03-14',
+            extractedExpiryDate: '2030-08-20',
+            extractedCountry: 'CHE',
+            mrzDetected: true,
+            mrzChecksumValid: true,
+            mrzRawString: 'IDCHEID77281902<<<<<<<<<<<<<<<\n9103144F3008208CHE<<<<<<<<<<<6\nVANCE<<CLARA<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+            faceDetected: true,
+            faceMatchScore: 95.8,
+            antiSpoofingPass: true,
+            tamperRiskLevel: 'LOW',
+            discrepancies: [
+              '✓ Extracted name matches registered account (100% match)',
+              '✓ Swiss Cantonal Identity hologram detected',
+              '✓ Credential valid until 2030-08-20',
+              'ℹ Awaiting Compliance Officer Clearance'
+            ],
+            scannedAt: new Date(now - 3600000 * 3).toISOString()
+          },
+          submittedAt: new Date(now - 3600000 * 3).toISOString(),
+          updatedAt: new Date(now - 3600000 * 3).toISOString()
+        }
+      ];
+    }
 
     this.save(schema);
   }
@@ -441,7 +537,8 @@ class DatabaseService {
           createdAt: new Date().toISOString()
         }
       ],
-      depositAddresses: DEFAULT_DEPOSIT_ADDRESSES
+      depositAddresses: DEFAULT_DEPOSIT_ADDRESSES,
+      kycSubmissions: []
     };
   }
 
@@ -935,6 +1032,198 @@ class DatabaseService {
       }
     }
     return tokens;
+  }
+
+  // --- Automated KYC & Compliance Management ---
+  createKycSubmission(submission: KycSubmission): KycSubmission {
+    if (!this.data.kycSubmissions) this.data.kycSubmissions = [];
+    // Remove previous submission for this user if any exists
+    this.data.kycSubmissions = this.data.kycSubmissions.filter(s => s.userId !== submission.userId);
+    this.data.kycSubmissions.unshift(submission);
+
+    const user = this.getUserById(submission.userId);
+    if (user) {
+      user.kycStatus = submission.status;
+      user.forceReverification = false;
+      user.forceReverificationReason = undefined;
+    }
+
+    this.save();
+    return submission;
+  }
+
+  getAllKycSubmissions(): KycSubmission[] {
+    if (!this.data.kycSubmissions) this.data.kycSubmissions = [];
+    return [...this.data.kycSubmissions].sort(
+      (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
+  }
+
+  getKycSubmissionById(id: string): KycSubmission | undefined {
+    return (this.data.kycSubmissions || []).find(s => s.id === id);
+  }
+
+  getKycSubmissionByUserId(userId: string): KycSubmission | undefined {
+    return (this.data.kycSubmissions || []).find(s => s.userId === userId);
+  }
+
+  updateKycSubmissionStatus(
+    id: string,
+    status: KycStatus,
+    rejectionReason?: string,
+    adminNotes?: string,
+    reviewer?: string
+  ): KycSubmission | null {
+    const sub = (this.data.kycSubmissions || []).find(s => s.id === id);
+    if (!sub) return null;
+
+    sub.status = status;
+    sub.updatedAt = new Date().toISOString();
+    if (rejectionReason) sub.rejectionReason = rejectionReason;
+    if (adminNotes) sub.adminNotes = adminNotes;
+    if (reviewer) {
+      sub.reviewedBy = reviewer;
+      sub.reviewedAt = new Date().toISOString();
+    }
+
+    const user = this.getUserById(sub.userId);
+    if (user) {
+      user.kycStatus = status;
+      if (status === 'verified') {
+        user.kycLevel = 'tier2';
+        user.kycRejectionReason = undefined;
+        user.forceReverification = false;
+        user.forceReverificationReason = undefined;
+
+        // Automatically release any KYC-held transactions for this user
+        if (this.data.transactions) {
+          this.data.transactions.forEach(tx => {
+            if (tx.userId === user.id && tx.status === 'pending_kyc') {
+              tx.status = 'pending';
+              tx.verificationHold = false;
+              tx.note = `${tx.note} [Compliance Verification Cleared]`;
+            }
+          });
+        }
+
+        // Send celebration notification to user
+        this.createNotification({
+          id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          userId: user.id,
+          targetEmail: user.email,
+          title: 'Identity Verification Approved (Level 2 Verified)',
+          message: 'Congratulations! Your identity credentials have been verified by the Compliance Desk. Full institutional settlement limits ($2,000,000.00/24h) and direct cold-custody privileges are active.',
+          type: 'success',
+          sender: 'Compliance & Risk Desk',
+          readBy: [],
+          createdAt: new Date().toISOString()
+        });
+      } else if (status === 'rejected') {
+        user.kycStatus = 'rejected';
+        user.kycRejectionReason = rejectionReason || 'Verification document was unreadable or failed compliance check.';
+
+        this.createNotification({
+          id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          userId: user.id,
+          targetEmail: user.email,
+          title: 'Verification Requires Attention',
+          message: `Your identity verification was rejected: "${user.kycRejectionReason}". Please visit the Client Verification Portal to submit updated documentation.`,
+          type: 'alert',
+          sender: 'Compliance & Risk Desk',
+          readBy: [],
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    this.save();
+    return sub;
+  }
+
+  forceUserReverification(userId: string, reason: string): boolean {
+    const user = this.getUserById(userId);
+    if (!user) return false;
+
+    user.kycStatus = 'action_required';
+    user.forceReverification = true;
+    user.forceReverificationReason = reason;
+
+    const sub = this.getKycSubmissionByUserId(userId);
+    if (sub) {
+      sub.status = 'action_required';
+      sub.rejectionReason = reason;
+      sub.updatedAt = new Date().toISOString();
+    }
+
+    this.createNotification({
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId: user.id,
+      targetEmail: user.email,
+      title: 'Action Required: Re-Verification Requested',
+      message: `The Executive Compliance Officer has requested fresh verification credentials for your account. Reason: "${reason}". Please complete re-verification in your profile.`,
+      type: 'warning',
+      sender: 'Chief Compliance Officer',
+      readBy: [],
+      createdAt: new Date().toISOString()
+    });
+
+    this.save();
+    return true;
+  }
+
+  pendTransactionForKyc(txId: string, reason: string): Transaction | null {
+    const tx = (this.data.transactions || []).find(t => t.id === txId);
+    if (!tx) return null;
+
+    tx.status = 'pending_kyc';
+    tx.verificationHold = true;
+    tx.holdReason = reason || 'KYC Clearance required before disbursement';
+    tx.heldAt = new Date().toISOString();
+
+    const user = this.getUserById(tx.userId);
+    if (user) {
+      this.createNotification({
+        id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        userId: user.id,
+        targetEmail: user.email,
+        title: `Transaction Held for Verification: ${tx.id}`,
+        message: `Your transaction of $${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${tx.asset} has been paused on compliance hold: "${tx.holdReason}". Please complete identity verification in the Client Portal to release funds.`,
+        type: 'alert',
+        sender: 'Settlement Compliance Desk',
+        readBy: [],
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    this.save();
+    return tx;
+  }
+
+  releaseTransactionKycHold(txId: string): Transaction | null {
+    const tx = (this.data.transactions || []).find(t => t.id === txId);
+    if (!tx) return null;
+
+    tx.status = 'pending';
+    tx.verificationHold = false;
+    tx.holdReason = undefined;
+
+    const user = this.getUserById(tx.userId);
+    if (user) {
+      this.createNotification({
+        id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        userId: user.id,
+        targetEmail: user.email,
+        title: `Verification Hold Released: ${tx.id}`,
+        message: `The compliance hold on your transaction of $${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${tx.asset} has been cleared. Settlement will proceed in the standard queue.`,
+        type: 'success',
+        sender: 'Settlement Compliance Desk',
+        readBy: [],
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    this.save();
+    return tx;
   }
 }
 

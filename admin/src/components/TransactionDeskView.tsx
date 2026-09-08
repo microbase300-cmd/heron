@@ -7,7 +7,12 @@ import {
   Search,
   ArrowDownLeft,
   ArrowUpRight,
-  ShieldCheck
+  ShieldCheck,
+  ShieldAlert,
+  Lock,
+  Unlock,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { Transaction } from '../types';
 import { adminApi } from '../services/api';
@@ -17,7 +22,7 @@ interface TransactionDeskViewProps {
   onRefreshTransactions: () => void;
 }
 
-type TabType = 'all' | 'pending_deposits' | 'pending_withdrawals' | 'completed' | 'rejected';
+type TabType = 'all' | 'pending_deposits' | 'pending_withdrawals' | 'kyc_holds' | 'completed' | 'rejected';
 
 export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
   transactions,
@@ -27,11 +32,17 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  // KYC Hold modal state
+  const [holdingTx, setHoldingTx] = useState<Transaction | null>(null);
+  const [holdReason, setHoldReason] = useState('');
+
   const pendingDeposits = transactions.filter(t => t.type === 'deposit' && t.status === 'pending');
   const pendingWithdrawals = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending');
+  const kycHolds = transactions.filter(t => t.status === 'pending_kyc');
 
   const totalPendingDepositAmount = pendingDeposits.reduce((acc, t) => acc + t.amount, 0);
   const totalPendingWithdrawalAmount = pendingWithdrawals.reduce((acc, t) => acc + t.amount, 0);
+  const totalKycHoldAmount = kycHolds.reduce((acc, t) => acc + t.amount, 0);
 
   const filtered = transactions.filter((t) => {
     let matchesTab = true;
@@ -39,6 +50,8 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
       matchesTab = t.type === 'deposit' && t.status === 'pending';
     } else if (activeTab === 'pending_withdrawals') {
       matchesTab = t.type === 'withdrawal' && t.status === 'pending';
+    } else if (activeTab === 'kyc_holds') {
+      matchesTab = t.status === 'pending_kyc';
     } else if (activeTab === 'completed') {
       matchesTab = t.status === 'completed';
     } else if (activeTab === 'rejected') {
@@ -51,6 +64,7 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
       t.userId.toLowerCase().includes(term) ||
       (t.txHash && t.txHash.toLowerCase().includes(term)) ||
       (t.note && t.note.toLowerCase().includes(term)) ||
+      (t.holdReason && t.holdReason.toLowerCase().includes(term)) ||
       t.asset.toLowerCase().includes(term);
 
     return matchesTab && matchesSearch;
@@ -100,6 +114,39 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
     }
   };
 
+  const handleOpenHoldModal = (tx: Transaction) => {
+    setHoldingTx(tx);
+    setHoldReason('Official identity verification documents required before authorizing this institutional settlement.');
+  };
+
+  const handleConfirmPendKyc = async () => {
+    if (!holdingTx || !holdReason.trim()) return;
+    setProcessingId(holdingTx.id);
+    try {
+      await adminApi.pendTransactionForKyc(holdingTx.id, holdReason.trim());
+      onRefreshTransactions();
+      setHoldingTx(null);
+      setHoldReason('');
+    } catch (err: any) {
+      alert(err.message || 'Failed to place verification hold.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReleaseHold = async (tx: Transaction) => {
+    if (!window.confirm(`Release compliance KYC hold on transaction ${tx.id}? Transaction will be returned to active settlement queue.`)) return;
+    setProcessingId(tx.id);
+    try {
+      await adminApi.releaseTransactionKycHold(tx.id);
+      onRefreshTransactions();
+    } catch (err: any) {
+      alert(err.message || 'Failed to release KYC hold.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header and KPI Cards */}
@@ -110,13 +157,13 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
             Settlement Desk & Liquidity Verification
           </h2>
           <p className="text-xs text-[#848E9C] font-mono">
-            Two-tier institutional clearance pipeline for inbound deposits & client disbursements.
+            Two-tier institutional clearance pipeline with automated KYC verification holds.
           </p>
         </div>
       </div>
 
       {/* Settlement Queues Alert Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div 
           onClick={() => setActiveTab('pending_deposits')}
           className={`p-4 rounded-2xl glass-panel border transition-all cursor-pointer ${
@@ -155,7 +202,7 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
                 <ArrowUpRight className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xs font-mono uppercase text-[#848E9C] tracking-wider">Outbound Withdrawals Queue</h3>
+                <h3 className="text-xs font-mono uppercase text-[#848E9C] tracking-wider">Outbound Withdrawals</h3>
                 <div className="text-lg font-mono font-bold text-[#EAECEF] mt-0.5">
                   ${totalPendingWithdrawalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
@@ -164,7 +211,33 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
             <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
               pendingWithdrawals.length > 0 ? 'bg-[#F0B90B]/20 text-[#F0B90B] border border-[#F0B90B]/40 animate-pulse' : 'bg-[#2B313A] text-[#848E9C]'
             }`}>
-              {pendingWithdrawals.length} awaiting approval
+              {pendingWithdrawals.length} awaiting
+            </span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setActiveTab('kyc_holds')}
+          className={`p-4 rounded-2xl glass-panel border transition-all cursor-pointer ${
+            activeTab === 'kyc_holds' ? 'border-amber-500/60 bg-amber-500/10 shadow-lg shadow-amber-500/10' : 'border-[#2B313A] hover:border-amber-500/40'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-mono uppercase text-[#848E9C] tracking-wider">KYC Compliance Holds</h3>
+                <div className="text-lg font-mono font-bold text-amber-400 mt-0.5">
+                  ${totalKycHoldAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
+              kycHolds.length > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-[#2B313A] text-[#848E9C]'
+            }`}>
+              {kycHolds.length} on hold
             </span>
           </div>
         </div>
@@ -177,6 +250,7 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
             { id: 'all', label: `All Transactions (${transactions.length})` },
             { id: 'pending_deposits', label: `Pending Deposits (${pendingDeposits.length})` },
             { id: 'pending_withdrawals', label: `Pending Withdrawals (${pendingWithdrawals.length})` },
+            { id: 'kyc_holds', label: `KYC Holds (${kycHolds.length})` },
             { id: 'completed', label: 'Completed' },
             { id: 'rejected', label: 'Rejected' },
           ].map((tab) => (
@@ -236,6 +310,14 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
                       <div className="text-[11px] text-[#848E9C] font-sans mt-0.5 max-w-sm truncate">
                         {tx.note || `User: ${tx.userId}`}
                       </div>
+                      {tx.holdReason && (
+                        <div className="text-[10px] text-amber-400 font-mono mt-0.5 flex items-center gap-1">
+                          <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                          <span className="truncate max-w-xs" title={tx.holdReason}>
+                            Hold Reason: {tx.holdReason}
+                          </span>
+                        </div>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4">
@@ -267,13 +349,16 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
                             ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
                             : tx.status === 'pending'
                             ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/40 animate-pulse'
+                            : tx.status === 'pending_kyc'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40 animate-pulse'
                             : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
                         }`}
                       >
                         {tx.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
                         {tx.status === 'pending' && <Clock className="w-3 h-3" />}
+                        {tx.status === 'pending_kyc' && <ShieldAlert className="w-3 h-3 text-amber-400" />}
                         {tx.status === 'rejected' && <XCircle className="w-3 h-3" />}
-                        {tx.status.toUpperCase()}
+                        {tx.status === 'pending_kyc' ? 'KYC HOLD' : tx.status.toUpperCase()}
                       </span>
                     </td>
 
@@ -283,33 +368,63 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
 
                     <td className="py-3.5 px-4 text-right">
                       {tx.status === 'pending' ? (
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           {tx.type === 'deposit' ? (
                             <button
                               onClick={() => handleApproveDeposit(tx)}
                               disabled={processingId === tx.id}
-                              className="px-3 py-1.5 rounded-lg bg-[#0ECB81] hover:bg-[#0ECB81]/90 text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#0ECB81]/20 disabled:opacity-50 flex items-center gap-1"
+                              className="px-2.5 py-1.5 rounded-lg bg-[#0ECB81] hover:bg-[#0ECB81]/90 text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#0ECB81]/20 disabled:opacity-50 flex items-center gap-1"
                             >
                               <ShieldCheck className="w-3.5 h-3.5" />
-                              Confirm & Credit
+                              Confirm
                             </button>
                           ) : (
                             <button
                               onClick={() => handleApproveWithdrawal(tx)}
                               disabled={processingId === tx.id}
-                              className="px-3 py-1.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#F0B90B]/20 disabled:opacity-50 flex items-center gap-1"
+                              className="px-2.5 py-1.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#F0B90B]/20 disabled:opacity-50 flex items-center gap-1"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
-                              Approve Payout
+                              Approve
                             </button>
                           )}
+
+                          <button
+                            onClick={() => handleOpenHoldModal(tx)}
+                            disabled={processingId === tx.id}
+                            title="Pend settlement for identity verification issues"
+                            className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 font-mono text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1"
+                          >
+                            <Lock className="w-3 h-3" />
+                            Hold KYC
+                          </button>
+
+                          <button
+                            onClick={() => handleReject(tx)}
+                            disabled={processingId === tx.id}
+                            className="px-2 py-1.5 rounded-lg bg-[#F6465D]/15 hover:bg-[#F6465D]/25 text-[#F6465D] border border-[#F6465D]/30 font-mono text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            Reject
+                          </button>
+                        </div>
+                      ) : tx.status === 'pending_kyc' ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleReleaseHold(tx)}
+                            disabled={processingId === tx.id}
+                            className="px-3 py-1.5 rounded-lg bg-[#0ECB81] hover:bg-[#0ECB81]/90 text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#0ECB81]/20 disabled:opacity-50 flex items-center gap-1"
+                          >
+                            <Unlock className="w-3.5 h-3.5" />
+                            Release Hold
+                          </button>
                           <button
                             onClick={() => handleReject(tx)}
                             disabled={processingId === tx.id}
                             className="px-2.5 py-1.5 rounded-lg bg-[#F6465D]/15 hover:bg-[#F6465D]/25 text-[#F6465D] border border-[#F6465D]/30 font-mono text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1"
                           >
                             <XCircle className="w-3.5 h-3.5" />
-                            {tx.type === 'withdrawal' ? 'Reject & Refund' : 'Reject'}
+                            Reject
                           </button>
                         </div>
                       ) : (
@@ -329,6 +444,81 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
           </table>
         </div>
       </div>
+
+      {/* KYC Hold Modal */}
+      {holdingTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="glass-panel w-full max-w-md rounded-3xl border border-[#2B313A] bg-[#181A20] shadow-2xl p-6 space-y-5">
+            <div className="flex items-start justify-between border-b border-[#2B313A] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-sans font-bold text-[#EAECEF]">Place KYC Verification Hold</h3>
+                  <div className="text-[11px] font-mono text-[#848E9C]">Transaction #{holdingTx.id}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setHoldingTx(null)}
+                className="p-1 rounded-lg hover:bg-[#2B313A] text-[#848E9C] hover:text-[#EAECEF]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#1E2329] border border-[#2B313A] text-xs font-mono space-y-1">
+              <div className="flex justify-between">
+                <span className="text-[#848E9C]">Target Investor:</span>
+                <span className="font-bold text-[#EAECEF]">{holdingTx.userId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#848E9C]">Amount & Asset:</span>
+                <span className="font-bold text-[#F0B90B]">${holdingTx.amount.toLocaleString()} {holdingTx.asset}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#848E9C]">Type:</span>
+                <span className="uppercase text-[#EAECEF]">{holdingTx.type}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-mono uppercase text-[#848E9C]">
+                Verification Hold Notice Reason
+              </label>
+              <textarea
+                value={holdReason}
+                onChange={(e) => setHoldReason(e.target.value)}
+                placeholder="Explain the identity issue or document required for releasing this transaction..."
+                rows={3}
+                className="w-full glass-input p-3 rounded-xl text-xs font-mono resize-none border-amber-500/40"
+              />
+              <p className="text-[10px] font-mono text-[#848E9C]">
+                This explanation will be rendered prominently to the client on their dashboard with an action link to verify.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#2B313A]">
+              <button
+                type="button"
+                onClick={() => setHoldingTx(null)}
+                className="px-4 py-2 rounded-xl bg-[#2B313A] hover:bg-[#363D47] text-[#848E9C] font-mono text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={processingId === holdingTx.id || !holdReason.trim()}
+                onClick={handleConfirmPendKyc}
+                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                {processingId === holdingTx.id ? 'Placing Hold...' : 'Confirm KYC Hold'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

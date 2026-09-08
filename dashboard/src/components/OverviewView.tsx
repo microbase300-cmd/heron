@@ -10,9 +10,11 @@ import {
   CheckCircle2, 
   ShieldCheck,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  ShieldAlert
 } from 'lucide-react';
-import { WalletSummary, Investment, User } from '../types';
+import { WalletSummary, Investment, User, Transaction } from '../types';
 import { PortfolioYieldChart } from './charts/PortfolioYieldChart';
 import { AssetAllocationChart } from './charts/AssetAllocationChart';
 import { formatCurrency, DEFAULT_EXCHANGE_RATES, CURRENCY_SYMBOLS } from '../utils/currency';
@@ -20,6 +22,7 @@ import { formatCurrency, DEFAULT_EXCHANGE_RATES, CURRENCY_SYMBOLS } from '../uti
 interface OverviewViewProps {
   summary: WalletSummary | null;
   investments: Investment[];
+  transactions?: Transaction[];
   user: User | null;
   onNavigate: (tab: string) => void;
   onOpenDeposit: () => void;
@@ -30,6 +33,7 @@ interface OverviewViewProps {
 export const OverviewView: React.FC<OverviewViewProps> = ({
   summary,
   investments,
+  transactions,
   user,
   onNavigate,
   onOpenDeposit,
@@ -50,8 +54,44 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const btcEquivalent = (totalNAV / 68420).toFixed(4);
   const ethEquivalent = (totalNAV / 3540).toFixed(3);
 
+  const kycHoldTx = transactions?.find(t => t.status === 'pending_kyc');
+  const needsKycAttention = kycHoldTx || user?.forceReverification || user?.kycStatus === 'rejected' || user?.kycStatus === 'action_required';
+
   return (
     <div className="space-y-8">
+      {/* Institutional Compliance Notice Banner */}
+      {needsKycAttention && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/40">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wide flex items-center gap-2">
+                <span>Compliance Verification Action Required</span>
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              </div>
+              <p className="text-xs text-[#EAECEF] font-mono mt-0.5">
+                {kycHoldTx
+                  ? `Transaction #${kycHoldTx.id} ($${kycHoldTx.amount.toLocaleString()} ${kycHoldTx.asset}) is on verification hold: ${kycHoldTx.holdReason || 'Identity verification documents needed.'}`
+                  : user?.forceReverification
+                  ? `Periodic institutional compliance re-verification mandated: ${user?.forceReverificationReason || 'Fresh ID documents required.'}`
+                  : `Document review notice: ${user?.kycRejectionReason || 'Please submit updated identification.'}`}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onNavigate('profile')}
+            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 self-start sm:self-auto shrink-0"
+          >
+            <span>Resolve Verification</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Banner: NAV & 24h Delta */}
       <div className="relative overflow-hidden rounded-2xl bg-[#1E2329] p-5 sm:p-8 border border-[#2B313A] shadow-xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#F0B90B]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>

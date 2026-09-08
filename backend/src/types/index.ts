@@ -19,6 +19,54 @@ export interface SecurityLogItem {
   status: 'Authorized' | 'Blocked' | 'Challenge';
 }
 
+export type KycDocumentType = 'passport' | 'national_id' | 'driver_license' | 'proof_of_address';
+
+export type KycStatus = 'unverified' | 'pending' | 'verified' | 'rejected' | 'action_required';
+
+export interface KycOcrResult {
+  confidenceScore: number;
+  documentType: KycDocumentType;
+  extractedFullName: string;
+  extractedDocumentNumber: string;
+  extractedDob: string;
+  extractedExpiryDate: string;
+  extractedCountry: string;
+  mrzDetected: boolean;
+  mrzChecksumValid: boolean;
+  mrzRawString?: string;
+  faceDetected: boolean;
+  faceMatchScore: number;
+  antiSpoofingPass: boolean;
+  tamperRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  discrepancies: string[];
+  scannedAt: string;
+}
+
+export interface KycSubmission {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  userUid?: string;
+  documentType: KycDocumentType;
+  issuingCountry: string;
+  documentNumber: string;
+  fullName: string;
+  dob: string;
+  expiryDate: string;
+  frontDocumentUrl: string;
+  backDocumentUrl?: string;
+  selfieUrl?: string;
+  status: KycStatus;
+  rejectionReason?: string;
+  adminNotes?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  ocrResult: KycOcrResult;
+  submittedAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -32,6 +80,10 @@ export interface User {
   createdAt: string;
   uid?: string;
   kycLevel?: 'unverified' | 'tier1' | 'tier2';
+  kycStatus?: KycStatus;
+  kycRejectionReason?: string;
+  forceReverification?: boolean;
+  forceReverificationReason?: string;
   vipLevel?: string;
   antiPhishingCode?: string;
   twoFactorEnabled?: boolean;
@@ -93,9 +145,12 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   asset: string;
-  status: 'completed' | 'pending' | 'rejected';
+  status: 'completed' | 'pending' | 'rejected' | 'pending_kyc';
   txHash: string;
   note: string;
+  verificationHold?: boolean;
+  holdReason?: string;
+  heldAt?: string;
   createdAt: string;
 }
 

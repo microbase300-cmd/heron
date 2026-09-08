@@ -10,7 +10,9 @@ import {
   CheckCircle2,
   RefreshCw,
   PlusCircle,
-  ExternalLink
+  ExternalLink,
+  ShieldCheck,
+  RotateCcw
 } from 'lucide-react';
 import { AdminUser } from '../types';
 import { adminApi } from '../services/api';
@@ -29,7 +31,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'funded' | 'unfunded' | 'active' | 'suspended'>('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [modalMode, setModalMode] = useState<'balance' | null>(null);
+  const [modalMode, setModalMode] = useState<'balance' | 'force_kyc' | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Balance adjustment & Top Up state
@@ -38,6 +40,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [adjustNote, setAdjustNote] = useState('');
   const [loadingAction, setLoadingAction] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Force Re-verification state
+  const [forceKycReason, setForceKycReason] = useState('');
+  const [loadingForceKyc, setLoadingForceKyc] = useState(false);
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
@@ -108,6 +114,29 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       setActionMessage({ type: 'error', text: err.message || 'Balance update failed.' });
     } finally {
       setLoadingAction(false);
+    }
+  };
+
+  const handleForceKyc = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !forceKycReason.trim()) return;
+    setLoadingForceKyc(true);
+    setActionMessage(null);
+
+    try {
+      const res = await adminApi.forceReverification(selectedUser.id, forceKycReason.trim());
+      setActionMessage({ type: 'success', text: res.message });
+      setForceKycReason('');
+      onRefreshUsers();
+      setTimeout(() => {
+        setModalMode(null);
+        setSelectedUser(null);
+        setActionMessage(null);
+      }, 1500);
+    } catch (err: any) {
+      setActionMessage({ type: 'error', text: err.message || 'Failed to trigger re-verification.' });
+    } finally {
+      setLoadingForceKyc(false);
     }
   };
 
@@ -237,6 +266,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 <th className="py-3.5 px-4">Role</th>
                 <th className="py-3.5 px-4">Available Liquidity</th>
                 <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">KYC Compliance</th>
                 <th className="py-3.5 px-4">Referral Code</th>
                 <th className="py-3.5 px-4">Registration Date</th>
                 <th className="py-3.5 px-4 text-right">Ledger Actions</th>
@@ -259,7 +289,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                               <span>{u.name}</span>
                               {isNewToday && (
                                 <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#0ECB81]/20 text-[#0ECB81] border border-[#0ECB81]/40">
-                                  NEW
+                                   NEW
                                 </span>
                               )}
                             </div>
@@ -307,6 +337,30 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                         </span>
                       </td>
 
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                              u.kycStatus === 'verified'
+                                ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                                : u.kycStatus === 'pending'
+                                ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/40 animate-pulse'
+                                : u.kycStatus === 'action_required' || u.kycStatus === 'rejected'
+                                ? 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
+                                : 'bg-[#2B313A] text-[#848E9C]'
+                            }`}
+                          >
+                            <ShieldCheck className="w-3 h-3" />
+                            {(u.kycStatus || 'unverified').replace('_', ' ').toUpperCase()}
+                          </span>
+                          {u.forceReverification && (
+                            <span className="text-[9px] font-mono text-amber-400 font-semibold flex items-center gap-0.5">
+                              <RotateCcw className="w-2.5 h-2.5" /> RE-VERIFY
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
                       <td className="py-3.5 px-4 font-mono text-[11px] text-[#848E9C]">
                         {u.referralCode || 'N/A'}
                         {u.referredBy && (
@@ -342,8 +396,23 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                           className="px-3 py-1.5 rounded-lg bg-[#F0B90B]/15 hover:bg-[#F0B90B]/25 text-[#F0B90B] border border-[#F0B90B]/30 text-xs font-mono font-bold transition-all inline-flex items-center gap-1 shadow-sm"
                         >
                           <PlusCircle className="w-3.5 h-3.5" />
-                          Top Up / Adjust
+                          Top Up
                         </button>
+
+                        {u.role !== 'admin' && (
+                          <button
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setForceKycReason('Periodic institutional compliance audit requires fresh document submission.');
+                              setModalMode('force_kyc');
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold transition-all inline-flex items-center gap-1"
+                            title="Require investor to submit new KYC verification documents"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            Force KYC
+                          </button>
+                        )}
 
                         {u.role !== 'admin' && (
                           <button
@@ -517,6 +586,98 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   className="px-5 py-2.5 rounded-lg btn-binance text-xs font-mono font-bold shadow-lg shadow-[#F0B90B]/20 disabled:opacity-50"
                 >
                   {loadingAction ? 'Updating Ledger...' : adjustAction === 'credit' ? 'Credit Account' : 'Debit Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Force Re-verification Modal */}
+      {modalMode === 'force_kyc' && selectedUser && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-panel w-full max-w-md p-6 rounded-xl border border-amber-500/40 bg-[#1E2329] shadow-2xl space-y-4 text-[#EAECEF]">
+            <div className="flex items-center justify-between border-b border-[#2B313A] pb-3">
+              <h3 className="font-sans text-lg font-bold text-[#EAECEF] flex items-center gap-2 tracking-tight">
+                <RotateCcw className="w-5 h-5 text-amber-400" />
+                Force Identity Re-Verification
+              </h3>
+              <button
+                onClick={() => {
+                  setModalMode(null);
+                  setSelectedUser(null);
+                }}
+                className="text-[#848E9C] hover:text-[#EAECEF]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-lg bg-[#2B313A] border border-[#363D47] text-xs font-mono">
+              <div className="text-[#848E9C]">Target Investor:</div>
+              <div className="font-bold text-[#EAECEF] text-sm">{selectedUser.name}</div>
+              <div className="text-[#848E9C] text-[11px]">{selectedUser.email}</div>
+              <div className="mt-2 text-[#848E9C]">
+                Current KYC Status:{' '}
+                <span className="text-[#F0B90B] font-bold uppercase">
+                  {selectedUser.kycStatus || 'UNVERIFIED'}
+                </span>
+              </div>
+            </div>
+
+            {actionMessage && (
+              <div
+                className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+                  actionMessage.type === 'success'
+                    ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                    : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
+                }`}
+              >
+                {actionMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-[#0ECB81]" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-[#F6465D]" />
+                )}
+                <span>{actionMessage.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleForceKyc} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono uppercase text-[#848E9C] mb-1">
+                  Re-Verification Requirement Reason (Delivered to User)
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={forceKycReason}
+                  onChange={(e) => setForceKycReason(e.target.value)}
+                  placeholder="Explain why fresh verification documents are requested (e.g. Periodic institutional audit, document expired, name mismatch)..."
+                  className="w-full px-4 py-2.5 rounded-lg glass-input text-xs font-mono bg-[#2B313A] border-[#363D47] text-[#EAECEF] resize-none border-amber-500/30"
+                />
+                <p className="text-[10px] font-mono text-[#848E9C] mt-1">
+                  The client will be locked into verification required status until new valid documents are reviewed and approved.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalMode(null);
+                    setSelectedUser(null);
+                  }}
+                  className="px-4 py-2.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] text-[#848E9C] hover:text-[#EAECEF] text-xs font-mono"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loadingForceKyc || !forceKycReason.trim()}
+                  className="px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#181A20] text-xs font-mono font-bold shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  {loadingForceKyc ? 'Enforcing...' : 'Flag for Re-verification'}
                 </button>
               </div>
             </form>

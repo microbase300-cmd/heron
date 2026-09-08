@@ -8,6 +8,8 @@ import {
   PlanId,
   DepositAddressConfig,
   NotificationMessage,
+  KycSubmission,
+  KycStatus,
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -240,6 +242,50 @@ class AdminApiService {
     } catch {
       return [];
     }
+  }
+
+  // --- KYC & Compliance Desk Methods ---
+  public async getKycSubmissions(status?: KycStatus | string): Promise<{ submissions: KycSubmission[]; count: number; pendingCount: number }> {
+    const query = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    return this.request<{ submissions: KycSubmission[]; count: number; pendingCount: number }>(`/kyc/admin/submissions${query}`);
+  }
+
+  public async getKycSubmission(id: string): Promise<{ submission: KycSubmission }> {
+    return this.request<{ submission: KycSubmission }>(`/kyc/admin/submissions/${id}`);
+  }
+
+  public async approveKyc(id: string, notes?: string): Promise<{ message: string; submission: KycSubmission }> {
+    return this.request<{ message: string; submission: KycSubmission }>(`/kyc/admin/submissions/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  }
+
+  public async rejectKyc(id: string, reason: string, notes?: string): Promise<{ message: string; submission: KycSubmission }> {
+    return this.request<{ message: string; submission: KycSubmission }>(`/kyc/admin/submissions/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason, notes }),
+    });
+  }
+
+  public async forceReverification(userId: string, reason: string): Promise<{ message: string; user: AdminUser }> {
+    return this.request<{ message: string; user: AdminUser }>(`/kyc/admin/users/${userId}/force-reverification`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  public async pendTransactionForKyc(txId: string, reason: string): Promise<{ message: string; transaction: Transaction }> {
+    return this.request<{ message: string; transaction: Transaction }>(`/kyc/admin/transactions/${txId}/pend-kyc`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  public async releaseTransactionKycHold(txId: string): Promise<{ message: string; transaction: Transaction }> {
+    return this.request<{ message: string; transaction: Transaction }>(`/kyc/admin/transactions/${txId}/release-kyc`, {
+      method: 'POST',
+    });
   }
 }
 

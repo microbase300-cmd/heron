@@ -4,47 +4,13 @@
       "id": "usr_admin_001",
       "email": "admin@heronassets.com",
       "name": "Chief Risk Officer",
-      "passwordHash": "$2a$10$.y9XZtLGA.FPLZW.Ju4LYeeTx.JovCVb5KRyKld/6azVSz3vEOWvi",
+      "passwordHash": "$2a$10$1rGT/03zV22Zp8nTcWv9Z.dAyvKmfNtgS1tmrNf133ARUiSWNnL3.",
       "role": "admin",
       "balance": 0,
       "referralCode": "HERON-ADMIN",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T01:11:41.826Z",
-      "securityLogs": [
-        {
-          "id": "sec_1788831340521_3y1j",
-          "timestamp": "2026-09-08T01:35:40.521Z",
-          "ip": "127.0.0.***",
-          "device": "Test Terminal",
-          "location": "Local Test",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_admin_001_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_admin_001_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_admin_001_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "createdAt": "2026-09-05T01:11:41.826Z"
     },
     {
       "id": "usr_demo_882194",
@@ -56,33 +22,7 @@
       "referredBy": null,
       "createdAt": "2026-08-29T17:18:13.156Z",
       "role": "user",
-      "status": "active",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_demo_882194_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_882194_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_882194_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "status": "active"
     },
     {
       "id": "usr_downline_49201",
@@ -94,33 +34,7 @@
       "referredBy": "HERON-8821",
       "createdAt": "2026-08-31T17:18:13.156Z",
       "role": "user",
-      "status": "active",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_downline_49201_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_downline_49201_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_downline_49201_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "status": "active"
     },
     {
       "id": "usr_d9120325-7839-4607-8cc4-ebda84749ef2",
@@ -132,33 +46,7 @@
       "referredBy": null,
       "createdAt": "2026-09-03T17:30:29.126Z",
       "role": "user",
-      "status": "active",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_d9120325-7839-4607-8cc4-ebda84749ef2_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_d9120325-7839-4607-8cc4-ebda84749ef2_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_d9120325-7839-4607-8cc4-ebda84749ef2_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "status": "active"
     },
     {
       "id": "usr_f14b4038-7532-4b34-962a-c2c978953f7d",
@@ -170,33 +58,7 @@
       "referredBy": null,
       "createdAt": "2026-09-03T17:32:55.790Z",
       "role": "user",
-      "status": "active",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_f14b4038-7532-4b34-962a-c2c978953f7d_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_f14b4038-7532-4b34-962a-c2c978953f7d_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_f14b4038-7532-4b34-962a-c2c978953f7d_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "status": "active"
     },
     {
       "id": "usr_demo_vance",
@@ -209,32 +71,7 @@
       "referredBy": null,
       "status": "active",
       "createdAt": "2026-09-05T01:11:41.826Z",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_demo_vance_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_vance_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_vance_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "preferredCurrency": "USD"
     },
     {
       "id": "usr_3b02dfde-3160-4db6-800f-a35577816fe3",
@@ -246,33 +83,7 @@
       "referralCode": "HERON-1842",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T01:46:40.359Z",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_3b02dfde-3160-4db6-800f-a35577816fe3_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_3b02dfde-3160-4db6-800f-a35577816fe3_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_3b02dfde-3160-4db6-800f-a35577816fe3_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "createdAt": "2026-09-05T01:46:40.359Z"
     },
     {
       "id": "usr_2b892fa5-dafb-4965-804f-a0276dd94488",
@@ -284,33 +95,7 @@
       "referralCode": "HERON-8599",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T03:47:58.970Z",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_2b892fa5-dafb-4965-804f-a0276dd94488_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_2b892fa5-dafb-4965-804f-a0276dd94488_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_2b892fa5-dafb-4965-804f-a0276dd94488_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "createdAt": "2026-09-05T03:47:58.970Z"
     },
     {
       "id": "usr_0cda17de-def3-477d-a0a8-06c984532277",
@@ -322,33 +107,7 @@
       "referralCode": "HERON-4542",
       "referredBy": null,
       "status": "active",
-      "createdAt": "2026-09-05T04:10:57.553Z",
-      "securityLogs": [
-        {
-          "id": "sec_init_usr_0cda17de-def3-477d-a0a8-06c984532277_01",
-          "timestamp": "2026-09-07T23:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_0cda17de-def3-477d-a0a8-06c984532277_02",
-          "timestamp": "2026-09-07T11:35:40.519Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_0cda17de-def3-477d-a0a8-06c984532277_03",
-          "timestamp": "2026-09-06T01:35:40.519Z",
-          "ip": "104.28.19.***",
-          "device": "macOS Sonoma • Safari 17",
-          "location": "London, UK [Secured Gateway]",
-          "status": "Authorized"
-        }
-      ]
+      "createdAt": "2026-09-05T04:10:57.553Z"
     }
   ],
   "refreshTokens": [
@@ -631,6 +390,13 @@
       "tokenHash": "56d62c181fdeb2968d9791893befb5779151405139c23c8b741b2774500ba5de",
       "expiresAt": "2026-09-15T01:26:01.267Z",
       "createdAt": "2026-09-08T01:26:01.272Z"
+    },
+    {
+      "id": "rft_b3b072a4-d3a9-4da3-ac04-a3a47dd46d60",
+      "userId": "usr_demo_vance",
+      "tokenHash": "457ff3c049da2edb7ac681f4695af14029413525b8010b642dd6baa6b8740e62",
+      "expiresAt": "2026-09-15T01:56:34.070Z",
+      "createdAt": "2026-09-08T01:56:34.076Z"
     }
   ],
   "investments": [

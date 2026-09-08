@@ -16,9 +16,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Planned / In Progress
-- [ ] Automated KYC document OCR processing pipeline in Admin portal.
 - [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
+
+## [1.7.0] - 2026-09-08
+### Added & Enhanced
+- **Automated KYC Document OCR Processing Pipeline & Admin Compliance Desk (`backend/`, `admin/`, `dashboard/`, `mobile/`)**:
+  - **Backend Intelligent OCR Engine & Compliance Engine (`backend/src/services/ocrEngine.ts`, `backend/src/routes/kyc.ts`, `backend/src/services/db.ts`)**:
+    - Built automated ICAO 9303 Machine Readable Zone (MRZ) parser with Type 3 (Passport 2x44) and Type 1 (ID Card 3x30) checksum verification using the 7-3-1 weight algorithm.
+    - Implemented simulated biometric face confidence scoring (80-99%), document liveness and anti-spoofing heuristics, and automated discrepancy checks comparing user submission claims against decoded OCR document metadata.
+    - Added dedicated KYC REST API routes:
+      - `POST /api/kyc/submit`: Processes client document uploads, runs automated OCR pipeline, persists submission, updates account state, and logs compliance events.
+      - `GET /api/kyc/status`: Fetches authenticated user's active KYC submission, historical submissions, and rejection or re-verification alerts.
+      - `GET /api/kyc/admin/submissions`: Compliance desk queue with filtering by status and search by user / doc ID.
+      - `POST /api/kyc/admin/submissions/:id/approve`: Approves submission, upgrades user to `kycStatus: 'verified'` and `kycLevel: 'tier2'`, and sends approval notification.
+      - `POST /api/kyc/admin/submissions/:id/reject`: Rejects submission with custom compliance feedback or preset categories, flagging account and notifying client.
+      - `POST /api/kyc/admin/force-reverification`: Mandates fresh identity verification for any account, invalidating current credentials and restricting sensitive operations.
+      - `POST /api/kyc/admin/transactions/:id/hold`: Pends a settlement or withdrawal transaction under compliance KYC hold (`status: 'pending_kyc'`, `verificationHold: true`, `holdReason`).
+      - `POST /api/kyc/admin/transactions/:id/release`: Releases compliance hold, returning transaction to `pending` queue or original status.
+  - **Admin KYC Compliance Desk (`admin/src/components/KycComplianceDeskView.tsx` & `admin/src/App.tsx`)**:
+    - Created comprehensive institutional KYC Compliance Desk view accessible via dedicated sidebar tab with pending queue count badge.
+    - **Compliance Metrics**: Real-time KPI cards for Pending Audits, Approved Identities, Under Compliance Hold, and OCR Optical Pass Rate.
+    - **Inspection Modal**: Deep audit drawer featuring high-resolution side-by-side document views (Front, Back, Biometric Selfie), extracted OCR text, ICAO 9303 MRZ checksum validation pill, claim vs document discrepancy flags, and compliance review action buttons.
+    - **Rejection Workflow**: Modal with preset rejection reasons (Illegible Document, Expired ID, Name Discrepancy, Biometric Mismatch, Suspected Document Alteration) and custom reviewer feedback textarea.
+    - **User Management Integration (`UserManagementView.tsx`)**: Added KYC compliance status badge column and direct "Force Re-verification" action modal for administrators.
+    - **Transaction Desk Integration (`TransactionDeskView.tsx`)**: Added support for `pending_kyc` status, "Hold for KYC" modal dialog with compliance reason input, "Release KYC Hold" action, and a dedicated "KYC Compliance Holds" queue filter tab.
+  - **Client Verification Portal (`dashboard/src/components/ClientVerificationPortal.tsx`, `ProfileView.tsx`, `OverviewView.tsx`)**:
+    - Implemented interactive multi-step verification portal supporting Passports, National IDs, Driver's Licenses, and Residence Permits.
+    - Added high-resolution upload dropzones for document front, document back, and real-time biometric selfie with instant client-side image preview and clear actions.
+    - Integrated animated optical OCR pipeline scan progress displaying step-by-step feature extraction, biometric face matching, and MRZ checksum computation.
+    - Added dedicated `Identity Verification (KYC)` tab in user profile with real-time status tracker, OCR extracted credentials recap, and re-submission gateway.
+    - Added high-priority institutional compliance alert banner in Dashboard Overview alerting users when identity re-verification is required or transactions are held.
+  - **Mobile Client Compliance Reflection (`mobile/App.tsx`)**:
+    - Upgraded Account & Security Center profile modal from hardcoded status to dynamic `currentUser.kycStatus` badge with distinct Binance Pro color themes (`#0ECB81` verified, `#F0B90B` pending/action required, `#F6465D` rejected).
+    - Added mandatory re-verification mandate alert card and document rejection notice box displaying compliance officer feedback directly within the profile sheet.
+    - Updated Overview Home screen Account & Security Center banner with real-time KYC status indicator and top-level Institutional Compliance Alert Banner.
+    - Updated Cryptographic Audit Ledger to support `pending_kyc` transaction status with amber `⚠️ KYC HOLD` badge and compliance hold reason box.
+    - Added dedicated `KYC Holds` filter chip in Ledger tab when held transactions exist.
 
 ## [1.6.2] - 2026-09-08
 ### Added & Enhanced
