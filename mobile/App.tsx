@@ -23,12 +23,17 @@ import {
   Switch
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import * as Notifications from 'expo-notifications';
 import { NavigationBar } from 'expo-navigation-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
-import { registerForPushNotificationsAsync, scheduleLocalNotification, isExpoGo } from './src/services/notifications';
+import {
+  registerForPushNotificationsAsync,
+  scheduleLocalNotification,
+  addNotificationReceivedListener,
+  addNotificationResponseReceivedListener,
+  isExpoGo
+} from './src/services/notifications';
 import {
   ExchangeRatesData,
   DEFAULT_EXCHANGE_RATES,
@@ -533,26 +538,24 @@ function MainAppContent() {
     let respSub: any = null;
 
     try {
-      if (!isExpoGo) {
-        // Foreground push notification listener
-        notifSub = Notifications.addNotificationReceivedListener((notification) => {
-          console.log('[Push] Notification received in foreground:', notification.request.content);
-          loadAllData();
-        });
+      // Foreground push notification listener
+      notifSub = addNotificationReceivedListener((notification) => {
+        console.log('[Push] Notification received in foreground:', notification?.request?.content);
+        loadAllData();
+      });
 
-        // Background / Tray tap notification listener
-        respSub = Notifications.addNotificationResponseReceivedListener((response) => {
-          console.log('[Push] Notification tapped by user:', response.notification.request.content);
-          setShowNotificationModal(true);
-        });
-      }
+      // Background / Tray tap notification listener
+      respSub = addNotificationResponseReceivedListener((response) => {
+        console.log('[Push] Notification tapped by user:', response?.notification?.request?.content);
+        setShowNotificationModal(true);
+      });
     } catch (listenerErr) {
       console.log('[Push] Notification listener notice:', listenerErr);
     }
 
     return () => {
-      if (notifSub && notifSub.remove) notifSub.remove();
-      if (respSub && respSub.remove) respSub.remove();
+      if (notifSub && typeof notifSub.remove === 'function') notifSub.remove();
+      if (respSub && typeof respSub.remove === 'function') respSub.remove();
     };
   }, [currentUser]);
 

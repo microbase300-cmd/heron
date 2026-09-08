@@ -4,7 +4,7 @@
       "id": "usr_admin_001",
       "email": "admin@heronassets.com",
       "name": "Chief Risk Officer",
-      "passwordHash": "$2a$10$laoGCgW5/wj1/e3CKvTjNe7sI5hO3/2vIaUJiVnFa6lcuF1V2uYaG",
+      "passwordHash": "$2a$10$H8W4YUPy4Vexn9tRgn3yFumuRhZStAKxzhA7K7RLQo3.S6bcf6piK",
       "role": "admin",
       "balance": 0,
       "referralCode": "HERON-ADMIN",
@@ -243,6 +243,14 @@
       "createdAt": "2026-09-05T01:11:41.826Z",
       "preferredCurrency": "USD",
       "securityLogs": [
+        {
+          "id": "sec_1788907805769_p317",
+          "timestamp": "2026-09-08T22:50:05.771Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
         {
           "id": "sec_1788903002405_1hf2",
           "timestamp": "2026-09-08T21:30:02.405Z",
@@ -939,6 +947,13 @@
       "tokenHash": "9c45588d298974e668b3783e17ec313008b7da00b526e58d45bb2131e3f8e7e1",
       "expiresAt": "2026-09-15T21:30:02.462Z",
       "createdAt": "2026-09-08T21:30:02.462Z"
+    },
+    {
+      "id": "rft_e69a66e7-361e-42bf-a3f9-c917c5ee67a1",
+      "userId": "usr_demo_vance",
+      "tokenHash": "f3d0066eea24be65f4d1dc1860eb658cd5e68dbe58e4357541d261408cff1641",
+      "expiresAt": "2026-09-15T22:50:05.981Z",
+      "createdAt": "2026-09-08T22:50:05.988Z"
     }
   ],
   "investments": [
