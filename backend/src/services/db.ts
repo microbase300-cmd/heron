@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem } from '../types';
+import { pushService } from './pushNotificationService';
 
 export const DEFAULT_DEPOSIT_ADDRESSES: Record<string, DepositAddressConfig> = {
   USDT_TRC20: {
@@ -636,6 +637,29 @@ class DatabaseService {
     if (!this.data.notifications) this.data.notifications = [];
     this.data.notifications.unshift(notification);
     this.save();
+
+    // Asynchronously dispatch push notification to registered mobile devices
+    try {
+      let tokens: string[] = [];
+      if (notification.userId) {
+        tokens = this.getUserPushTokens(notification.userId);
+      } else if (notification.targetEmail) {
+        const target = this.getUserByEmail(notification.targetEmail);
+        if (target) tokens = this.getUserPushTokens(target.id);
+      } else {
+        // System broadcast: dispatch to all registered mobile tokens
+        tokens = this.getAllPushTokens();
+      }
+
+      if (tokens.length > 0) {
+        pushService.dispatchNotification(notification, tokens).catch((err) => {
+          console.error('[Push Gateway] Dispatch error:', err);
+        });
+      }
+    } catch (e) {
+      console.error('[Push Gateway] Token resolution failure:', e);
+    }
+
     return notification;
   }
 
@@ -807,6 +831,39 @@ class DatabaseService {
       user.securityLogs = user.securityLogs.slice(0, 20);
     }
     this.save();
+  }
+
+  saveUserPushToken(userId: string, token: string): boolean {
+    const user = this.data.users.find((u) => u.id === userId);
+    if (!user) return false;
+
+    if (!user.pushTokens) {
+      user.pushTokens = [];
+    }
+
+    if (!user.pushTokens.includes(token)) {
+      user.pushTokens.push(token);
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  getUserPushTokens(userId: string): string[] {
+    const user = this.data.users.find((u) => u.id === userId);
+    return user?.pushTokens || [];
+  }
+
+  getAllPushTokens(): string[] {
+    const tokens: string[] = [];
+    for (const u of this.data.users) {
+      if (Array.isArray(u.pushTokens)) {
+        for (const t of u.pushTokens) {
+          if (!tokens.includes(t)) tokens.push(t);
+        }
+      }
+    }
+    return tokens;
   }
 }
 

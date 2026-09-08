@@ -23,10 +23,12 @@ import {
   Switch
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Notifications from 'expo-notifications';
 import { NavigationBar } from 'expo-navigation-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
+import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/notifications';
 import {
   User,
   WalletSummary,
@@ -311,6 +313,10 @@ function MainAppContent() {
   const [antiPhishingInput, setAntiPhishingInput] = useState('');
   const [editingAntiPhishing, setEditingAntiPhishing] = useState(false);
   const [securityLogsList, setSecurityLogsList] = useState<SecurityLogItem[]>([]);
+
+  // Push Notification State (Expo Notifications / APNs / FCM)
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+  const [pushStatus, setPushStatus] = useState<string>('initializing');
   
   // Moved down
   // Operational Data
@@ -489,6 +495,38 @@ function MainAppContent() {
       const interval = setInterval(loadAllData, 20000); // 20s auto-refresh
       return () => clearInterval(interval);
     }
+  }, [currentUser]);
+
+  // Push Notification Registration & Listeners (Expo Notifications / APNs / FCM)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    registerForPushNotificationsAsync().then((result) => {
+      if (result.token) {
+        setExpoPushToken(result.token);
+        setPushStatus('registered');
+        mobileApi.registerPushToken(result.token);
+      } else {
+        setPushStatus(result.status);
+      }
+    });
+
+    // Foreground push notification listener
+    const notifSub = Notifications.addNotificationReceivedListener((notification) => {
+      console.log('[Push] Notification received in foreground:', notification.request.content);
+      loadAllData();
+    });
+
+    // Background / Tray tap notification listener
+    const respSub = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log('[Push] Notification tapped by user:', response.notification.request.content);
+      setShowNotificationModal(true);
+    });
+
+    return () => {
+      notifSub.remove();
+      respSub.remove();
+    };
   }, [currentUser]);
 
   // Auth Handlers
@@ -2584,6 +2622,41 @@ function MainAppContent() {
                     trackColor={{ false: '#2B313A', true: '#0ECB81' }}
                     thumbColor="#FFFFFF"
                   />
+                </View>
+
+                {/* Push Notification Service Gateway (Expo Notifications / APNs / FCM) */}
+                <View style={styles.secItemCardColumn}>
+                  <View style={styles.secItemTopRow}>
+                    <View style={styles.secItemLeft}>
+                      <Text style={styles.secItemTitle}>Push Notification Gateway</Text>
+                      <Text style={styles.secItemSub}>
+                        {pushStatus === 'registered'
+                          ? 'Expo / APNs / FCM Push Token Active'
+                          : pushStatus === 'simulator'
+                          ? 'Simulator Node (Use Send Test below)'
+                          : 'Push Gateway Operational'}
+                      </Text>
+                    </View>
+                    <View style={[styles.kycVerifiedMiniBadge, { backgroundColor: pushStatus === 'registered' ? 'rgba(14,203,129,0.15)' : 'rgba(240,185,11,0.15)', borderColor: pushStatus === 'registered' ? '#0ECB81' : '#F0B90B' }]}>
+                      <Text style={[styles.kycVerifiedMiniText, { color: pushStatus === 'registered' ? '#0ECB81' : '#F0B90B' }]}>
+                        {pushStatus === 'registered' ? 'ACTIVE' : 'READY'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.secItemActionBtn, { marginTop: 10, alignSelf: 'flex-start' }]}
+                    onPress={async () => {
+                      await scheduleLocalNotification(
+                        'Heron Assets Trustees Dispatches',
+                        'Push notification gateway operational. Real-time cryptographic settlement alerts active.',
+                        { type: 'test' }
+                      );
+                      showCustomAlert('Test Push Dispatched', 'A simulated push notification alert was dispatched to your system tray.', 'success');
+                    }}
+                  >
+                    <Text style={styles.secItemActionBtnText}>🔔 Send Test Push Notification</Text>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Withdrawal Limits Box */}

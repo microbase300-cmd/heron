@@ -39,6 +39,7 @@ export interface User {
   whitelistedWallets?: WhitelistedWallet[];
   securityLogs?: SecurityLogItem[];
   preferredCurrency?: string;
+  pushTokens?: string[];
 }
 
 export interface RefreshToken {

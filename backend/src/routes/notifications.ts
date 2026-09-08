@@ -42,4 +42,22 @@ router.post('/read-all', requireAuth, (req: AuthRequest, res: Response): void =>
   }
 });
 
+// POST /api/notifications/push-token - Register device push token (Expo / APNs / FCM)
+router.post('/push-token', requireAuth, (req: AuthRequest, res: Response): void => {
+  try {
+    const userId = req.user!.userId || req.user!.id;
+    const { token } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({ error: 'Valid push notification token is required.' });
+      return;
+    }
+
+    db.saveUserPushToken(userId, token.trim());
+    res.json({ message: 'Push notification device token registered successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to register push token.' });
+  }
+});
+
 export default router;

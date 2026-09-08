@@ -375,6 +375,13 @@
       "tokenHash": "4e758d8309ade1850d40ad18e9da236cf0c9920895ca06f0bd5f9f27273667e8",
       "expiresAt": "2026-09-15T00:51:17.142Z",
       "createdAt": "2026-09-08T00:51:17.143Z"
+    },
+    {
+      "id": "rft_cc0638d2-175b-4adf-869b-8519972f293f",
+      "userId": "usr_demo_vance",
+      "tokenHash": "d542d16680b4f0856e45f08c1c2f6fe64a22a35b5172f9210fbbb8dc388c771f",
+      "expiresAt": "2026-09-15T01:08:08.724Z",
+      "createdAt": "2026-09-08T01:08:08.724Z"
     }
   ],
   "investments": [

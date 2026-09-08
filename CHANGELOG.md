@@ -16,10 +16,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Planned / In Progress
-- [ ] Push Notification service integration for mobile app (Expo Notifications / APNs / FCM).
 - [ ] Automated KYC document OCR processing pipeline in Admin portal.
 - [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
+
+## [1.6.0] - 2026-09-08
+### Added & Changed
+- **Push Notification Service Integration for Mobile App (Expo Notifications / APNs / FCM)**:
+  - **Mobile Push Engine (`mobile/src/services/notifications.ts` & `mobile/App.tsx`)**:
+    - Installed and integrated `expo-notifications` and `expo-device` native modules into the mobile application.
+    - Configured Android high-priority notification channel (`heron-default`) with `#F0B90B` light accent, vibration pattern, and badge indicators.
+    - Configured Expo foreground notification behavior (`shouldShowAlert`, `shouldShowBanner`, `shouldShowList`, `shouldPlaySound`, `shouldSetBadge`).
+    - Implemented `registerForPushNotificationsAsync` with automatic permission requests and EAS project ID resolution (`c4024769-dbe5-404f-9d89-64da8ea2a57b`).
+    - Added automatic device token registration pipeline transmitting push tokens to the backend on login (`POST /api/notifications/push-token`).
+    - Added foreground notification listener triggering real-time balance and ledger sync (`loadAllData`) upon incoming dispatches.
+    - Added notification response listener opening the official Executive Communication Box upon user tray interaction.
+    - Added live "Push Notification Gateway" control card in Profile Settings with 1-tap "Send Test Push Notification" local simulation.
+  - **Backend Push Gateway Pipeline (`backend/src/services/pushNotificationService.ts` & `backend/src/routes/notifications.ts`)**:
+    - Created high-performance push notification service utilizing Expo's HTTP v2 Gateway with native support for APNs (iOS) and FCM (Android).
+    - Added push token storage, retrieval, and deduplication helpers in `DatabaseService` (`saveUserPushToken`, `getUserPushTokens`, `getAllPushTokens`).
+    - Wired automated push notifications into `db.createNotification` for deposit confirmations, withdrawal releases, investment maturity releases, admin dispatches, and ecosystem broadcasts.
+    - Added authenticated `POST /api/notifications/push-token` endpoint.
+
+## [1.5.0] - 2026-09-08
+### Added & Changed
+- **Institutional Binance Pro User Profile & Security Center (`dashboard/` & `mobile/`)**:
+  - **Web Client Dashboard (`dashboard/src/components/ProfileView.tsx`)**:
+    - Built comprehensive Binance Pro User Profile & Security Center screen with institutional dark gold styling (`#181A20`, `#1E2329`, `#2B313A`, `#F0B90B`, `#0ECB81`).
+    - **Identity Header**: Cryptographic UID (`HAT-89240182`) with 1-click copy, KYC Level 2 Verified badge, VIP 1 Institutional badge, and dynamic security score (85% • Strong).
+    - **Security & Defense**: Interactive modal for updating master password, Two-Factor Authentication (2FA) toggle, anti-phishing code protection, and withdrawal whitelist enforcement switch.
+    - **Whitelisted Wallets (Address Book)**: Multi-chain filtering (All, BTC, ETH, USDT, SOL), Add Destination Address modal with network validation, label tagging, and deletion actions.
+    - **Session & Audit Logs**: Monitored access history with masked IP (`197.210.84.***`), device agent (`Windows 11 • Chrome 128`), location, and authorization status.
+    - **Preferences & Limits**: Base currency selection (USD, EUR, GBP), yield auto-compounding switch, and VIP 1 disbursement ceilings ($500,000 / 24h).
+    - **Navigation**: Added `Account & Security` sidebar nav item with `ShieldCheck` icon, clickable bottom user profile card, and navbar profile quick-access button.
+  - **Mobile App (`mobile/App.tsx`)**:
+    - Connected top-left avatar button in the Binance header to open the full-screen Account & Security Center modal with live status indicator.
+    - Added prominent `Account & Security Center` banner card on the Overview screen with KYC Tier 2 badge and UID display.
+    - Implemented 4 sub-sections: Security & Defense, Whitelisted Wallets address book with Add modal, Session Audit Logs, and Preferences & Settings.
+    - Added interactive Change Password modal, native `Switch` toggles for 2FA and Whitelisting, and inline Anti-Phishing editor.
+    - Added offline simulation fallbacks in `mobile/src/services/api.ts` to allow testing without backend requirements.
+  - **Backend API & Database (`backend/`)**:
+    - Extended `User` model with `uid`, `kycLevel`, `vipLevel`, `antiPhishingCode`, `twoFactorEnabled`, `whitelistEnabled`, `whitelistedWallets`, and `securityLogs`.
+    - Added REST endpoints in `backend/src/routes/auth.ts`: `PUT /api/auth/profile`, `PUT /api/auth/change-password`, `POST /api/auth/whitelist-wallet`, `DELETE /api/auth/whitelist-wallet/:id`, `GET /api/auth/security-logs`.
+
+## [1.4.3] - 2026-09-07
+### Added & Changed
+- **Corporate Rebranding to Heron Assets Trustees & Luxury 3D Crest Emblem**:
+  - Rebranded corporate entity from Heron Capital to **Heron Assets Trustees** across all 5 sub-projects.
+  - Applied new luxury 3D gold-and-sapphire crest emblem (`heron_logo.jpg`) across `mobile/assets/`, `mobile/app.json`, `web/public/`, `dashboard/public/`, `admin/public/`, and backend seeding.
+  - Updated mobile app configuration: App name `Heron Assets Trustees`, adaptive icon, dark splash screen, and notification dispatch headers.
+  - Updated web, client dashboard, and executive admin portal page titles, favicons, brand headers, and protocol dispatch tags.
 
 ## [1.4.2] - 2026-09-07
 ### Added & Changed

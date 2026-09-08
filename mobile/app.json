@@ -32,6 +32,13 @@
         {
           "style": "dark"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/heron_logo.jpg",
+          "color": "#F0B90B"
+        }
       ]
     ],
     "web": {

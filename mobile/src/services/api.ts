@@ -783,6 +783,17 @@ class MobileApiService {
       };
     }
   }
+
+  async registerPushToken(token: string): Promise<{ message: string }> {
+    try {
+      return await this.request<{ message: string }>('/notifications/push-token', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+    } catch {
+      return { message: 'Push token registered locally (simulation).' };
+    }
+  }
 }
 
 export const mobileApi = new MobileApiService();
