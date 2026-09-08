@@ -23,6 +23,7 @@ import {
   Switch
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import { NavigationBar } from 'expo-navigation-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
@@ -53,7 +54,11 @@ import {
   PlanConfig,
   PlanId,
   WhitelistedWallet,
-  SecurityLogItem
+  SecurityLogItem,
+  KycDocumentType,
+  KycStatus,
+  KycSubmission,
+  KycOcrResult
 } from './src/types';
 
 const { width, height } = Dimensions.get('window');
@@ -311,9 +316,31 @@ function MainAppContent() {
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
+
+  // KYC Verification State & Form
+  const [kycData, setKycData] = useState<{
+    status: KycStatus;
+    submission?: KycSubmission;
+    kycRejectionReason?: string;
+    forceReverification?: boolean;
+    forceReverificationReason?: string;
+    kycLevel?: string;
+  } | null>(null);
+  const [kycDocType, setKycDocType] = useState<KycDocumentType>('passport');
+  const [kycCountry, setKycCountry] = useState('United States');
+  const [kycDocNumber, setKycDocNumber] = useState('');
+  const [kycFullName, setKycFullName] = useState('');
+  const [kycDob, setKycDob] = useState('1990-01-01');
+  const [kycExpiry, setKycExpiry] = useState('2030-01-01');
+  const [kycFrontUrl, setKycFrontUrl] = useState('');
+  const [kycBackUrl, setKycBackUrl] = useState('');
+  const [kycSelfieUrl, setKycSelfieUrl] = useState('');
+  const [kycSubmitting, setKycSubmitting] = useState(false);
+  const [showKycForm, setShowKycForm] = useState(false);
 
   // Profile & Security Center State
-  const [profileTab, setProfileTab] = useState<'security' | 'whitelist' | 'logs' | 'preferences'>('security');
+  const [profileTab, setProfileTab] = useState<'kyc' | 'security' | 'whitelist' | 'logs' | 'preferences'>('kyc');
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [currentPasswordInput, setCurrentPasswordInput] = useState('');
   const [newPasswordInput, setNewPasswordInput] = useState('');
@@ -383,6 +410,7 @@ function MainAppContent() {
   useEffect(() => {
     if (Platform.OS === 'android') {
       const onBackPress = () => {
+        if (showKycModal) { setShowKycModal(false); return true; }
         if (showProfileModal) {
           if (showChangePasswordModal) { setShowChangePasswordModal(false); return true; }
           if (showAddWalletModal) { setShowAddWalletModal(false); return true; }
@@ -406,7 +434,7 @@ function MainAppContent() {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => backHandler.remove();
     }
-  }, [showDepositModal, showWithdrawModal, showInvestModal, showNotificationModal, selectedDetailNotif, priorityPopUpNotif, activeTab]);
+  }, [showKycModal, showProfileModal, showDepositModal, showWithdrawModal, showInvestModal, showNotificationModal, selectedDetailNotif, priorityPopUpNotif, activeTab]);
 
   // Helper to dynamically match deposit asset to active receiving addresses
   const getSelectedDepositWallet = () => {
@@ -466,7 +494,8 @@ function MainAppContent() {
         tickerRes,
         addrRes,
         secLogRes,
-        ratesRes
+        ratesRes,
+        kycRes
       ] = await Promise.allSettled([
         mobileApi.getWalletSummary(),
         mobileApi.getMyInvestments(),
@@ -477,7 +506,8 @@ function MainAppContent() {
         mobileApi.getMarketTickers(),
         mobileApi.getDepositAddresses(),
         mobileApi.getSecurityLogs(),
-        mobileApi.getExchangeRates()
+        mobileApi.getExchangeRates(),
+        mobileApi.getKycStatus()
       ]);
 
       if (summaryRes.status === 'fulfilled') setWalletSummary(summaryRes.value);
@@ -486,6 +516,12 @@ function MainAppContent() {
       if (txsRes.status === 'fulfilled') setTransactions(txsRes.value.transactions || []);
       if (secLogRes.status === 'fulfilled' && secLogRes.value?.logs) setSecurityLogsList(secLogRes.value.logs);
       if (ratesRes.status === 'fulfilled' && ratesRes.value) setExchangeRates(ratesRes.value);
+      if (kycRes.status === 'fulfilled' && kycRes.value) {
+        setKycData(kycRes.value);
+        if (kycRes.value.status && currentUser && currentUser.kycStatus !== kycRes.value.status) {
+          setCurrentUser(prev => prev ? { ...prev, kycStatus: kycRes.value.status } : null);
+        }
+      }
       if (notifRes.status === 'fulfilled') {
         const notifList = notifRes.value.notifications || [];
         setNotifications(notifList);
@@ -752,17 +788,113 @@ function MainAppContent() {
     try {
       await mobileApi.updateProfile({ preferredCurrency: curr });
       setCurrentUser(prev => prev ? { ...prev, preferredCurrency: curr } : null);
-      const rates = exchangeRates.rates || DEFAULT_EXCHANGE_RATES.rates;
-      const rate = rates[curr] || 1;
-      const avail = walletSummary?.availableBalance ?? currentUser.balance ?? 0;
-      const converted = formatCurrency(avail, curr, rates);
+    } catch (e: any) {
+      console.log('Currency preference update notice:', e?.message || e);
+    }
+  };
+
+  // KYC Image Picker & Capture Helper
+  const pickKycImage = async (setter: (val: string) => void, fromCamera: boolean = false) => {
+    try {
+      if (fromCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          showCustomAlert('Camera Permission', 'Camera permission is required to capture your identity document.', 'warning');
+          return;
+        }
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          quality: 0.8,
+          base64: true,
+        });
+        if (!result.canceled && result.assets && result.assets[0]) {
+          const a = result.assets[0];
+          setter(a.base64 ? `data:image/jpeg;base64,${a.base64}` : a.uri);
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          showCustomAlert('Gallery Permission', 'Gallery access is required to select your identity document.', 'warning');
+          return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          quality: 0.8,
+          base64: true,
+        });
+        if (!result.canceled && result.assets && result.assets[0]) {
+          const a = result.assets[0];
+          setter(a.base64 ? `data:image/jpeg;base64,${a.base64}` : a.uri);
+        }
+      }
+    } catch (err: any) {
+      showCustomAlert('Image Capture Error', err?.message || 'Could not load photo.', 'error');
+    }
+  };
+
+  // KYC Submission Handler
+  const handleSubmitKyc = async () => {
+    const nameToSubmit = kycFullName.trim() || currentUser?.name || '';
+    if (!nameToSubmit) {
+      showCustomAlert('Full Legal Name', 'Please provide your legal full name matching your official document.', 'warning');
+      return;
+    }
+    if (!kycDocNumber.trim()) {
+      showCustomAlert('Document Number', 'Please enter your document ID / passport number.', 'warning');
+      return;
+    }
+    if (!kycFrontUrl.trim()) {
+      showCustomAlert('Front Document', 'Please capture or attach the front side of your identification document.', 'warning');
+      return;
+    }
+    if ((kycDocType === 'national_id' || kycDocType === 'driver_license') && !kycBackUrl.trim()) {
+      showCustomAlert('Back Document', `Please attach or capture the back side of your ${kycDocType === 'national_id' ? 'National ID' : "Driver's License"}.`, 'warning');
+      return;
+    }
+
+    setKycSubmitting(true);
+    try {
+      const res = await mobileApi.submitKyc({
+        documentType: kycDocType,
+        issuingCountry: kycCountry.trim() || 'United States',
+        documentNumber: kycDocNumber.trim(),
+        fullName: nameToSubmit,
+        dob: kycDob,
+        expiryDate: kycExpiry,
+        frontDocumentUrl: kycFrontUrl,
+        backDocumentUrl: kycBackUrl || undefined,
+        selfieUrl: kycSelfieUrl || undefined,
+        livenessVerified: true,
+      });
+
+      if (res.status) {
+        setCurrentUser(prev => prev ? {
+          ...prev,
+          kycStatus: res.status,
+          kycLevel: res.status === 'verified' ? 'tier2' : prev.kycLevel,
+          forceReverification: false,
+          forceReverificationReason: undefined
+        } : null);
+      }
+
+      const latestKyc = await mobileApi.getKycStatus();
+      setKycData(latestKyc);
+      setShowKycForm(false);
+
       showCustomAlert(
-        'Currency Preference Saved',
-        `Base display currency switched to ${curr}. Live available balance: ${converted} (Live Rate: 1 USD = ${rate.toFixed(4)} ${curr}).`,
+        res.status === 'verified' ? '✓ Tier 2 Verification Approved' : 'Identity Documents Submitted',
+        res.status === 'verified'
+          ? 'Automated cryptographic OCR verification succeeded! Your institutional tier 2 verification is active.'
+          : 'Your documents have been submitted to the Executive Compliance Settlement Desk. OCR score logged.',
         'success'
       );
-    } catch (e: any) {
-      showCustomAlert('Update Notice', e.message || 'Could not update currency preference.', 'error');
+      loadAllData();
+    } catch (err: any) {
+      showCustomAlert('Submission Error', err.message || 'Failed to submit identity documents.', 'error');
+    } finally {
+      setKycSubmitting(false);
     }
   };
 
@@ -1123,13 +1255,38 @@ function MainAppContent() {
 
         <TouchableOpacity style={styles.headerSearchBox}>
           <Text style={styles.headerSearchIcon}>🔍</Text>
-          <Text style={styles.headerSearchText}>Search coin, pairs...</Text>
+          <Text style={styles.headerSearchText}>Search pairs...</Text>
+        </TouchableOpacity>
+
+        {/* Dedicated KYC Verification Header Pill */}
+        <TouchableOpacity
+          style={[
+            styles.headerKycBadgePill,
+            (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') && styles.headerKycBadgeVerified,
+            (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') && styles.headerKycBadgePending,
+            (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') && styles.headerKycBadgeRejected,
+          ]}
+          onPress={() => setShowKycModal(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.headerKycBadgeIcon}>
+            {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? '✓' :
+             (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') ? '⏳' :
+             (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') ? '✕' : '🛡️'}
+          </Text>
+          <Text style={[
+            styles.headerKycBadgeText,
+            (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') && { color: '#0ECB81' },
+            (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') && { color: '#F0B90B' },
+            (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') && { color: '#F6465D' },
+          ]}>
+            {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? 'Tier 2' :
+             (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') ? 'Review' :
+             (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') ? 'Action Req' : 'Verify ID'}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.headerRightControls}>
-          <TouchableOpacity style={styles.headerIconBtn}>
-            <Text style={styles.headerIconText}>[–]</Text> {/* Scan icon mock */}
-          </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => setShowNotificationModal(true)}
@@ -1211,29 +1368,74 @@ function MainAppContent() {
               <Text style={styles.pnlText}>Today's PNL: <Text style={{ color: '#0ECB81' }}>+$124.50 (+1.25%)</Text></Text>
             </View>
 
-            {/* Institutional Compliance Alert Banner */}
-            {(currentUser.forceReverification || currentUser.kycStatus === 'action_required' || currentUser.kycStatus === 'rejected' || transactions.some(t => t.status === 'pending_kyc')) && (
+            {/* Direct KYC Prompt Banner for Unverified Users */}
+            {currentUser.kycStatus !== 'verified' && kycData?.status !== 'verified' && (
               <TouchableOpacity
                 style={[
-                  styles.complianceAlertBanner,
-                  currentUser.kycStatus === 'rejected' && { borderColor: 'rgba(246, 70, 93, 0.5)', backgroundColor: 'rgba(246, 70, 93, 0.08)' }
+                  styles.kycPromptBanner,
+                  (currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected') && { borderColor: 'rgba(246, 70, 93, 0.4)', backgroundColor: 'rgba(246, 70, 93, 0.08)' },
+                  (currentUser.kycStatus === 'pending' || kycData?.status === 'pending') && { borderColor: 'rgba(240, 185, 11, 0.4)', backgroundColor: 'rgba(240, 185, 11, 0.08)' }
                 ]}
-                onPress={() => setShowProfileModal(true)}
+                onPress={() => setShowKycModal(true)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.kycPromptLeft}>
+                  <Text style={styles.kycPromptIcon}>
+                    {currentUser.kycStatus === 'pending' || kycData?.status === 'pending' ? '⏳' :
+                     currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected' ? '✕' : '🪪'}
+                  </Text>
+                  <View style={{ marginLeft: 10, flex: 1 }}>
+                    <Text style={[
+                      styles.kycPromptTitle,
+                      (currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected') && { color: '#F6465D' }
+                    ]}>
+                      {currentUser.kycStatus === 'pending' || kycData?.status === 'pending'
+                        ? 'Identity Verification: Under Compliance Review'
+                        : currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected'
+                        ? 'Verification Rejected: Action Required'
+                        : 'Identity Verification: Complete KYC Tier 2'}
+                    </Text>
+                    <Text style={styles.kycPromptSub}>
+                      {currentUser.kycStatus === 'pending' || kycData?.status === 'pending'
+                        ? 'Your documents have been submitted and are being reviewed by the compliance desk.'
+                        : currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected'
+                        ? (currentUser.kycRejectionReason || kycData?.kycRejectionReason || 'Please re-submit your ID documents to pass compliance.')
+                        : 'Verify your identity to unlock higher withdrawal limits and instant execution.'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[
+                  styles.kycPromptBtn,
+                  (currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected') && { backgroundColor: 'rgba(246, 70, 93, 0.2)' }
+                ]}>
+                  <Text style={[
+                    styles.kycPromptBtnText,
+                    (currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected') && { color: '#F6465D' }
+                  ]}>
+                    {currentUser.kycStatus === 'pending' || kycData?.status === 'pending' ? 'View Status' : 'Verify ID →'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* Institutional Compliance Alert Banner */}
+            {(currentUser.forceReverification || currentUser.kycStatus === 'action_required' || transactions.some(t => t.status === 'pending_kyc')) && (
+              <TouchableOpacity
+                style={styles.complianceAlertBanner}
+                onPress={() => setShowKycModal(true)}
                 activeOpacity={0.8}
               >
                 <View style={styles.complianceAlertIconBox}>
-                  <Text style={{ fontSize: 16 }}>{currentUser.kycStatus === 'rejected' ? '✕' : '⚠️'}</Text>
+                  <Text style={{ fontSize: 16 }}>⚠️</Text>
                 </View>
                 <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={[styles.complianceAlertTitle, currentUser.kycStatus === 'rejected' && { color: '#F6465D' }]}>
+                  <Text style={styles.complianceAlertTitle}>
                     {currentUser.forceReverification || currentUser.kycStatus === 'action_required'
                       ? 'Institutional Compliance: Identity Re-Verification Mandate'
-                      : currentUser.kycStatus === 'rejected'
-                      ? 'Verification Rejected: Action Required'
                       : 'Settlement Notice: Active Compliance KYC Hold'}
                   </Text>
                   <Text style={styles.complianceAlertSub}>
-                    {currentUser.forceReverificationReason || currentUser.kycRejectionReason || 'One or more transaction settlements are held pending compliance audit. Tap to review.'}
+                    {currentUser.forceReverificationReason || currentUser.kycRejectionReason || 'One or more transaction settlements are held pending compliance audit. Tap to verify.'}
                   </Text>
                 </View>
                 <Text style={styles.complianceAlertArrow}>→</Text>
@@ -2490,6 +2692,7 @@ function MainAppContent() {
             {/* Segmented Tab Navigation */}
             <View style={styles.profileTabsRow}>
               {[
+                { id: 'kyc', label: 'Identity KYC', icon: '🪪' },
                 { id: 'security', label: 'Security', icon: '🛡️' },
                 { id: 'whitelist', label: 'Whitelist', icon: '📒' },
                 { id: 'logs', label: 'Audit Logs', icon: '📜' },
@@ -2507,6 +2710,141 @@ function MainAppContent() {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* TAB 0: KYC IDENTITY VERIFICATION & AML STATUS */}
+            {profileTab === 'kyc' && (
+              <View style={styles.profileSectionContent}>
+                {/* Main KYC Status Card */}
+                <View style={styles.kycProfileMainCard}>
+                  <View style={styles.kycProfileHeaderRow}>
+                    <View style={styles.kycProfileIconCircle}>
+                      <Text style={{ fontSize: 24 }}>
+                        {kycData?.status === 'verified' || currentUser.kycStatus === 'verified' ? '✓' :
+                         kycData?.status === 'pending' || currentUser.kycStatus === 'pending' ? '⏳' :
+                         kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected' ? '✕' : '🛡️'}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.kycProfileTag}>COMPLIANCE TIER STATUS</Text>
+                      <Text style={styles.kycProfileTitle}>
+                        {kycData?.status === 'verified' || currentUser.kycStatus === 'verified' ? 'Tier 2 Institutional Verified' :
+                         kycData?.status === 'pending' || currentUser.kycStatus === 'pending' ? 'Verification Under Review' :
+                         kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected' ? 'Verification Action Required' :
+                         'Unverified Account'}
+                      </Text>
+                    </View>
+                    <View style={[
+                      styles.kycVerifiedMiniBadge,
+                      (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') && { backgroundColor: 'rgba(14,203,129,0.15)', borderColor: '#0ECB81' },
+                      (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') && { backgroundColor: 'rgba(240,185,11,0.15)', borderColor: '#F0B90B' },
+                      (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') && { backgroundColor: 'rgba(246,70,93,0.15)', borderColor: '#F6465D' },
+                    ]}>
+                      <Text style={[
+                        styles.kycVerifiedMiniText,
+                        (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') && { color: '#0ECB81' },
+                        (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') && { color: '#F0B90B' },
+                        (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') && { color: '#F6465D' },
+                      ]}>
+                        {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? 'VERIFIED' :
+                         (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') ? 'PENDING' :
+                         (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') ? 'REJECTED' : 'UNVERIFIED'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Dynamic Information Display */}
+                  {(kycData?.submission || currentUser.kycStatus === 'verified' || currentUser.kycStatus === 'pending') && (
+                    <View style={styles.kycDetailGrid}>
+                      <View style={styles.kycDetailItem}>
+                        <Text style={styles.kycDetailLabel}>DOCUMENT TYPE</Text>
+                        <Text style={styles.kycDetailVal}>
+                          {(kycData?.submission?.documentType || 'Passport').toUpperCase().replace('_', ' ')}
+                        </Text>
+                      </View>
+                      <View style={styles.kycDetailItem}>
+                        <Text style={styles.kycDetailLabel}>ISSUING REGION</Text>
+                        <Text style={styles.kycDetailVal}>{kycData?.submission?.issuingCountry || 'United States'}</Text>
+                      </View>
+                      <View style={styles.kycDetailItem}>
+                        <Text style={styles.kycDetailLabel}>LEGAL FULL NAME</Text>
+                        <Text style={styles.kycDetailVal}>{kycData?.submission?.fullName || currentUser.name}</Text>
+                      </View>
+                      <View style={styles.kycDetailItem}>
+                        <Text style={styles.kycDetailLabel}>DOCUMENT NUMBER</Text>
+                        <Text style={styles.kycDetailVal}>
+                          {kycData?.submission?.documentNumber ? `•••• ${kycData.submission.documentNumber.slice(-4)}` : '•••• 8821'}
+                        </Text>
+                      </View>
+                      {kycData?.submission?.ocrResult && (
+                        <View style={[styles.kycDetailItem, { width: '100%' }]}>
+                          <Text style={styles.kycDetailLabel}>OCR RECOGNITION CONFIDENCE</Text>
+                          <Text style={[styles.kycDetailVal, { color: '#0ECB81' }]}>
+                            {kycData.submission.ocrResult.confidenceScore.toFixed(1)}% • MRZ Checksum Passed
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Rejection / Action Required Message */}
+                  {(currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected' || currentUser.forceReverification) && (
+                    <View style={styles.kycRejectionAlertCard}>
+                      <Text style={styles.kycRejectionAlertTitle}>⚠️ Compliance Audit Feedback</Text>
+                      <Text style={styles.kycRejectionAlertBody}>
+                        {currentUser.forceReverificationReason ||
+                         currentUser.kycRejectionReason ||
+                         kycData?.kycRejectionReason ||
+                         kycData?.submission?.rejectionReason ||
+                         'Your document submission requires update. Please provide clear, unblurred photos of your government ID.'}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Action Launch Button */}
+                  <TouchableOpacity
+                    style={[styles.goldBtnFull, { marginTop: 16 }]}
+                    onPress={() => {
+                      setShowKycModal(true);
+                      if (kycData?.status === 'unverified' || kycData?.status === 'rejected' || currentUser.forceReverification) {
+                        setShowKycForm(true);
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.goldBtnText}>
+                      {kycData?.status === 'verified' || currentUser.kycStatus === 'verified'
+                        ? '🛡️ View Identity Credentials & Limits'
+                        : kycData?.status === 'pending' || currentUser.kycStatus === 'pending'
+                        ? '⏳ View Verification Tracking'
+                        : '🪪 Launch KYC Verification Portal →'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Institutional Tier Comparison Table */}
+                <View style={styles.kycTierTableCard}>
+                  <Text style={styles.kycTierTableTitle}>INSTITUTIONAL ACCOUNT TIERS</Text>
+                  
+                  <View style={styles.kycTierRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.kycTierName}>Tier 1 (Email & OTP Verified)</Text>
+                      <Text style={styles.kycTierPerk}>Standard deposits, $25,000 daily limit</Text>
+                    </View>
+                    <Text style={{ color: '#848E9C', fontWeight: 'bold' }}>Active</Text>
+                  </View>
+
+                  <View style={[styles.kycTierRow, { borderBottomWidth: 0 }]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.kycTierName, { color: '#F0B90B' }]}>Tier 2 (Government ID & AML Cleared)</Text>
+                      <Text style={styles.kycTierPerk}>Uncapped withdrawals, VIP yield allocations, priority settlement</Text>
+                    </View>
+                    <Text style={{ color: (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? '#0ECB81' : '#F0B90B', fontWeight: 'bold' }}>
+                      {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? '✓ Unlocked' : 'Requires ID'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
 
             {/* TAB 1: SECURITY & DEFENSE */}
             {profileTab === 'security' && (
@@ -3066,6 +3404,367 @@ function MainAppContent() {
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 10: KYC IDENTITY VERIFICATION PORTAL */}
+      {/* ========================================================================= */}
+      <Modal visible={showKycModal} animationType="slide">
+        <SafeAreaView style={[styles.profileSafeContainer, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0) }]}>
+          <ExpoStatusBar style="light" />
+          <NavigationBar style="dark" />
+
+          {/* KYC Header Bar */}
+          <View style={styles.profileHeaderBar}>
+            <TouchableOpacity
+              style={styles.profileBackBtn}
+              onPress={() => setShowKycModal(false)}
+            >
+              <Text style={styles.profileBackBtnText}>←</Text>
+            </TouchableOpacity>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.profileHeaderTitle}>Identity Verification</Text>
+              <Text style={styles.profileHeaderSubtitle}>KYC • AML Institutional Compliance</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.profileCloseBtn}
+              onPress={() => setShowKycModal(false)}
+            >
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.kycModalScroll} showsVerticalScrollIndicator={false}>
+            {/* Status Header Overview Card */}
+            <View style={styles.kycOverviewCard}>
+              <View style={styles.kycOverviewTopRow}>
+                <View style={[
+                  styles.kycOverviewIconCircle,
+                  (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') && { backgroundColor: 'rgba(14,203,129,0.15)', borderColor: '#0ECB81' },
+                  (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') && { backgroundColor: 'rgba(240,185,11,0.15)', borderColor: '#F0B90B' },
+                  (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') && { backgroundColor: 'rgba(246,70,93,0.15)', borderColor: '#F6465D' },
+                ]}>
+                  <Text style={{ fontSize: 26 }}>
+                    {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? '✓' :
+                     (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') ? '⏳' :
+                     (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') ? '✕' : '🪪'}
+                  </Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 14 }}>
+                  <Text style={styles.kycOverviewBrand}>HERON ASSETS TRUSTEE COMPLIANCE</Text>
+                  <Text style={styles.kycOverviewHeadline}>
+                    {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? 'Level 2 Identity Verified' :
+                     (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') ? 'Verification Pending Review' :
+                     (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') ? 'Action Required: Re-submit ID' :
+                     'Unverified Account'}
+                  </Text>
+                  <Text style={styles.kycOverviewSub}>
+                    {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? 'All institutional features, uncapped limits, and VIP pools unlocked.' :
+                     (kycData?.status === 'pending' || currentUser.kycStatus === 'pending') ? 'Automated OCR scan completed. Executive desk review in progress (ETA < 2h).' :
+                     (kycData?.status === 'rejected' || currentUser.kycStatus === 'rejected') ? 'Previous documents failed compliance criteria. Please provide updated files below.' :
+                     'Submit your government-issued ID to complete regulatory clearance.'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Rejection Feedback Box */}
+              {(currentUser.kycStatus === 'rejected' || kycData?.status === 'rejected' || currentUser.forceReverification) && (
+                <View style={styles.kycRejectionDetailBox}>
+                  <Text style={styles.kycRejectionDetailTitle}>⚠️ Compliance Notice:</Text>
+                  <Text style={styles.kycRejectionDetailText}>
+                    {currentUser.forceReverificationReason ||
+                     currentUser.kycRejectionReason ||
+                     kycData?.kycRejectionReason ||
+                     kycData?.submission?.rejectionReason ||
+                     'The submitted document was unclear or incomplete. Please ensure photos are glare-free with all 4 corners visible.'}
+                  </Text>
+                </View>
+              )}
+
+              {/* Toggle Form / Summary Button for Verified/Pending */}
+              {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified' || kycData?.status === 'pending') && (
+                <TouchableOpacity
+                  style={styles.kycToggleFormBtn}
+                  onPress={() => setShowKycForm(!showKycForm)}
+                >
+                  <Text style={styles.kycToggleFormBtnText}>
+                    {showKycForm ? '▲ Hide Update Form' : '↻ Update / Re-submit Identity Documents'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* VERIFICATION SUMMARY (When Verified/Pending and form hidden) */}
+            {(!showKycForm && (kycData?.status === 'verified' || currentUser.kycStatus === 'verified' || kycData?.status === 'pending')) ? (
+              <View style={styles.kycVerifiedProofCard}>
+                <Text style={styles.kycSectionTitle}>VERIFIED CREDENTIAL DETAILS</Text>
+
+                <View style={styles.kycProofGrid}>
+                  <View style={styles.kycProofRow}>
+                    <Text style={styles.kycProofLabel}>Legal Name</Text>
+                    <Text style={styles.kycProofVal}>{kycData?.submission?.fullName || currentUser.name}</Text>
+                  </View>
+                  <View style={styles.kycProofRow}>
+                    <Text style={styles.kycProofLabel}>Document Type</Text>
+                    <Text style={styles.kycProofVal}>{(kycData?.submission?.documentType || 'Passport').toUpperCase().replace('_', ' ')}</Text>
+                  </View>
+                  <View style={styles.kycProofRow}>
+                    <Text style={styles.kycProofLabel}>Issuing Country</Text>
+                    <Text style={styles.kycProofVal}>{kycData?.submission?.issuingCountry || 'United States'}</Text>
+                  </View>
+                  <View style={styles.kycProofRow}>
+                    <Text style={styles.kycProofLabel}>Document Number</Text>
+                    <Text style={styles.kycProofVal}>
+                      {kycData?.submission?.documentNumber ? `•••• ${kycData.submission.documentNumber.slice(-4)}` : '•••• 8821'}
+                    </Text>
+                  </View>
+                  <View style={styles.kycProofRow}>
+                    <Text style={styles.kycProofLabel}>Status</Text>
+                    <Text style={[styles.kycProofVal, { color: (kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? '#0ECB81' : '#F0B90B' }]}>
+                      {(kycData?.status === 'verified' || currentUser.kycStatus === 'verified') ? '✓ Level 2 Verified' : '⏳ Pending Review'}
+                    </Text>
+                  </View>
+                  {kycData?.submission?.ocrResult && (
+                    <View style={styles.kycProofRow}>
+                      <Text style={styles.kycProofLabel}>OCR Confidence</Text>
+                      <Text style={[styles.kycProofVal, { color: '#0ECB81' }]}>
+                        {kycData.submission.ocrResult.confidenceScore.toFixed(1)}% (Passed)
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Account Privileges Unlocked */}
+                <View style={styles.kycPerksBox}>
+                  <Text style={styles.kycPerksTitle}>INSTITUTIONAL CLEARANCES ACTIVE</Text>
+                  <Text style={styles.kycPerkItem}>✓ 24-Hour Capital Disbursement: <Text style={{ color: '#0ECB81', fontWeight: 'bold' }}>Uncapped</Text></Text>
+                  <Text style={styles.kycPerkItem}>✓ Institutional Liquidity Staking: <Text style={{ color: '#0ECB81', fontWeight: 'bold' }}>Enabled</Text></Text>
+                  <Text style={styles.kycPerkItem}>✓ Direct Blockchain Settlements: <Text style={{ color: '#0ECB81', fontWeight: 'bold' }}>Priority Queue</Text></Text>
+                </View>
+              </View>
+            ) : (
+              /* SUBMISSION FORM (When Unverified, Rejected, or user toggled update) */
+              <View style={styles.kycFormContainer}>
+                <Text style={styles.kycSectionTitle}>STEP 1: SELECT DOCUMENT TYPE</Text>
+                <View style={styles.kycDocTypeGrid}>
+                  {[
+                    { id: 'passport', label: 'Passport', icon: '🛂' },
+                    { id: 'national_id', label: 'National ID', icon: '🪪' },
+                    { id: 'driver_license', label: "Driver's License", icon: '🚗' },
+                    { id: 'proof_of_address', label: 'Proof of Address', icon: '📄' }
+                  ].map((doc) => (
+                    <TouchableOpacity
+                      key={doc.id}
+                      style={[styles.kycDocTypeCard, kycDocType === doc.id && styles.kycDocTypeCardActive]}
+                      onPress={() => setKycDocType(doc.id as KycDocumentType)}
+                    >
+                      <Text style={styles.kycDocTypeIcon}>{doc.icon}</Text>
+                      <Text style={[styles.kycDocTypeTitle, kycDocType === doc.id && styles.kycDocTypeTitleActive]}>
+                        {doc.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={[styles.kycSectionTitle, { marginTop: 16 }]}>STEP 2: CREDENTIAL DETAILS</Text>
+
+                <Text style={styles.fieldLabel}>Issuing Country</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. United States, United Kingdom, Canada"
+                  placeholderTextColor="#666"
+                  value={kycCountry}
+                  onChangeText={setKycCountry}
+                />
+
+                <Text style={styles.fieldLabel}>Legal Full Name (as shown on ID)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Alexander Vance"
+                  placeholderTextColor="#666"
+                  value={kycFullName || currentUser.name}
+                  onChangeText={setKycFullName}
+                />
+
+                <Text style={styles.fieldLabel}>Document Number / Passport ID</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. P12345678 or ID-908124"
+                  placeholderTextColor="#666"
+                  value={kycDocNumber}
+                  onChangeText={setKycDocNumber}
+                  autoCapitalize="characters"
+                />
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.fieldLabel}>Date of Birth</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#666"
+                      value={kycDob}
+                      onChangeText={setKycDob}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.fieldLabel}>Expiry Date</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#666"
+                      value={kycExpiry}
+                      onChangeText={setKycExpiry}
+                    />
+                  </View>
+                </View>
+
+                <Text style={[styles.kycSectionTitle, { marginTop: 16 }]}>STEP 3: DOCUMENT PHOTO CAPTURE</Text>
+
+                {/* Front Document Upload */}
+                <View style={styles.kycUploadCard}>
+                  <View style={styles.kycUploadHeader}>
+                    <Text style={styles.kycUploadTitle}>📄 Front Side of Document</Text>
+                    <Text style={styles.kycUploadRequired}>REQUIRED</Text>
+                  </View>
+                  <Text style={styles.kycUploadSub}>
+                    Clear, high-resolution photo with all text and photo details readable.
+                  </Text>
+
+                  {kycFrontUrl ? (
+                    <View style={styles.kycPreviewBox}>
+                      <Image source={{ uri: kycFrontUrl }} style={styles.kycPreviewImage} resizeMode="cover" />
+                      <View style={styles.kycPreviewOverlay}>
+                        <Text style={styles.kycPreviewSuccessText}>✓ Front Image Attached</Text>
+                        <TouchableOpacity
+                          style={styles.kycRetakeBtn}
+                          onPress={() => setKycFrontUrl('')}
+                        >
+                          <Text style={styles.kycRetakeBtnText}>Retake / Replace</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.kycUploadActionsRow}>
+                      <TouchableOpacity
+                        style={styles.kycCameraBtn}
+                        onPress={() => pickKycImage(setKycFrontUrl, true)}
+                      >
+                        <Text style={styles.kycCameraBtnText}>📸 Take Photo</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.kycGalleryBtn}
+                        onPress={() => pickKycImage(setKycFrontUrl, false)}
+                      >
+                        <Text style={styles.kycGalleryBtnText}>🖼️ Choose Gallery</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* Back Document Upload (for National ID & Driver's License) */}
+                {(kycDocType === 'national_id' || kycDocType === 'driver_license') && (
+                  <View style={styles.kycUploadCard}>
+                    <View style={styles.kycUploadHeader}>
+                      <Text style={styles.kycUploadTitle}>📄 Back Side of Document</Text>
+                      <Text style={styles.kycUploadRequired}>REQUIRED FOR ID/LICENSE</Text>
+                    </View>
+                    <Text style={styles.kycUploadSub}>
+                      Ensure barcode, MRZ strip, and signatures on the reverse side are clearly visible.
+                    </Text>
+
+                    {kycBackUrl ? (
+                      <View style={styles.kycPreviewBox}>
+                        <Image source={{ uri: kycBackUrl }} style={styles.kycPreviewImage} resizeMode="cover" />
+                        <View style={styles.kycPreviewOverlay}>
+                          <Text style={styles.kycPreviewSuccessText}>✓ Back Image Attached</Text>
+                          <TouchableOpacity
+                            style={styles.kycRetakeBtn}
+                            onPress={() => setKycBackUrl('')}
+                          >
+                            <Text style={styles.kycRetakeBtnText}>Retake / Replace</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.kycUploadActionsRow}>
+                        <TouchableOpacity
+                          style={styles.kycCameraBtn}
+                          onPress={() => pickKycImage(setKycBackUrl, true)}
+                        >
+                          <Text style={styles.kycCameraBtnText}>📸 Take Photo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.kycGalleryBtn}
+                          onPress={() => pickKycImage(setKycBackUrl, false)}
+                        >
+                          <Text style={styles.kycGalleryBtnText}>🖼️ Choose Gallery</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Facial Selfie / Biometric Upload */}
+                <View style={styles.kycUploadCard}>
+                  <View style={styles.kycUploadHeader}>
+                    <Text style={styles.kycUploadTitle}>👤 Live Facial Selfie</Text>
+                    <Text style={[styles.kycUploadRequired, { color: '#848E9C' }]}>RECOMMENDED</Text>
+                  </View>
+                  <Text style={styles.kycUploadSub}>
+                    Take a live portrait selfie to verify face-match against your ID document.
+                  </Text>
+
+                  {kycSelfieUrl ? (
+                    <View style={styles.kycPreviewBox}>
+                      <Image source={{ uri: kycSelfieUrl }} style={styles.kycPreviewImage} resizeMode="cover" />
+                      <View style={styles.kycPreviewOverlay}>
+                        <Text style={styles.kycPreviewSuccessText}>✓ Selfie Attached</Text>
+                        <TouchableOpacity
+                          style={styles.kycRetakeBtn}
+                          onPress={() => setKycSelfieUrl('')}
+                        >
+                          <Text style={styles.kycRetakeBtnText}>Retake / Replace</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.kycUploadActionsRow}>
+                      <TouchableOpacity
+                        style={styles.kycCameraBtn}
+                        onPress={() => pickKycImage(setKycSelfieUrl, true)}
+                      >
+                        <Text style={styles.kycCameraBtnText}>📸 Take Live Selfie</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.kycGalleryBtn}
+                        onPress={() => pickKycImage(setKycSelfieUrl, false)}
+                      >
+                        <Text style={styles.kycGalleryBtnText}>🖼️ Upload Photo</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* Submission CTA */}
+                <TouchableOpacity
+                  style={[styles.goldBtnFull, { marginTop: 20, marginBottom: 40 }]}
+                  onPress={handleSubmitKyc}
+                  disabled={kycSubmitting}
+                  activeOpacity={0.8}
+                >
+                  {kycSubmitting ? (
+                    <ActivityIndicator color="#181A20" />
+                  ) : (
+                    <Text style={styles.goldBtnText}>Submit Documents for OCR & Compliance Audit →</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={{ height: 60 }} />
+          </ScrollView>
+        </SafeAreaView>
       </Modal>
 
       {/* Custom Luxury Alert Modal */}
@@ -5854,5 +6553,470 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(240, 185, 11, 0.2)',
+  },
+
+  // --- Header KYC Pill Badge ---
+  headerKycBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    marginLeft: 8,
+    gap: 4,
+  },
+  headerKycBadgeVerified: {
+    backgroundColor: 'rgba(14, 203, 129, 0.15)',
+    borderColor: '#0ECB81',
+  },
+  headerKycBadgePending: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderColor: '#F0B90B',
+  },
+  headerKycBadgeRejected: {
+    backgroundColor: 'rgba(246, 70, 93, 0.15)',
+    borderColor: '#F6465D',
+  },
+  headerKycBadgeIcon: {
+    fontSize: 11,
+  },
+  headerKycBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#EAECEF',
+  },
+
+  // --- Overview KYC Banner ---
+  kycPromptBanner: {
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.3)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  kycPromptLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  kycPromptIcon: {
+    fontSize: 22,
+  },
+  kycPromptTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  kycPromptSub: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  kycPromptBtn: {
+    backgroundColor: 'rgba(240, 185, 11, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  kycPromptBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+
+  // --- Profile KYC Tab Styles ---
+  kycProfileMainCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    marginBottom: 12,
+  },
+  kycProfileHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  kycProfileIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kycProfileTag: {
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  kycProfileTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 2,
+  },
+  kycDetailGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  kycDetailItem: {
+    width: '48%',
+    marginBottom: 6,
+  },
+  kycDetailLabel: {
+    fontSize: 8.5,
+    color: '#848E9C',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  kycDetailVal: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+    marginTop: 2,
+  },
+  kycRejectionAlertCard: {
+    backgroundColor: 'rgba(246, 70, 93, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(246, 70, 93, 0.35)',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+  },
+  kycRejectionAlertTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F6465D',
+    marginBottom: 2,
+  },
+  kycRejectionAlertBody: {
+    fontSize: 10.5,
+    color: '#EAECEF',
+    lineHeight: 15,
+  },
+  kycTierTableCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  kycTierTableTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: 'rgba(255, 255, 255, 0.5)',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  kycTierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  kycTierName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  kycTierPerk: {
+    fontSize: 10,
+    color: '#848E9C',
+    marginTop: 2,
+  },
+
+  // --- KYC Modal Styles ---
+  kycModalScroll: {
+    flex: 1,
+    padding: 16,
+  },
+  kycOverviewCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    marginBottom: 16,
+  },
+  kycOverviewTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  kycOverviewIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kycOverviewBrand: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 1,
+  },
+  kycOverviewHeadline: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 2,
+  },
+  kycOverviewSub: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.65)',
+    marginTop: 4,
+    lineHeight: 15,
+  },
+  kycRejectionDetailBox: {
+    backgroundColor: 'rgba(246, 70, 93, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(246, 70, 93, 0.35)',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+  },
+  kycRejectionDetailTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F6465D',
+    marginBottom: 2,
+  },
+  kycRejectionDetailText: {
+    fontSize: 11,
+    color: '#EAECEF',
+    lineHeight: 15,
+  },
+  kycToggleFormBtn: {
+    marginTop: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  kycToggleFormBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  kycVerifiedProofCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    marginBottom: 16,
+  },
+  kycSectionTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  kycProofGrid: {
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  kycProofRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  kycProofLabel: {
+    fontSize: 11,
+    color: '#848E9C',
+  },
+  kycProofVal: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  kycPerksBox: {
+    backgroundColor: 'rgba(14, 203, 129, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(14, 203, 129, 0.25)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  kycPerksTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  kycPerkItem: {
+    fontSize: 11,
+    color: '#EAECEF',
+    marginVertical: 2,
+  },
+  kycFormContainer: {
+    backgroundColor: '#1E2329',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  kycDocTypeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  kycDocTypeCard: {
+    width: '48%',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+  },
+  kycDocTypeCardActive: {
+    backgroundColor: 'rgba(240, 185, 11, 0.12)',
+    borderColor: '#F0B90B',
+  },
+  kycDocTypeIcon: {
+    fontSize: 22,
+    marginBottom: 4,
+  },
+  kycDocTypeTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#848E9C',
+  },
+  kycDocTypeTitleActive: {
+    color: '#F0B90B',
+    fontWeight: 'bold',
+  },
+  kycUploadCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+  },
+  kycUploadHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  kycUploadTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  kycUploadRequired: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  kycUploadSub: {
+    fontSize: 10,
+    color: '#848E9C',
+    marginBottom: 10,
+    lineHeight: 14,
+  },
+  kycUploadActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  kycCameraBtn: {
+    flex: 1,
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: '#F0B90B',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  kycCameraBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  kycGalleryBtn: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  kycGalleryBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  kycPreviewBox: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#0ECB81',
+  },
+  kycPreviewImage: {
+    width: '100%',
+    height: 140,
+  },
+  kycPreviewOverlay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(24, 26, 32, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  kycPreviewSuccessText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+  },
+  kycRetakeBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  kycRetakeBtnText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
   }
 });

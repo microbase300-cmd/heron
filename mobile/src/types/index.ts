@@ -52,7 +52,53 @@ export interface SecurityLogItem {
   status: 'Authorized' | 'Blocked' | 'Challenge';
 }
 
+export type KycDocumentType = 'passport' | 'national_id' | 'driver_license' | 'proof_of_address';
 export type KycStatus = 'unverified' | 'pending' | 'verified' | 'rejected' | 'action_required';
+
+export interface KycOcrResult {
+  confidenceScore: number;
+  documentType: KycDocumentType;
+  extractedFullName: string;
+  extractedDocumentNumber: string;
+  extractedDob: string;
+  extractedExpiryDate: string;
+  extractedCountry: string;
+  mrzDetected: boolean;
+  mrzChecksumValid: boolean;
+  mrzRawString?: string;
+  faceDetected: boolean;
+  faceMatchScore: number;
+  antiSpoofingPass: boolean;
+  tamperRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  discrepancies: string[];
+  scannedAt: string;
+}
+
+export interface KycSubmission {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  userUid?: string;
+  documentType: KycDocumentType;
+  issuingCountry: string;
+  documentNumber: string;
+  fullName: string;
+  dob: string;
+  expiryDate: string;
+  frontDocumentUrl: string;
+  backDocumentUrl?: string;
+  selfieUrl?: string;
+  biometricVideoUrl?: string;
+  status: KycStatus;
+  rejectionReason?: string;
+  adminNotes?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  ocrResult?: KycOcrResult;
+  livenessVerified?: boolean;
+  submittedAt?: string;
+}
 
 export interface User {
   id: string;

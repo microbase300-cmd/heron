@@ -12,7 +12,10 @@ import {
   PlanConfig,
   PlanId,
   WhitelistedWallet,
-  SecurityLogItem
+  SecurityLogItem,
+  KycDocumentType,
+  KycStatus,
+  KycSubmission
 } from '../types';
 
 // Dynamic host determination for Physical Devices, Emulators, and Web
@@ -352,6 +355,47 @@ class MobileApiService {
     return this.request<{ message: string }>('/notifications/push-token', {
       method: 'POST',
       body: JSON.stringify({ token }),
+    });
+  }
+
+  // --- KYC Verification Operations ---
+  async getKycStatus(): Promise<{
+    status: KycStatus;
+    submission?: KycSubmission;
+    kycRejectionReason?: string;
+    forceReverification?: boolean;
+    forceReverificationReason?: string;
+    kycLevel?: string;
+  }> {
+    return this.request('/kyc/status');
+  }
+
+  async submitKyc(data: {
+    documentType: KycDocumentType;
+    issuingCountry: string;
+    documentNumber: string;
+    fullName: string;
+    dob: string;
+    expiryDate: string;
+    frontDocumentUrl: string;
+    backDocumentUrl?: string;
+    selfieUrl?: string;
+    biometricVideoUrl?: string;
+    livenessVerified?: boolean;
+    livenessDetails?: {
+      botDetected: boolean;
+      turnLeftPassed: boolean;
+      turnRightPassed: boolean;
+      waveHandPassed?: boolean;
+      nodPassed?: boolean;
+      blinkPassed?: boolean;
+      smilePassed?: boolean;
+      capturedLive: boolean;
+    };
+  }): Promise<{ message: string; submission: KycSubmission; status: KycStatus; ocrResult?: any }> {
+    return this.request('/kyc/submit', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 
