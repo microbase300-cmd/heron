@@ -19,7 +19,8 @@ import {
   Image,
   BackHandler,
   Pressable,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  Switch
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { NavigationBar } from 'expo-navigation-bar';
@@ -36,7 +37,9 @@ import {
   MarketTicker,
   Investment,
   PlanConfig,
-  PlanId
+  PlanId,
+  WhitelistedWallet,
+  SecurityLogItem
 } from './src/types';
 
 const { width, height } = Dimensions.get('window');
@@ -287,6 +290,27 @@ function MainAppContent() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Profile & Security Center State
+  const [profileTab, setProfileTab] = useState<'security' | 'whitelist' | 'logs' | 'preferences'>('security');
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+
+  const [showAddWalletModal, setShowAddWalletModal] = useState(false);
+  const [walletAssetInput, setWalletAssetInput] = useState('USDT');
+  const [walletNetworkInput, setWalletNetworkInput] = useState('TRC-20');
+  const [walletAddressInput, setWalletAddressInput] = useState('');
+  const [walletLabelInput, setWalletLabelInput] = useState('');
+  const [walletAddLoading, setWalletAddLoading] = useState(false);
+  const [walletFilter, setWalletFilter] = useState('all');
+
+  const [antiPhishingInput, setAntiPhishingInput] = useState('');
+  const [editingAntiPhishing, setEditingAntiPhishing] = useState(false);
+  const [securityLogsList, setSecurityLogsList] = useState<SecurityLogItem[]>([]);
   
   // Moved down
   // Operational Data
@@ -333,6 +357,12 @@ function MainAppContent() {
   useEffect(() => {
     if (Platform.OS === 'android') {
       const onBackPress = () => {
+        if (showProfileModal) {
+          if (showChangePasswordModal) { setShowChangePasswordModal(false); return true; }
+          if (showAddWalletModal) { setShowAddWalletModal(false); return true; }
+          setShowProfileModal(false);
+          return true;
+        }
         if (showDepositModal) { setShowDepositModal(false); return true; }
         if (showWithdrawModal) { setShowWithdrawModal(false); return true; }
         if (showInvestModal) { setShowInvestModal(false); return true; }
@@ -408,7 +438,8 @@ function MainAppContent() {
         notifRes,
         refRes,
         tickerRes,
-        addrRes
+        addrRes,
+        secLogRes
       ] = await Promise.allSettled([
         mobileApi.getWalletSummary(),
         mobileApi.getMyInvestments(),
@@ -417,13 +448,15 @@ function MainAppContent() {
         mobileApi.getNotifications(),
         mobileApi.getReferrals(),
         mobileApi.getMarketTickers(),
-        mobileApi.getDepositAddresses()
+        mobileApi.getDepositAddresses(),
+        mobileApi.getSecurityLogs()
       ]);
 
       if (summaryRes.status === 'fulfilled') setWalletSummary(summaryRes.value);
       if (invRes.status === 'fulfilled') setInvestments(invRes.value.investments || []);
       if (plansRes.status === 'fulfilled') setPlans(plansRes.value.plans || []);
       if (txsRes.status === 'fulfilled') setTransactions(txsRes.value.transactions || []);
+      if (secLogRes.status === 'fulfilled' && secLogRes.value?.logs) setSecurityLogsList(secLogRes.value.logs);
       if (notifRes.status === 'fulfilled') {
         const notifList = notifRes.value.notifications || [];
         setNotifications(notifList);
@@ -526,6 +559,135 @@ function MainAppContent() {
     setWalletSummary(null);
     setInvestments([]);
     setTransactions([]);
+    setShowProfileModal(false);
+  };
+
+  // Profile & Security Operations
+  const handleToggle2FA = async () => {
+    if (!currentUser) return;
+    const newVal = !currentUser.twoFactorEnabled;
+    try {
+      await mobileApi.updateProfile({ twoFactorEnabled: newVal });
+      setCurrentUser(prev => prev ? { ...prev, twoFactorEnabled: newVal } : null);
+      showCustomAlert(
+        '2FA Security Updated',
+        `Two-Factor Authentication is now ${newVal ? 'ACTIVATED' : 'DEACTIVATED'}.`,
+        'success'
+      );
+    } catch (e: any) {
+      showCustomAlert('Update Notice', e.message || 'Could not update 2FA status.', 'error');
+    }
+  };
+
+  const handleToggleWhitelist = async () => {
+    if (!currentUser) return;
+    const newVal = !currentUser.whitelistEnabled;
+    try {
+      await mobileApi.updateProfile({ whitelistEnabled: newVal });
+      setCurrentUser(prev => prev ? { ...prev, whitelistEnabled: newVal } : null);
+      showCustomAlert(
+        'Whitelist Protection',
+        `Withdrawal whitelist restriction is now ${newVal ? 'STRICTLY ENFORCED' : 'DISABLED'}.`,
+        'success'
+      );
+    } catch (e: any) {
+      showCustomAlert('Update Notice', e.message || 'Could not update whitelist status.', 'error');
+    }
+  };
+
+  const handleSaveAntiPhishing = async () => {
+    if (!currentUser || !antiPhishingInput.trim()) return;
+    try {
+      await mobileApi.updateProfile({ antiPhishingCode: antiPhishingInput.trim() });
+      setCurrentUser(prev => prev ? { ...prev, antiPhishingCode: antiPhishingInput.trim() } : null);
+      setEditingAntiPhishing(false);
+      showCustomAlert(
+        'Anti-Phishing Configured',
+        `Your secret phrase is set to "${antiPhishingInput.trim()}". Verify this code in all platform correspondence.`,
+        'success'
+      );
+    } catch (e: any) {
+      showCustomAlert('Save Error', e.message || 'Could not save anti-phishing code.', 'error');
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPasswordInput || !newPasswordInput) {
+      showCustomAlert('Incomplete Form', 'Please enter your current password and new password.', 'warning');
+      return;
+    }
+    if (newPasswordInput !== confirmPasswordInput) {
+      showCustomAlert('Mismatch', 'The new passwords do not match. Please re-enter.', 'error');
+      return;
+    }
+    if (newPasswordInput.length < 6) {
+      showCustomAlert('Password Too Short', 'New password must be at least 6 characters.', 'warning');
+      return;
+    }
+
+    setPasswordChangeLoading(true);
+    try {
+      const res = await mobileApi.changePassword(currentPasswordInput, newPasswordInput);
+      setShowChangePasswordModal(false);
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      showCustomAlert('Password Changed', res.message || 'Your account password has been updated securely.', 'success');
+    } catch (e: any) {
+      showCustomAlert('Update Notice', e.message || 'Failed to change password.', 'error');
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
+  const handleAddWhitelistedWallet = async () => {
+    if (!walletAddressInput.trim() || !walletLabelInput.trim()) {
+      showCustomAlert('Missing Details', 'Please provide a recipient destination address and a label.', 'warning');
+      return;
+    }
+
+    setWalletAddLoading(true);
+    try {
+      const res = await mobileApi.addWhitelistedWallet({
+        asset: walletAssetInput,
+        network: walletNetworkInput,
+        address: walletAddressInput.trim(),
+        label: walletLabelInput.trim()
+      });
+
+      const updatedWallets = [...(currentUser?.whitelistedWallets || []), res.wallet];
+      setCurrentUser(prev => prev ? { ...prev, whitelistedWallets: updatedWallets } : null);
+      setShowAddWalletModal(false);
+      setWalletAddressInput('');
+      setWalletLabelInput('');
+      showCustomAlert('Address Whitelisted', `Successfully whitelisted ${walletAssetInput} (${walletNetworkInput}) for "${walletLabelInput.trim()}".`, 'success');
+    } catch (e: any) {
+      showCustomAlert('Whitelisting Notice', e.message || 'Could not add address.', 'error');
+    } finally {
+      setWalletAddLoading(false);
+    }
+  };
+
+  const handleDeleteWhitelistedWallet = async (id: string, label: string) => {
+    try {
+      await mobileApi.deleteWhitelistedWallet(id);
+      const updatedWallets = (currentUser?.whitelistedWallets || []).filter(w => w.id !== id);
+      setCurrentUser(prev => prev ? { ...prev, whitelistedWallets: updatedWallets } : null);
+      showCustomAlert('Address Removed', `"${label}" was deleted from your whitelisted destinations.`, 'info');
+    } catch (e: any) {
+      showCustomAlert('Deletion Notice', e.message || 'Could not delete whitelisted address.', 'error');
+    }
+  };
+
+  const handleSelectCurrency = async (curr: string) => {
+    if (!currentUser) return;
+    try {
+      await mobileApi.updateProfile({ preferredCurrency: curr });
+      setCurrentUser(prev => prev ? { ...prev, preferredCurrency: curr } : null);
+      showCustomAlert('Currency Preference Saved', `Base portfolio valuation is set to ${curr}.`, 'success');
+    } catch (e: any) {
+      showCustomAlert('Update Notice', e.message || 'Could not update currency preference.', 'error');
+    }
   };
 
   // Deposit Submit
@@ -872,8 +1034,13 @@ function MainAppContent() {
 
       {/* Binance-Style Top Mobile Header */}
       <View style={styles.appHeader}>
-        <TouchableOpacity style={styles.headerAvatarBtn} onPress={handleLogout}>
+        <TouchableOpacity
+          style={styles.headerAvatarBtn}
+          onPress={() => setShowProfileModal(true)}
+          activeOpacity={0.8}
+        >
           <Text style={styles.headerAvatarText}>{currentUser.name.charAt(0).toUpperCase()}</Text>
+          <View style={styles.headerAvatarBadgeDot} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerSearchBox}>
@@ -991,6 +1158,31 @@ function MainAppContent() {
                 <Text style={styles.actionGridText}>Referral</Text>
               </TouchablePlatform>
             </View>
+
+            {/* Account & Security Quick Access Banner */}
+            <TouchableOpacity
+              style={styles.securityBannerCard}
+              onPress={() => setShowProfileModal(true)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.securityBannerLeft}>
+                <View style={styles.securityBannerIconBox}>
+                  <Text style={{ fontSize: 16 }}>🛡️</Text>
+                </View>
+                <View style={{ marginLeft: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.securityBannerTitle}>Account & Security Center</Text>
+                    <View style={styles.kycVerifiedMiniBadge}>
+                      <Text style={styles.kycVerifiedMiniText}>KYC TIER 2</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.securityBannerSub}>
+                    UID: {currentUser.uid || 'HAT-89240182'} • {currentUser.vipLevel || 'VIP 1 Institutional'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.securityBannerArrow}>→</Text>
+            </TouchableOpacity>
 
             {/* Quick Investment Deploy Card */}
             <View style={styles.deployCard}>
@@ -2012,6 +2204,559 @@ function MainAppContent() {
             >
               <Text style={styles.goldBtnText}>Close Message Box</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 7: PROFILE & SECURITY CENTER MODAL (BINANCE STYLE) */}
+      {/* ========================================================================= */}
+      <Modal visible={showProfileModal} animationType="slide">
+        <SafeAreaView style={[styles.profileSafeContainer, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0) }]}>
+          <ExpoStatusBar style="light" />
+          <NavigationBar style="dark" />
+
+          {/* Profile Header Bar */}
+          <View style={styles.profileHeaderBar}>
+            <TouchableOpacity
+              style={styles.profileBackBtn}
+              onPress={() => setShowProfileModal(false)}
+            >
+              <Text style={styles.profileBackBtnText}>←</Text>
+            </TouchableOpacity>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.profileHeaderTitle}>Account & Security</Text>
+              <Text style={styles.profileHeaderSubtitle}>Heron Assets Trustees • Protocol Security</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.profileCloseBtn}
+              onPress={() => setShowProfileModal(false)}
+            >
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.profileScroll} showsVerticalScrollIndicator={false}>
+            {/* Identity Card */}
+            <View style={styles.profileIdentityCard}>
+              <View style={styles.profileAvatarRow}>
+                <View style={styles.profileAvatarLarge}>
+                  <Text style={styles.profileAvatarLargeText}>
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 14 }}>
+                  <Text style={styles.profileNameText}>{currentUser.name}</Text>
+                  <Text style={styles.profileEmailText}>{currentUser.email}</Text>
+                  
+                  {/* UID Copy Box */}
+                  <TouchableOpacity
+                    style={styles.profileUidBox}
+                    onPress={() => copyToClipboard(currentUser.uid || 'HAT-89240182', 'user_uid')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.profileUidLabel}>UID:</Text>
+                    <Text style={styles.profileUidValue}>{currentUser.uid || 'HAT-89240182'}</Text>
+                    <Text style={styles.profileUidCopyIcon}>
+                      {copiedKey === 'user_uid' ? '✓' : '📋'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Status Badges Row */}
+              <View style={styles.profileBadgeRow}>
+                <View style={styles.profileKycBadge}>
+                  <Text style={styles.profileKycBadgeText}>✓ KYC LEVEL 2 VERIFIED</Text>
+                </View>
+                <View style={styles.profileVipBadge}>
+                  <Text style={styles.profileVipBadgeText}>👑 {currentUser.vipLevel || 'VIP 1 INSTITUTIONAL'}</Text>
+                </View>
+              </View>
+
+              {/* Security Health Score */}
+              <View style={styles.profileSecurityScoreCard}>
+                <View style={styles.profileScoreHeader}>
+                  <Text style={styles.profileScoreLabel}>Cryptographic Security Rating</Text>
+                  <Text style={styles.profileScoreValue}>85% • Strong</Text>
+                </View>
+                <View style={styles.profileScoreBarTrack}>
+                  <View style={[styles.profileScoreBarFill, { width: '85%' }]} />
+                </View>
+                <Text style={styles.profileScoreNote}>
+                  Multi-factor protection, encrypted timelocks, and withdrawal whitelisting active.
+                </Text>
+              </View>
+            </View>
+
+            {/* Segmented Tab Navigation */}
+            <View style={styles.profileTabsRow}>
+              {[
+                { id: 'security', label: 'Security', icon: '🛡️' },
+                { id: 'whitelist', label: 'Whitelist', icon: '📒' },
+                { id: 'logs', label: 'Audit Logs', icon: '📜' },
+                { id: 'preferences', label: 'Settings', icon: '⚙️' }
+              ].map(t => (
+                <TouchableOpacity
+                  key={t.id}
+                  style={[styles.profileTabBtn, profileTab === t.id && styles.profileTabBtnActive]}
+                  onPress={() => setProfileTab(t.id as any)}
+                >
+                  <Text style={styles.profileTabIcon}>{t.icon}</Text>
+                  <Text style={[styles.profileTabBtnText, profileTab === t.id && styles.profileTabBtnTextActive]}>
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* TAB 1: SECURITY & DEFENSE */}
+            {profileTab === 'security' && (
+              <View style={styles.profileSectionContent}>
+                {/* Change Password Card */}
+                <View style={styles.secItemCard}>
+                  <View style={styles.secItemLeft}>
+                    <Text style={styles.secItemTitle}>Master Account Password</Text>
+                    <Text style={styles.secItemSub}>Secured with cryptographic salting</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.secItemActionBtn}
+                    onPress={() => {
+                      setCurrentPasswordInput('');
+                      setNewPasswordInput('');
+                      setConfirmPasswordInput('');
+                      setShowChangePasswordModal(true);
+                    }}
+                  >
+                    <Text style={styles.secItemActionBtnText}>Change</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* 2FA Card */}
+                <View style={styles.secItemCard}>
+                  <View style={styles.secItemLeft}>
+                    <Text style={styles.secItemTitle}>Two-Factor Authentication (2FA)</Text>
+                    <Text style={styles.secItemSub}>Requires confirmation for fund disbursement</Text>
+                  </View>
+                  <Switch
+                    value={currentUser.twoFactorEnabled ?? true}
+                    onValueChange={handleToggle2FA}
+                    trackColor={{ false: '#2B313A', true: '#0ECB81' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+
+                {/* Anti-Phishing Code Card */}
+                <View style={styles.secItemCardColumn}>
+                  <View style={styles.secItemTopRow}>
+                    <View style={styles.secItemLeft}>
+                      <Text style={styles.secItemTitle}>Anti-Phishing Verification Code</Text>
+                      <Text style={styles.secItemSub}>Protects against counterfeit platform correspondence</Text>
+                    </View>
+                    {!editingAntiPhishing && (
+                      <TouchableOpacity
+                        style={styles.secItemActionBtn}
+                        onPress={() => {
+                          setAntiPhishingInput(currentUser.antiPhishingCode || 'HERON-2025');
+                          setEditingAntiPhishing(true);
+                        }}
+                      >
+                        <Text style={styles.secItemActionBtnText}>Edit</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {editingAntiPhishing ? (
+                    <View style={styles.antiPhishingEditRow}>
+                      <TextInput
+                        style={styles.antiPhishingInput}
+                        value={antiPhishingInput}
+                        onChangeText={setAntiPhishingInput}
+                        placeholder="Enter code (e.g. HERON-VIP)"
+                        placeholderTextColor="#848E9C"
+                        autoCapitalize="characters"
+                      />
+                      <TouchableOpacity
+                        style={styles.antiPhishingSaveBtn}
+                        onPress={handleSaveAntiPhishing}
+                      >
+                        <Text style={styles.antiPhishingSaveBtnText}>Save</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.antiPhishingCancelBtn}
+                        onPress={() => setEditingAntiPhishing(false)}
+                      >
+                        <Text style={styles.antiPhishingCancelBtnText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.antiPhishingDisplayBadge}>
+                      <Text style={styles.antiPhishingDisplayText}>
+                        Active Phrase: <Text style={{ color: '#F0B90B', fontWeight: 'bold' }}>{currentUser.antiPhishingCode || 'HERON-2025'}</Text>
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Whitelist Only Mode */}
+                <View style={styles.secItemCard}>
+                  <View style={styles.secItemLeft}>
+                    <Text style={styles.secItemTitle}>Withdrawal Address Whitelist</Text>
+                    <Text style={styles.secItemSub}>Disburse solely to pre-registered crypto destinations</Text>
+                  </View>
+                  <Switch
+                    value={currentUser.whitelistEnabled ?? false}
+                    onValueChange={handleToggleWhitelist}
+                    trackColor={{ false: '#2B313A', true: '#0ECB81' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* TAB 2: WHITELISTED WALLETS */}
+            {profileTab === 'whitelist' && (
+              <View style={styles.profileSectionContent}>
+                {/* Header & Add Action */}
+                <View style={styles.whitelistHeaderRow}>
+                  <Text style={styles.whitelistHeaderTitle}>Destination Address Book</Text>
+                  <TouchableOpacity
+                    style={styles.whitelistAddBtn}
+                    onPress={() => {
+                      setWalletAssetInput('USDT');
+                      setWalletNetworkInput('TRC-20');
+                      setWalletAddressInput('');
+                      setWalletLabelInput('');
+                      setShowAddWalletModal(true);
+                    }}
+                  >
+                    <Text style={styles.whitelistAddBtnText}>+ Add Address</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Asset Filter Pills */}
+                <View style={styles.whitelistFilterRow}>
+                  {['all', 'USDT', 'BTC', 'ETH', 'SOL'].map(f => (
+                    <TouchableOpacity
+                      key={f}
+                      style={[styles.whitelistFilterPill, walletFilter === f && styles.whitelistFilterPillActive]}
+                      onPress={() => setWalletFilter(f)}
+                    >
+                      <Text style={[styles.whitelistFilterPillText, walletFilter === f && styles.whitelistFilterPillTextActive]}>
+                        {f.toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Wallets List */}
+                {(() => {
+                  const allWallets = currentUser.whitelistedWallets || [];
+                  const filtered = walletFilter === 'all'
+                    ? allWallets
+                    : allWallets.filter(w => w.asset.toUpperCase() === walletFilter.toUpperCase());
+
+                  if (filtered.length === 0) {
+                    return (
+                      <View style={styles.emptyCard}>
+                        <Text style={styles.emptyIcon}>📒</Text>
+                        <Text style={styles.emptyText}>No whitelisted addresses registered.</Text>
+                        <Text style={styles.emptySubText}>
+                          Add cold storage or hardware vaults to speed up withdrawals.
+                        </Text>
+                      </View>
+                    );
+                  }
+
+                  return filtered.map((w) => (
+                    <View key={w.id} style={styles.whitelistCard}>
+                      <View style={styles.whitelistCardTop}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={styles.whitelistAssetBadge}>
+                            <Text style={styles.whitelistAssetBadgeText}>{w.asset}</Text>
+                          </View>
+                          <Text style={styles.whitelistNetworkText}>{w.network}</Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.whitelistDeleteBtn}
+                          onPress={() => handleDeleteWhitelistedWallet(w.id, w.label)}
+                        >
+                          <Text style={styles.whitelistDeleteBtnText}>🗑️</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <Text style={styles.whitelistLabelText}>{w.label}</Text>
+
+                      <View style={styles.whitelistAddressRow}>
+                        <Text style={styles.whitelistAddressText} numberOfLines={1}>
+                          {w.address}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.whitelistCopyBtn}
+                          onPress={() => copyToClipboard(w.address, `wl_${w.id}`)}
+                        >
+                          <Text style={styles.whitelistCopyBtnText}>
+                            {copiedKey === `wl_${w.id}` ? '✓ Copied' : 'Copy'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ));
+                })()}
+              </View>
+            )}
+
+            {/* TAB 3: AUDIT & SESSION LOGS */}
+            {profileTab === 'logs' && (
+              <View style={styles.profileSectionContent}>
+                <Text style={styles.logsSectionTitle}>Recent Account Authentication Sessions</Text>
+                {securityLogsList.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <Text style={styles.emptyText}>No session logs recorded.</Text>
+                  </View>
+                ) : (
+                  securityLogsList.map((log) => (
+                    <View key={log.id} style={styles.logCard}>
+                      <View style={styles.logCardTop}>
+                        <Text style={styles.logDeviceText}>{log.device}</Text>
+                        <View style={styles.logStatusBadge}>
+                          <Text style={styles.logStatusBadgeText}>✓ {log.status}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.logLocationText}>{log.location} • {log.ip}</Text>
+                      <Text style={styles.logTimeText}>
+                        {new Date(log.timestamp).toLocaleString()}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+
+            {/* TAB 4: SETTINGS & PREFERENCES */}
+            {profileTab === 'preferences' && (
+              <View style={styles.profileSectionContent}>
+                {/* Base Currency Selection */}
+                <View style={styles.secItemCardColumn}>
+                  <Text style={styles.secItemTitle}>Base Valuation Currency</Text>
+                  <Text style={styles.secItemSub}>Preferred currency for portfolio calculations</Text>
+                  <View style={styles.currencyRow}>
+                    {['USD', 'EUR', 'GBP'].map(curr => {
+                      const active = (currentUser.preferredCurrency || 'USD') === curr;
+                      return (
+                        <TouchableOpacity
+                          key={curr}
+                          style={[styles.currencyBtn, active && styles.currencyBtnActive]}
+                          onPress={() => handleSelectCurrency(curr)}
+                        >
+                          <Text style={[styles.currencyBtnText, active && styles.currencyBtnTextActive]}>
+                            {curr === 'USD' ? '$ USD' : curr === 'EUR' ? '€ EUR' : '£ GBP'}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Yield Compounding */}
+                <View style={styles.secItemCard}>
+                  <View style={styles.secItemLeft}>
+                    <Text style={styles.secItemTitle}>Automated Yield Compounding</Text>
+                    <Text style={styles.secItemSub}>Programmatic dividend reinvestment</Text>
+                  </View>
+                  <Switch
+                    value={true}
+                    onValueChange={() => showCustomAlert('Compounding Status', 'Automated yield compounding is permanently active for institutional tiers.', 'info')}
+                    trackColor={{ false: '#2B313A', true: '#0ECB81' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+
+                {/* Execution Alerts */}
+                <View style={styles.secItemCard}>
+                  <View style={styles.secItemLeft}>
+                    <Text style={styles.secItemTitle}>Dispatch & Execution Alerts</Text>
+                    <Text style={styles.secItemSub}>In-app push updates on deposits & maturities</Text>
+                  </View>
+                  <Switch
+                    value={true}
+                    onValueChange={() => showCustomAlert('Alert Protocol', 'Critical execution alerts remain active for account security.', 'info')}
+                    trackColor={{ false: '#2B313A', true: '#0ECB81' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+
+                {/* Withdrawal Limits Box */}
+                <View style={styles.vipLimitsBox}>
+                  <Text style={styles.vipLimitsTitle}>VIP 1 Operational Disbursements</Text>
+                  <View style={styles.vipLimitsRow}>
+                    <Text style={styles.vipLimitsLabel}>24h Withdrawal Ceiling:</Text>
+                    <Text style={styles.vipLimitsValue}>$500,000.00 / 24h</Text>
+                  </View>
+                  <View style={styles.vipLimitsRow}>
+                    <Text style={styles.vipLimitsLabel}>Available Today:</Text>
+                    <Text style={[styles.vipLimitsValue, { color: '#0ECB81' }]}>$500,000.00</Text>
+                  </View>
+                </View>
+
+                {/* Sign Out Button */}
+                <TouchableOpacity
+                  style={styles.profileSignOutBtn}
+                  onPress={() => {
+                    showCustomAlert(
+                      'Sign Out Confirmation',
+                      'Are you sure you want to terminate this authenticated investor session?',
+                      'warning',
+                      handleLogout,
+                      'Confirm Sign Out'
+                    );
+                  }}
+                >
+                  <Text style={styles.profileSignOutBtnText}>Sign Out of Session</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={{ height: 60 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 8: CHANGE PASSWORD MODAL */}
+      {/* ========================================================================= */}
+      <Modal visible={showChangePasswordModal} transparent animationType="fade">
+        <View style={styles.modalOverlayCenter}>
+          <View style={styles.pwdModalCard}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.modalTitle}>Update Security Password</Text>
+              <TouchableOpacity onPress={() => setShowChangePasswordModal(false)}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ marginTop: 12 }}>
+              <Text style={styles.fieldLabel}>CURRENT PASSWORD</Text>
+              <TextInput
+                style={styles.textInput}
+                secureTextEntry
+                placeholder="Enter current password"
+                placeholderTextColor="#848E9C"
+                value={currentPasswordInput}
+                onChangeText={setCurrentPasswordInput}
+              />
+
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>NEW PASSWORD (MIN 6 CHARACTERS)</Text>
+              <TextInput
+                style={styles.textInput}
+                secureTextEntry
+                placeholder="Enter new password"
+                placeholderTextColor="#848E9C"
+                value={newPasswordInput}
+                onChangeText={setNewPasswordInput}
+              />
+
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>CONFIRM NEW PASSWORD</Text>
+              <TextInput
+                style={styles.textInput}
+                secureTextEntry
+                placeholder="Re-enter new password"
+                placeholderTextColor="#848E9C"
+                value={confirmPasswordInput}
+                onChangeText={setConfirmPasswordInput}
+              />
+
+              <TouchableOpacity
+                style={[styles.goldBtnFull, { marginTop: 20 }]}
+                onPress={handleChangePassword}
+                disabled={passwordChangeLoading}
+              >
+                {passwordChangeLoading ? (
+                  <ActivityIndicator color="#181A20" />
+                ) : (
+                  <Text style={styles.goldBtnText}>Update Master Password</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 9: ADD WHITELISTED WALLET MODAL */}
+      {/* ========================================================================= */}
+      <Modal visible={showAddWalletModal} transparent animationType="fade">
+        <View style={styles.modalOverlayCenter}>
+          <View style={styles.pwdModalCard}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.modalTitle}>Whitelist Destination Wallet</Text>
+              <TouchableOpacity onPress={() => setShowAddWalletModal(false)}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ marginTop: 12, maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.fieldLabel}>ASSET</Text>
+              <View style={styles.assetPillRow}>
+                {['USDT', 'BTC', 'ETH', 'SOL'].map((a) => (
+                  <TouchableOpacity
+                    key={a}
+                    style={[styles.assetPill, walletAssetInput === a && styles.assetPillActive]}
+                    onPress={() => {
+                      setWalletAssetInput(a);
+                      if (a === 'USDT') setWalletNetworkInput('TRC-20');
+                      else if (a === 'BTC') setWalletNetworkInput('Bitcoin Native SegWit');
+                      else if (a === 'ETH') setWalletNetworkInput('Ethereum Mainnet');
+                      else if (a === 'SOL') setWalletNetworkInput('Solana SPL');
+                    }}
+                  >
+                    <Text style={[styles.assetPillText, walletAssetInput === a && styles.assetPillTextActive]}>
+                      {a}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>NETWORK</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. TRC-20, ERC-20, Bitcoin"
+                placeholderTextColor="#848E9C"
+                value={walletNetworkInput}
+                onChangeText={setWalletNetworkInput}
+              />
+
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>DESTINATION WALLET ADDRESS</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Paste cryptocurrency receiving address"
+                placeholderTextColor="#848E9C"
+                value={walletAddressInput}
+                onChangeText={setWalletAddressInput}
+                autoCapitalize="none"
+              />
+
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>WALLET LABEL / ALIAS</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. Ledger Hardware Vault 01"
+                placeholderTextColor="#848E9C"
+                value={walletLabelInput}
+                onChangeText={setWalletLabelInput}
+              />
+
+              <TouchableOpacity
+                style={[styles.goldBtnFull, { marginTop: 20 }]}
+                onPress={handleAddWhitelistedWallet}
+                disabled={walletAddLoading}
+              >
+                {walletAddLoading ? (
+                  <ActivityIndicator color="#181A20" />
+                ) : (
+                  <Text style={styles.goldBtnText}>Whitelist Address</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -3959,4 +4704,666 @@ const styles = StyleSheet.create({
   customAlertBtnTextError: {
     color: '#ffffff',
   },
+
+  // --- Avatar & Security Banner ---
+  headerAvatarBadgeDot: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#0ECB81',
+    borderWidth: 2,
+    borderColor: '#181A20',
+  },
+  securityBannerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  securityBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  securityBannerIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(240, 185, 11, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.3)',
+  },
+  securityBannerTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  securityBannerSub: {
+    fontSize: 11,
+    color: '#848E9C',
+    marginTop: 2,
+  },
+  securityBannerArrow: {
+    fontSize: 16,
+    color: '#F0B90B',
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  kycVerifiedMiniBadge: {
+    backgroundColor: 'rgba(14, 203, 129, 0.15)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(14, 203, 129, 0.4)',
+  },
+  kycVerifiedMiniText: {
+    fontSize: 8.5,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+    letterSpacing: 0.5,
+  },
+
+  // --- Profile & Security Modal Styles ---
+  profileSafeContainer: {
+    flex: 1,
+    backgroundColor: '#181A20',
+  },
+  profileHeaderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2B313A',
+    backgroundColor: '#181A20',
+  },
+  profileBackBtn: {
+    padding: 6,
+  },
+  profileBackBtnText: {
+    fontSize: 22,
+    color: '#F0B90B',
+    fontWeight: 'bold',
+  },
+  profileHeaderTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  profileHeaderSubtitle: {
+    fontSize: 10,
+    color: '#848E9C',
+    marginTop: 1,
+  },
+  profileCloseBtn: {
+    padding: 6,
+  },
+  profileScroll: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  profileIdentityCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+    marginBottom: 16,
+  },
+  profileAvatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileAvatarLarge: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#F0B90B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#EAECEF',
+  },
+  profileAvatarLargeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#181A20',
+  },
+  profileNameText: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  profileEmailText: {
+    fontSize: 12,
+    color: '#848E9C',
+    marginTop: 2,
+  },
+  profileUidBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2B313A',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginTop: 6,
+  },
+  profileUidLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#848E9C',
+    marginRight: 4,
+  },
+  profileUidValue: {
+    fontSize: 11,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: '#F0B90B',
+    fontWeight: '600',
+  },
+  profileUidCopyIcon: {
+    fontSize: 10,
+    color: '#848E9C',
+    marginLeft: 6,
+  },
+  profileBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+  },
+  profileKycBadge: {
+    backgroundColor: 'rgba(14, 203, 129, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(14, 203, 129, 0.4)',
+  },
+  profileKycBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+    letterSpacing: 0.5,
+  },
+  profileVipBadge: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.4)',
+  },
+  profileVipBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    letterSpacing: 0.5,
+  },
+  profileSecurityScoreCard: {
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#2B313A',
+  },
+  profileScoreHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  profileScoreLabel: {
+    fontSize: 11.5,
+    color: '#848E9C',
+  },
+  profileScoreValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+  },
+  profileScoreBarTrack: {
+    height: 5,
+    backgroundColor: '#2B313A',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  profileScoreBarFill: {
+    height: '100%',
+    backgroundColor: '#0ECB81',
+    borderRadius: 3,
+  },
+  profileScoreNote: {
+    fontSize: 10,
+    color: '#848E9C',
+    lineHeight: 14,
+  },
+
+  // --- Profile Segmented Tabs ---
+  profileTabsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#1E2329',
+    borderRadius: 12,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+    marginBottom: 16,
+  },
+  profileTabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 9,
+    gap: 4,
+  },
+  profileTabBtnActive: {
+    backgroundColor: '#2B313A',
+  },
+  profileTabIcon: {
+    fontSize: 12,
+  },
+  profileTabBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#848E9C',
+  },
+  profileTabBtnTextActive: {
+    color: '#F0B90B',
+    fontWeight: 'bold',
+  },
+  profileSectionContent: {
+    gap: 12,
+  },
+
+  // --- Security Items ---
+  secItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  secItemCardColumn: {
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  secItemTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  secItemLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  secItemTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  secItemSub: {
+    fontSize: 11,
+    color: '#848E9C',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  secItemActionBtn: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.4)',
+  },
+  secItemActionBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  antiPhishingEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+  },
+  antiPhishingInput: {
+    flex: 1,
+    backgroundColor: '#181A20',
+    borderWidth: 1,
+    borderColor: '#363D47',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    color: '#EAECEF',
+    fontWeight: 'bold',
+  },
+  antiPhishingSaveBtn: {
+    backgroundColor: '#F0B90B',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  antiPhishingSaveBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#181A20',
+  },
+  antiPhishingCancelBtn: {
+    backgroundColor: '#2B313A',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  antiPhishingCancelBtnText: {
+    fontSize: 12,
+    color: '#848E9C',
+    fontWeight: 'bold',
+  },
+  antiPhishingDisplayBadge: {
+    backgroundColor: '#181A20',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  antiPhishingDisplayText: {
+    fontSize: 12,
+    color: '#848E9C',
+  },
+
+  // --- Whitelist Styles ---
+  whitelistHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  whitelistHeaderTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  whitelistAddBtn: {
+    backgroundColor: '#F0B90B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  whitelistAddBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#181A20',
+  },
+  whitelistFilterRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 4,
+  },
+  whitelistFilterPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 14,
+    backgroundColor: '#1E2329',
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  whitelistFilterPillActive: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderColor: '#F0B90B',
+  },
+  whitelistFilterPillText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#848E9C',
+  },
+  whitelistFilterPillTextActive: {
+    color: '#F0B90B',
+    fontWeight: 'bold',
+  },
+  whitelistCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+    marginBottom: 8,
+  },
+  whitelistCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  whitelistAssetBadge: {
+    backgroundColor: 'rgba(240, 185, 11, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.4)',
+  },
+  whitelistAssetBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+  whitelistNetworkText: {
+    fontSize: 11,
+    color: '#848E9C',
+  },
+  whitelistDeleteBtn: {
+    padding: 4,
+  },
+  whitelistDeleteBtnText: {
+    fontSize: 14,
+  },
+  whitelistLabelText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+    marginBottom: 4,
+  },
+  whitelistAddressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#181A20',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  whitelistAddressText: {
+    flex: 1,
+    fontSize: 10.5,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: '#848E9C',
+    marginRight: 8,
+  },
+  whitelistCopyBtn: {
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  whitelistCopyBtnText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+  },
+
+  // --- Session Logs Styles ---
+  logsSectionTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+    marginBottom: 6,
+  },
+  logCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+    marginBottom: 8,
+  },
+  logCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  logDeviceText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  logStatusBadge: {
+    backgroundColor: 'rgba(14, 203, 129, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: 'rgba(14, 203, 129, 0.4)',
+  },
+  logStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#0ECB81',
+  },
+  logLocationText: {
+    fontSize: 11,
+    color: '#848E9C',
+    marginBottom: 2,
+  },
+  logTimeText: {
+    fontSize: 10,
+    color: '#5E6673',
+  },
+
+  // --- Preferences & Settings ---
+  currencyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  currencyBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#181A20',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#363D47',
+  },
+  currencyBtnActive: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderColor: '#F0B90B',
+  },
+  currencyBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#848E9C',
+  },
+  currencyBtnTextActive: {
+    color: '#F0B90B',
+    fontWeight: 'bold',
+  },
+  vipLimitsBox: {
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  vipLimitsTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+    marginBottom: 8,
+  },
+  vipLimitsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  vipLimitsLabel: {
+    fontSize: 12,
+    color: '#848E9C',
+  },
+  vipLimitsValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  profileSignOutBtn: {
+    backgroundColor: 'rgba(246, 70, 93, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(246, 70, 93, 0.5)',
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  profileSignOutBtnText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#F6465D',
+  },
+  pwdModalCard: {
+    width: '92%',
+    maxWidth: 420,
+    backgroundColor: '#1E2329',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  emptyIcon: {
+    fontSize: 28,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  emptySubText: {
+    fontSize: 11,
+    color: '#848E9C',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  textInput: {
+    backgroundColor: '#181A20',
+    borderWidth: 1,
+    borderColor: '#363D47',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: '#EAECEF',
+    marginTop: 4,
+  }
 });

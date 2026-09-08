@@ -368,6 +368,13 @@
       "tokenHash": "d1694018428fc3d6b708e7f6ccb343563d85af814e113b86542aedbc9a7fa311",
       "expiresAt": "2026-09-15T00:40:00.261Z",
       "createdAt": "2026-09-08T00:40:00.261Z"
+    },
+    {
+      "id": "rft_239d24ee-83a3-4cd8-ad97-eb9d3be33636",
+      "userId": "usr_demo_vance",
+      "tokenHash": "4e758d8309ade1850d40ad18e9da236cf0c9920895ca06f0bd5f9f27273667e8",
+      "expiresAt": "2026-09-15T00:51:17.142Z",
+      "createdAt": "2026-09-08T00:51:17.143Z"
     }
   ],
   "investments": [
@@ -433,6 +440,17 @@
     }
   ],
   "transactions": [
+    {
+      "id": "tx_8fe4ddb2-4332-453a-bcab-872876879fb1",
+      "userId": "usr_demo_vance",
+      "type": "admin_adjustment",
+      "amount": 5000,
+      "asset": "USD",
+      "status": "completed",
+      "txHash": "0x36663131626362312d623463372d346534342d393036312d6665383963386332",
+      "note": "Admin CREDIT: Executive liquidity deposit",
+      "createdAt": "2026-09-08T00:40:50.510Z"
+    },
     {
       "id": "tx_2916abb6-28b8-473c-a56e-e3212b270002",
       "userId": "usr_demo_vance",
@@ -553,17 +571,6 @@
       "txHash": "0x8f29c91d4e680a7114b03512e99d1469e71239aa8cf01b54a29c629811f0082a",
       "note": "Deposit via TRC-20 Smart Contract",
       "createdAt": "2026-08-30T17:18:13.156Z"
-    },
-    {
-      "id": "tx_8fe4ddb2-4332-453a-bcab-872876879fb1",
-      "userId": "usr_demo_vance",
-      "type": "admin_adjustment",
-      "amount": 5000,
-      "asset": "USD",
-      "status": "completed",
-      "txHash": "0x36663131626362312d623463372d346534342d393036312d6665383963386332",
-      "note": "Admin CREDIT: Executive liquidity deposit",
-      "createdAt": "2026-09-08T00:40:50.510Z"
     }
   ],
   "referralCommissions": [

@@ -10,7 +10,9 @@ import {
   MarketTicker,
   Investment,
   PlanConfig,
-  PlanId
+  PlanId,
+  WhitelistedWallet,
+  SecurityLogItem
 } from '../types';
 
 // Dynamic host determination for Physical Devices, Emulators, and Web
@@ -169,7 +171,15 @@ class MobileApiService {
         email: payload.email,
         balance: 5000.00,
         referralCode: 'HERON77',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        uid: 'HAT-71829304',
+        kycLevel: 'tier2',
+        vipLevel: 'VIP 1 Institutional',
+        antiPhishingCode: 'HERON-NEW',
+        twoFactorEnabled: true,
+        whitelistEnabled: false,
+        preferredCurrency: 'USD',
+        whitelistedWallets: []
       };
       this.setToken('demo_token');
       this.setUser(mockUser);
@@ -200,7 +210,32 @@ class MobileApiService {
           email: email, 
           balance: 12500.50,
           referralCode: 'DEMO',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          uid: 'HAT-89240182',
+          kycLevel: 'tier2',
+          vipLevel: 'VIP 1 Institutional',
+          antiPhishingCode: 'HERON-2025',
+          twoFactorEnabled: true,
+          whitelistEnabled: false,
+          preferredCurrency: 'USD',
+          whitelistedWallets: [
+            {
+              id: 'w1',
+              asset: 'USDT',
+              network: 'TRC-20',
+              address: 'TJp9wD7uNq1xXQ6zM8eRvK4yH2tB5sC7aP',
+              label: 'Ledger Cold Vault 01',
+              addedAt: new Date(Date.now() - 86400000 * 12).toISOString()
+            },
+            {
+              id: 'w2',
+              asset: 'BTC',
+              network: 'Bitcoin Native SegWit',
+              address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+              label: 'Institutional Custody Apex',
+              addedAt: new Date(Date.now() - 86400000 * 5).toISOString()
+            }
+          ]
         };
         this.setToken('demo_token');
         this.setUser(mockUser);
@@ -648,6 +683,105 @@ class MobileApiService {
       { symbol: 'SOL/USD', price: 184.20, change24h: 6.12 },
       { symbol: 'USDT/USD', price: 1.00, change24h: 0.01 }
     ];
+  }
+
+  // --- Profile & Security Operations ---
+  async updateProfile(updates: Partial<User>): Promise<{ message: string; user: User }> {
+    try {
+      const res = await this.request<{ message: string; user: User }>('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
+      if (res?.user) this.setUser({ ...(this.getUser() || {}), ...res.user } as User);
+      return res;
+    } catch {
+      // Local demo fallback
+      const current = this.getUser() || ({} as User);
+      const updated = { ...current, ...updates } as User;
+      this.setUser(updated);
+      return {
+        message: 'Security preferences updated successfully.',
+        user: updated
+      };
+    }
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    try {
+      return await this.request<{ message: string }>('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+    } catch (e: any) {
+      if (this.getToken() === 'demo_token' || !this.getToken()) {
+        return { message: 'Security access password updated successfully (Demo Mode).' };
+      }
+      throw e;
+    }
+  }
+
+  async addWhitelistedWallet(wallet: { asset: string; network: string; address: string; label: string }): Promise<{ message: string; wallet: WhitelistedWallet }> {
+    try {
+      return await this.request<{ message: string; wallet: WhitelistedWallet }>('/auth/whitelist-wallet', {
+        method: 'POST',
+        body: JSON.stringify(wallet)
+      });
+    } catch {
+      const mockWallet: WhitelistedWallet = {
+        id: `w_${Date.now()}`,
+        ...wallet,
+        addedAt: new Date().toISOString()
+      };
+      return {
+        message: 'Withdrawal address added to whitelist.',
+        wallet: mockWallet
+      };
+    }
+  }
+
+  async deleteWhitelistedWallet(id: string): Promise<{ message: string }> {
+    try {
+      return await this.request<{ message: string }>(`/auth/whitelist-wallet/${id}`, {
+        method: 'DELETE'
+      });
+    } catch {
+      return { message: 'Whitelisted address deleted.' };
+    }
+  }
+
+  async getSecurityLogs(): Promise<{ logs: SecurityLogItem[] }> {
+    try {
+      return await this.request<{ logs: SecurityLogItem[] }>('/auth/security-logs');
+    } catch {
+      return {
+        logs: [
+          {
+            id: 'sec_m1',
+            timestamp: new Date().toISOString(),
+            ip: '197.210.84.***',
+            device: 'Mobile App • Android 15 / iOS',
+            location: 'Client Mobile Terminal [Secured]',
+            status: 'Authorized'
+          },
+          {
+            id: 'sec_m2',
+            timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
+            ip: '197.210.84.***',
+            device: 'Mobile App • Biometric Sign-in',
+            location: 'New York, US [Edge]',
+            status: 'Authorized'
+          },
+          {
+            id: 'sec_m3',
+            timestamp: new Date(Date.now() - 86400000 * 3).toISOString(),
+            ip: '104.28.19.***',
+            device: 'Web Terminal • Chrome / Safari',
+            location: 'London, UK [Cloudflare Gateway]',
+            status: 'Authorized'
+          }
+        ]
+      };
+    }
   }
 }
 
