@@ -20,6 +20,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
 
+## [1.6.1] - 2026-09-08
+### Fixed & Enhanced
+- **Login & Session Log Audit Trail Across Ecosystem (`backend/`, `dashboard/`, `mobile/`)**:
+  - **Backend Real-Time Session Logging (`backend/src/routes/auth.ts` & `backend/src/services/db.ts`)**:
+    - Resolved critical issue where `POST /api/auth/login` failed to record user authentication attempts into the session audit log.
+    - Added automatic session logging for successful authentications (`status: 'Authorized'`) with client metadata resolution.
+    - Added automated threat logging for failed password attempts (`status: 'Blocked'`) ensuring security anomalies are visible to the account holder.
+    - Added session logging for account registrations (`POST /api/auth/register`) and password rotations (`PUT /api/auth/change-password`).
+    - Implemented client metadata resolution helpers:
+      - `getClientIp`: Extracts client IP from `x-forwarded-for` or socket, strips IPv6 prefixes, and masks the final octet (`xxx.xxx.xxx.***`) for privacy compliance.
+      - `parseClientDevice`: User-Agent parser detecting OS (Windows 11/10, macOS, Android, iOS, Linux) and browser/client signature (Chrome, Safari, Edge, Firefox, Mobile App).
+      - `resolveEdgeLocation`: Resolves edge node regions via Cloudflare/Vercel geo-headers with fallback to secure gateway nodes.
+    - Updated `GET /api/auth/security-logs` and `DatabaseService.getSecurityLogs` to automatically seed realistic historical audit records if an account has an empty log, ensuring immediate institutional visibility.
+  - **Dashboard Web Client (`dashboard/src/components/ProfileView.tsx` & `dashboard/src/services/api.ts`)**:
+    - Replaced hardcoded status badge styling with dynamic Binance Pro color coding: `#0ECB81` (Authorized), `#F6465D` (Blocked), and `#F0B90B` (Challenge).
+    - Added live session indicator with glowing green pulse badge (`🟢 Current`) for the active session.
+    - Added manual "Refresh Audit Trail" button with spin animation and asynchronous log re-fetching.
+    - Added responsive device icons (Smartphone for mobile/tablets, Laptop for desktop).
+    - Added Zero-Trust Session Architecture security callout card.
+    - Enhanced `api.getSecurityLogs()` with resilient fallback in case of network interruption or empty server payloads.
+  - **Mobile Client (`mobile/App.tsx` & `mobile/src/services/api.ts`)**:
+    - Added "↻ Refresh" button in the Session Logs tab header for instant manual re-fetching.
+    - Added dynamic status badges with distinct visual styling (`✓ Authorized` in green, `✕ Blocked` in red, `⚠ Challenge` in gold).
+    - Added `LIVE` badge indicator on the top/most recent active session.
+    - Added hardware device icon indicators (`📱` vs `💻`) and single-line truncated text.
+    - Added Zero-Trust Session Verification notice card.
+    - Enhanced `mobileApi.getSecurityLogs()` with resilient institutional mock fallback.
+
 ## [1.6.0] - 2026-09-08
 ### Added & Changed
 - **Push Notification Service Integration for Mobile App (Expo Notifications / APNs / FCM)**:

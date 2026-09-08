@@ -132,6 +132,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     return () => { isMounted = false; };
   }, []);
 
+  const handleRefreshLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await api.getSecurityLogs();
+      if (res && res.logs) {
+        setSecurityLogs(res.logs);
+      }
+    } catch {
+      // Handled in api fallback
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
   // Copy helper
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -682,11 +696,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* TAB C: LOGIN & SECURITY AUDIT LOG */}
       {activeTab === 'activity' && (
         <div className="space-y-4">
-          <div>
-            <h3 className="text-base font-sans font-bold text-[#EAECEF]">Recent Login & Session Audit Trail</h3>
-            <p className="text-xs text-[#848E9C] mt-0.5">
-              Cryptographic log of authenticated sessions, geographical edge nodes, and hardware clients.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-sans font-bold text-[#EAECEF]">Recent Login & Session Audit Trail</h3>
+              <p className="text-xs text-[#848E9C] mt-0.5">
+                Cryptographic log of authenticated sessions, geographical edge nodes, and hardware clients.
+              </p>
+            </div>
+
+            <button
+              onClick={handleRefreshLogs}
+              disabled={loadingLogs}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] border border-[#363D47] text-xs font-semibold text-[#EAECEF] hover:text-[#F0B90B] transition-all self-start sm:self-auto disabled:opacity-50"
+            >
+              <History className={`w-3.5 h-3.5 ${loadingLogs ? 'animate-spin text-[#F0B90B]' : 'text-[#848E9C]'}`} />
+              <span>{loadingLogs ? 'Refreshing...' : 'Refresh Audit Trail'}</span>
+            </button>
           </div>
 
           <div className="rounded-2xl bg-[#1E2329] border border-[#2B313A] overflow-hidden shadow-md">
@@ -704,48 +729,89 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <tbody className="divide-y divide-[#2B313A]/50 text-[#EAECEF]">
                   {loadingLogs ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-[#848E9C]">Loading security audit records...</td>
+                      <td colSpan={5} className="py-8 text-center text-[#848E9C]">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-[#F0B90B] border-t-transparent rounded-full animate-spin" />
+                          <span>Refreshing cryptographic audit records...</span>
+                        </div>
+                      </td>
                     </tr>
                   ) : securityLogs.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-[#848E9C]">No audit records captured yet.</td>
                     </tr>
                   ) : (
-                    securityLogs.map(log => (
-                      <tr key={log.id} className="hover:bg-[#2B313A]/30 transition-colors">
-                        <td className="py-3.5 px-4 sm:px-6 text-[#848E9C]">
-                          {new Date(log.timestamp).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
-                          })}
-                        </td>
-                        <td className="py-3.5 px-4 font-sans font-medium flex items-center gap-2">
-                          {log.device.includes('Mobile') ? (
-                            <Smartphone className="w-4 h-4 text-[#F0B90B]" />
-                          ) : (
-                            <Laptop className="w-4 h-4 text-[#0ECB81]" />
-                          )}
-                          <span>{log.device}</span>
-                        </td>
-                        <td className="py-3.5 px-4 text-[#848E9C]">{log.ip}</td>
-                        <td className="py-3.5 px-4 text-[#848E9C] flex items-center gap-1.5">
-                          <Globe className="w-3.5 h-3.5 text-[#5E6673]" />
-                          <span>{log.location}</span>
-                        </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30">
-                            {log.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                    securityLogs.map((log, idx) => {
+                      const isCurrentSession = idx === 0;
+                      const isAuthorized = log.status === 'Authorized';
+                      const isBlocked = log.status === 'Blocked';
+                      const isChallenge = log.status === 'Challenge';
+
+                      return (
+                        <tr key={log.id} className="hover:bg-[#2B313A]/30 transition-colors">
+                          <td className="py-3.5 px-4 sm:px-6 text-[#848E9C]">
+                            <div className="flex items-center gap-2">
+                              {isCurrentSession && (
+                                <span className="relative flex h-2 w-2" title="Active Live Session">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0ECB81] opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0ECB81]"></span>
+                                </span>
+                              )}
+                              <span>
+                                {new Date(log.timestamp).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit'
+                                })}
+                              </span>
+                              {isCurrentSession && (
+                                <span className="text-[10px] text-[#0ECB81] font-sans font-bold bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/30">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 font-sans font-medium flex items-center gap-2">
+                            {log.device.includes('Mobile') || log.device.includes('Android') || log.device.includes('iOS') || log.device.includes('iPhone') ? (
+                              <Smartphone className="w-4 h-4 text-[#F0B90B] shrink-0" />
+                            ) : (
+                              <Laptop className="w-4 h-4 text-[#0ECB81] shrink-0" />
+                            )}
+                            <span className="truncate max-w-[200px]">{log.device}</span>
+                          </td>
+                          <td className="py-3.5 px-4 text-[#848E9C]">{log.ip}</td>
+                          <td className="py-3.5 px-4 text-[#848E9C] flex items-center gap-1.5">
+                            <Globe className="w-3.5 h-3.5 text-[#5E6673] shrink-0" />
+                            <span>{log.location}</span>
+                          </td>
+                          <td className="py-3.5 px-4 sm:px-6 text-right">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+                              isAuthorized
+                                ? 'bg-[#0ECB81]/15 text-[#0ECB81] border-[#0ECB81]/30'
+                                : isBlocked
+                                ? 'bg-[#F6465D]/15 text-[#F6465D] border-[#F6465D]/30'
+                                : 'bg-[#F0B90B]/15 text-[#F0B90B] border-[#F0B90B]/30'
+                            }`}>
+                              {isAuthorized ? '✓ ' : isBlocked ? '✕ ' : '⚠ '}
+                              {log.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-[#181A20] border border-[#2B313A] flex items-start gap-3">
+            <ShieldCheck className="w-4 h-4 text-[#F0B90B] shrink-0 mt-0.5" />
+            <p className="text-[11px] text-[#848E9C] leading-relaxed">
+              <strong className="text-[#EAECEF]">Zero-Trust Session Architecture:</strong> Authenticated sessions, hardware devices, and edge routes are cryptographically pinned. If you notice any unverified authorization attempts or blocked logins from unfamiliar locations, immediately update your security password and enable Two-Factor Authentication.
+            </p>
           </div>
         </div>
       )}

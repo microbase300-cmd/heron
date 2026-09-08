@@ -2547,27 +2547,76 @@ function MainAppContent() {
             {/* TAB 3: AUDIT & SESSION LOGS */}
             {profileTab === 'logs' && (
               <View style={styles.profileSectionContent}>
-                <Text style={styles.logsSectionTitle}>Recent Account Authentication Sessions</Text>
+                <View style={styles.logsHeaderRow}>
+                  <Text style={styles.logsSectionTitle}>Recent Account Sessions</Text>
+                  <TouchableOpacity
+                    style={styles.logsRefreshBtn}
+                    onPress={async () => {
+                      try {
+                        const res = await mobileApi.getSecurityLogs();
+                        if (res?.logs) setSecurityLogsList(res.logs);
+                      } catch (e) {
+                        // ignore
+                      }
+                    }}
+                  >
+                    <Text style={styles.logsRefreshBtnText}>↻ Refresh</Text>
+                  </TouchableOpacity>
+                </View>
                 {securityLogsList.length === 0 ? (
                   <View style={styles.emptyCard}>
                     <Text style={styles.emptyText}>No session logs recorded.</Text>
                   </View>
                 ) : (
-                  securityLogsList.map((log) => (
-                    <View key={log.id} style={styles.logCard}>
-                      <View style={styles.logCardTop}>
-                        <Text style={styles.logDeviceText}>{log.device}</Text>
-                        <View style={styles.logStatusBadge}>
-                          <Text style={styles.logStatusBadgeText}>✓ {log.status}</Text>
+                  securityLogsList.map((log, index) => {
+                    const isAuthorized = log.status === 'Authorized';
+                    const isBlocked = log.status === 'Blocked';
+                    const isChallenge = log.status === 'Challenge';
+                    const isCurrent = index === 0;
+
+                    return (
+                      <View key={log.id} style={styles.logCard}>
+                        <View style={styles.logCardTop}>
+                          <View style={styles.logDeviceRow}>
+                            <Text style={styles.logDeviceIcon}>
+                              {log.device.includes('Mobile') || log.device.includes('Android') || log.device.includes('iOS') ? '📱' : '💻'}
+                            </Text>
+                            <Text style={styles.logDeviceText} numberOfLines={1}>{log.device}</Text>
+                            {isCurrent && (
+                              <View style={styles.logCurrentBadge}>
+                                <Text style={styles.logCurrentBadgeText}>LIVE</Text>
+                              </View>
+                            )}
+                          </View>
+                          <View style={[
+                            styles.logStatusBadge,
+                            isBlocked && styles.logStatusBadgeBlocked,
+                            isChallenge && styles.logStatusBadgeChallenge,
+                          ]}>
+                            <Text style={[
+                              styles.logStatusBadgeText,
+                              isBlocked && styles.logStatusBadgeTextBlocked,
+                              isChallenge && styles.logStatusBadgeTextChallenge,
+                            ]}>
+                              {isAuthorized ? '✓ ' : isBlocked ? '✕ ' : '⚠ '}{log.status}
+                            </Text>
+                          </View>
                         </View>
+                        <Text style={styles.logLocationText}>{log.location} • {log.ip}</Text>
+                        <Text style={styles.logTimeText}>
+                          {new Date(log.timestamp).toLocaleString()}
+                        </Text>
                       </View>
-                      <Text style={styles.logLocationText}>{log.location} • {log.ip}</Text>
-                      <Text style={styles.logTimeText}>
-                        {new Date(log.timestamp).toLocaleString()}
-                      </Text>
-                    </View>
-                  ))
+                    );
+                  })
                 )}
+
+                <View style={styles.logNoticeCard}>
+                  <Text style={styles.logNoticeTitle}>🛡️ Zero-Trust Session Verification</Text>
+                  <Text style={styles.logNoticeText}>
+                    All terminal fingerprints, cryptographic hardware signatures, and edge gateways are recorded. Report any unrecognized authorizations to compliance immediately.
+                  </Text>
+                </View>
               </View>
             )}
 
@@ -5289,11 +5338,29 @@ const styles = StyleSheet.create({
   },
 
   // --- Session Logs Styles ---
+  logsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   logsSectionTitle: {
     fontSize: 13,
     fontWeight: 'bold',
     color: '#EAECEF',
-    marginBottom: 6,
+  },
+  logsRefreshBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#2B313A',
+    borderWidth: 1,
+    borderColor: '#363D47',
+  },
+  logsRefreshBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#F0B90B',
   },
   logCard: {
     backgroundColor: '#1E2329',
@@ -5309,10 +5376,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 4,
   },
+  logDeviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+    gap: 6,
+  },
+  logDeviceIcon: {
+    fontSize: 13,
+  },
   logDeviceText: {
     fontSize: 13,
     fontWeight: 'bold',
     color: '#EAECEF',
+    flexShrink: 1,
+  },
+  logCurrentBadge: {
+    backgroundColor: 'rgba(14, 203, 129, 0.15)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(14, 203, 129, 0.4)',
+  },
+  logCurrentBadgeText: {
+    fontSize: 8.5,
+    fontWeight: 'bold',
+    color: '#0ECB81',
   },
   logStatusBadge: {
     backgroundColor: 'rgba(14, 203, 129, 0.15)',
@@ -5322,10 +5413,24 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: 'rgba(14, 203, 129, 0.4)',
   },
+  logStatusBadgeBlocked: {
+    backgroundColor: 'rgba(246, 70, 93, 0.15)',
+    borderColor: 'rgba(246, 70, 93, 0.4)',
+  },
+  logStatusBadgeChallenge: {
+    backgroundColor: 'rgba(240, 185, 11, 0.15)',
+    borderColor: 'rgba(240, 185, 11, 0.4)',
+  },
   logStatusBadgeText: {
     fontSize: 10,
     fontWeight: 'bold',
     color: '#0ECB81',
+  },
+  logStatusBadgeTextBlocked: {
+    color: '#F6465D',
+  },
+  logStatusBadgeTextChallenge: {
+    color: '#F0B90B',
   },
   logLocationText: {
     fontSize: 11,
@@ -5335,6 +5440,25 @@ const styles = StyleSheet.create({
   logTimeText: {
     fontSize: 10,
     color: '#5E6673',
+  },
+  logNoticeCard: {
+    backgroundColor: '#181A20',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+    marginTop: 4,
+  },
+  logNoticeTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#F0B90B',
+    marginBottom: 4,
+  },
+  logNoticeText: {
+    fontSize: 10.5,
+    color: '#848E9C',
+    lineHeight: 15,
   },
 
   // --- Preferences & Settings ---

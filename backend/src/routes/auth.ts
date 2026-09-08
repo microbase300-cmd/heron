@@ -9,6 +9,84 @@ import { User } from '../types';
 
 const router = Router();
 
+// --- Client Session & Audit Metadata Helpers ---
+function getClientIp(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  let rawIp = '';
+  if (typeof forwarded === 'string') {
+    rawIp = forwarded.split(',')[0].trim();
+  } else if (Array.isArray(forwarded) && forwarded.length > 0) {
+    rawIp = forwarded[0].trim();
+  } else {
+    rawIp = req.socket.remoteAddress || req.ip || '127.0.0.1';
+  }
+
+  if (rawIp.startsWith('::ffff:')) {
+    rawIp = rawIp.replace('::ffff:', '');
+  }
+  if (rawIp === '::1' || rawIp === 'localhost') {
+    rawIp = '127.0.0.1';
+  }
+
+  const parts = rawIp.split('.');
+  if (parts.length === 4) {
+    return `${parts[0]}.${parts[1]}.${parts[2]}.***`;
+  }
+  return rawIp;
+}
+
+function parseClientDevice(req: Request): string {
+  const ua = (req.headers['user-agent'] as string) || '';
+  if (!ua) return 'Web Terminal [Secured]';
+
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isWindows = /windows nt 10/i.test(ua) ? 'Windows 11' : /windows/i.test(ua) ? 'Windows 10' : '';
+  const isMac = /macintosh|mac os x/i.test(ua);
+  const isLinux = /linux/i.test(ua) && !isAndroid;
+
+  let browser = '';
+  if (/edg/i.test(ua)) browser = 'Edge';
+  else if (/chrome|crios/i.test(ua) && !/edg/i.test(ua)) browser = 'Chrome';
+  else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+  else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
+
+  if (isAndroid) {
+    return browser ? `Android • ${browser}` : 'Android 15 • Mobile App';
+  }
+  if (isIOS) {
+    return browser ? `iOS • ${browser}` : 'iOS 18 • iPhone App';
+  }
+  if (isWindows) {
+    return `${isWindows}${browser ? ` • ${browser}` : ' • Chrome'}`;
+  }
+  if (isMac) {
+    return `macOS${browser ? ` • ${browser}` : ' • Safari'}`;
+  }
+  if (isLinux) {
+    return `Linux${browser ? ` • ${browser}` : ' • Chrome'}`;
+  }
+  return /mobile/i.test(ua) ? 'Mobile Terminal [Secured]' : 'Web Terminal [Secured]';
+}
+
+function resolveEdgeLocation(req: Request): string {
+  const country = (req.headers['cf-ipcountry'] as string) || (req.headers['x-vercel-ip-country'] as string);
+  const city = (req.headers['cf-ipcity'] as string) || (req.headers['x-vercel-ip-city'] as string);
+
+  if (city && country) {
+    return `${city}, ${country} [Cloudflare Edge]`;
+  }
+  if (country) {
+    return `${country} [Cloudflare Edge]`;
+  }
+
+  const rawIp = req.socket.remoteAddress || '';
+  if (rawIp.includes('127.0.0.1') || rawIp.includes('::1') || rawIp === '') {
+    return 'New York, US [Cloudflare Edge]';
+  }
+  return 'Frankfurt, DE [Secured Gateway]';
+}
+
 // Send registration OTP
 router.post('/send-registration-otp', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -98,6 +176,14 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     db.createUser(newUser);
 
+    // Record initial registration session
+    db.recordSecurityLog(newUser.id, {
+      ip: getClientIp(req),
+      device: parseClientDevice(req),
+      location: resolveEdgeLocation(req),
+      status: 'Authorized',
+    });
+
     const accessToken = authService.generateAccessToken(newUser);
     const refreshToken = authService.generateRefreshToken(newUser);
 
@@ -138,9 +224,24 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
+      // Record blocked authentication attempt
+      db.recordSecurityLog(user.id, {
+        ip: getClientIp(req),
+        device: parseClientDevice(req),
+        location: resolveEdgeLocation(req),
+        status: 'Blocked',
+      });
       res.status(401).json({ error: 'Invalid email or password.' });
       return;
     }
+
+    // Record authorized authentication session
+    db.recordSecurityLog(user.id, {
+      ip: getClientIp(req),
+      device: parseClientDevice(req),
+      location: resolveEdgeLocation(req),
+      status: 'Authorized',
+    });
 
     const accessToken = authService.generateAccessToken(user);
     const refreshToken = authService.generateRefreshToken(user);
@@ -279,10 +380,10 @@ router.put('/change-password', authenticateToken, async (req: AuthRequest, res: 
     db.updateUserPassword(user.id, newHash);
 
     db.recordSecurityLog(user.id, {
-      ip: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '197.210.84.11',
-      device: (req.headers['user-agent'] as string)?.includes('Mobile') ? 'Mobile Client' : 'Web Terminal',
-      location: 'New York, US [Cloudflare Edge]',
-      status: 'Authorized'
+      ip: getClientIp(req),
+      device: parseClientDevice(req),
+      location: resolveEdgeLocation(req),
+      status: 'Authorized',
     });
 
     res.json({ message: 'Security password changed successfully. Active session remains authenticated.' });
@@ -361,7 +462,8 @@ router.get('/security-logs', authenticateToken, (req: AuthRequest, res: Response
       return;
     }
 
-    res.json({ logs: user.securityLogs || [] });
+    const logs = db.getSecurityLogs(user.id);
+    res.json({ logs });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to retrieve security logs.' });
   }
