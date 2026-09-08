@@ -61,6 +61,15 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const isStartingRef = useRef(false);
+  const isOpenRef = useRef(isOpen);
+  const selectedDeviceIdRef = useRef(selectedDeviceId);
+  const sequenceStartedRef = useRef(false);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+    selectedDeviceIdRef.current = selectedDeviceId;
+  }, [isOpen, selectedDeviceId]);
 
   // Helper to clear all scheduled liveness sequence timers
   const clearAllTimers = useCallback(() => {
@@ -68,18 +77,39 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     timeoutsRef.current = [];
   }, []);
 
-  // Stop camera feed and release hardware lock
+  // Stop camera feed and release hardware lock completely
   const stopCamera = useCallback(() => {
     clearAllTimers();
+    isStartingRef.current = false;
+    sequenceStartedRef.current = false;
+
+    // 1. Stop all tracks on streamRef
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
-        track.stop();
+        try {
+          track.stop();
+        } catch {}
       });
       streamRef.current = null;
     }
+
+    // 2. Stop any tracks attached to video element
     if (videoRef.current) {
-      videoRef.current.srcObject = null;
+      if (videoRef.current.srcObject) {
+        try {
+          const s = videoRef.current.srcObject as MediaStream;
+          if (s && s.getTracks) {
+            s.getTracks().forEach((track) => {
+              try {
+                track.stop();
+              } catch {}
+            });
+          }
+        } catch {}
+        videoRef.current.srcObject = null;
+      }
     }
+
     setCameraActive(false);
   }, [clearAllTimers]);
 
@@ -165,6 +195,18 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
   // Start real hardware camera with multi-stage fallback constraints and device enumeration
   const startCamera = useCallback(async (forcedDeviceId?: string) => {
+    if (isStartingRef.current || !isOpenRef.current) return;
+    isStartingRef.current = true;
+    sequenceStartedRef.current = false;
+
+    // Stop any existing stream before starting a new one
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        try { track.stop(); } catch {}
+      });
+      streamRef.current = null;
+    }
+
     clearAllTimers();
     setCameraError(null);
     setCapturedImage(null);
@@ -173,6 +215,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     setBotDetectorStatus('Requesting biometric optical sensor authorization...');
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      isStartingRef.current = false;
       const msg = 'Camera API is not supported in this browser environment. Please use modern Google Chrome, Microsoft Edge, or Safari.';
       setCameraError(msg);
       setErrorType('unsupported');
@@ -181,90 +224,77 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
       return;
     }
 
-    // Refresh and inspect all connected video devices
-    let vDevices: MediaDeviceInfo[] = [];
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      vDevices = devices.filter((d) => d.kind === 'videoinput');
-      setVideoDevices(vDevices);
-    } catch (enumErr) {
-      console.warn('Could not enumerate media devices:', enumErr);
-    }
-
     let stream: MediaStream | null = null;
     let lastError: any = null;
-    const targetDevId = forcedDeviceId || selectedDeviceId;
+    const targetDevId = forcedDeviceId || selectedDeviceIdRef.current;
 
-    // Strategy A: If specific camera selected
-    if (targetDevId) {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: targetDevId } },
-          audio: false,
-        });
-      } catch (devErr: any) {
-        console.warn(`Target camera ${targetDevId} failed, falling back:`, devErr);
-        lastError = devErr;
-      }
-    }
-
-    // Strategy B: Standard HD resolution feed (without facingMode)
-    if (!stream) {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: false,
-        });
-      } catch (err1: any) {
-        console.warn('HD camera constraints failed, attempting basic video:', err1);
-        lastError = err1;
-
-        // If user explicitly blocked Chrome permission, halt immediately
-        if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'SecurityError') {
-          const permMsg =
-            'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left side of the address bar (next to localhost:5173), change "Camera" to "Allow", and click "Retry Camera Authorization".';
-          setCameraError(permMsg);
-          setErrorType('permission');
-          setStep('error');
-          setBotDetectorStatus('Optical biometric capture halted: Camera permission blocked.');
-          stopCamera();
-          return;
+    try {
+      // Strategy A: If specific camera selected
+      if (targetDevId) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: targetDevId } },
+            audio: false,
+          });
+        } catch (devErr: any) {
+          console.warn(`Target camera ${targetDevId} failed, falling back:`, devErr);
+          lastError = devErr;
         }
+      }
 
-        // Strategy C: Basic unconstrained video feed
+      // Strategy B: Standard HD resolution feed (without facingMode)
+      if (!stream) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
+        } catch (err1: any) {
+          lastError = err1;
+
+          // If user explicitly blocked Chrome permission, halt immediately
+          if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'SecurityError') {
+            isStartingRef.current = false;
+            const permMsg =
+              'Camera access was denied by your browser. In Google Chrome: Click the Site Settings / Tune icon on the left side of the address bar (next to localhost:5173), change "Camera" to "Allow", and click "Retry Camera Authorization".';
+            setCameraError(permMsg);
+            setErrorType('permission');
+            setStep('error');
+            setBotDetectorStatus('Optical biometric capture halted: Camera permission blocked.');
+            stopCamera();
+            return;
+          }
+        }
+      }
+
+      // Strategy C: Basic unconstrained video feed
+      if (!stream) {
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: false,
           });
         } catch (err2: any) {
-          console.warn('Basic unconstrained camera acquisition failed:', err2);
           lastError = err2;
-
-          // Strategy D: Try iterating each enumerated device individually
-          if (vDevices.length > 0) {
-            for (const d of vDevices) {
-              if (d.deviceId) {
-                try {
-                  stream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: d.deviceId } },
-                    audio: false,
-                  });
-                  if (stream) {
-                    setSelectedDeviceId(d.deviceId);
-                    break;
-                  }
-                } catch {
-                  // Continue to next device
-                }
-              }
-            }
-          }
         }
       }
+    } catch (topErr: any) {
+      lastError = topErr;
+    }
+
+    isStartingRef.current = false;
+
+    // CRITICAL: If modal was closed while getUserMedia was pending, stop tracks immediately!
+    if (!isOpenRef.current) {
+      if (stream) {
+        stream.getTracks().forEach((track) => {
+          try { track.stop(); } catch {}
+        });
+      }
+      return;
     }
 
     // If no stream could be acquired after all tiers
@@ -302,26 +332,19 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     setCameraActive(true);
     setCameraError(null);
 
-    // Re-query labels now that permission is granted
+    // Refresh devices list once permission granted
     try {
-      const updatedDevices = await navigator.mediaDevices.enumerateDevices();
-      const updatedVideoDevices = updatedDevices.filter((d) => d.kind === 'videoinput');
-      setVideoDevices(updatedVideoDevices);
-      const activeTrack = stream.getVideoTracks()[0];
-      if (activeTrack) {
-        const settings = activeTrack.getSettings();
-        if (settings.deviceId) {
-          setSelectedDeviceId(settings.deviceId);
-        }
-      }
-    } catch {
-      // Ignore
-    }
+      const allDevices = await navigator.mediaDevices.enumerateDevices();
+      const vDevs = allDevices.filter((d) => d.kind === 'videoinput');
+      setVideoDevices(vDevs);
+    } catch {}
 
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
 
       const handleVideoReady = async () => {
+        if (sequenceStartedRef.current) return;
+        sequenceStartedRef.current = true;
         try {
           await videoRef.current?.play();
         } catch (playErr) {
@@ -337,20 +360,42 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         videoRef.current.onloadeddata = handleVideoReady;
       }
     }
-  }, [clearAllTimers, onError, selectedDeviceId, startLivenessSequence, stopCamera]);
+  }, [clearAllTimers, onError, startLivenessSequence, stopCamera]);
 
+  // Handle camera switching
+  const handleSelectCamera = useCallback((deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    selectedDeviceIdRef.current = deviceId;
+    stopCamera();
+    setTimeout(() => {
+      startCamera(deviceId);
+    }, 150);
+  }, [startCamera, stopCamera]);
+
+  // Primary lifecycle hook: open and close camera
   useEffect(() => {
-    if (!isOpen) {
-      stopCamera();
-      return;
-    }
-
-    startCamera();
-
-    // Auto-detect when camera is plugged in, hotkey is pressed, or mobile phone connects
-    const handleDeviceChange = async () => {
-      console.log('🔄 Hardware device change detected, auto-initiating camera handshake...');
+    isOpenRef.current = isOpen;
+    if (isOpen) {
       startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [isOpen]);
+
+  // Secondary watcher: only listen to devicechange if camera was missing
+  useEffect(() => {
+    if (!isOpen || step !== 'error' || errorType !== 'not_found') return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const handleDeviceChange = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        console.log('🔄 Hardware device change detected while missing, retrying camera...');
+        startCamera();
+      }, 800);
     };
 
     if (navigator.mediaDevices?.addEventListener) {
@@ -358,15 +403,16 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     }
 
     return () => {
-      stopCamera();
+      if (timer) clearTimeout(timer);
       if (navigator.mediaDevices?.removeEventListener) {
         navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
       }
     };
-  }, [isOpen, startCamera, stopCamera]);
+  }, [isOpen, step, errorType, startCamera]);
 
   // Cancel and close modal, propagating error if verification didn't complete
   const handleCancel = () => {
+    isOpenRef.current = false;
     stopCamera();
     if (step !== 'completed' && onError) {
       onError(
@@ -380,6 +426,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   // Confirm biometric capture
   const handleConfirm = () => {
     if (capturedImage) {
+      isOpenRef.current = false;
+      stopCamera();
       onCaptureComplete(capturedImage, {
         botDetected: false,
         turnLeftPassed: true,
@@ -388,7 +436,6 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         capturedLive: true,
         confidenceScore: 99.4,
       });
-      stopCamera();
       onClose();
     }
   };
@@ -431,8 +478,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               <select
                 value={selectedDeviceId}
                 onChange={(e) => {
-                  setSelectedDeviceId(e.target.value);
-                  startCamera(e.target.value);
+                  handleSelectCamera(e.target.value);
                 }}
                 className="bg-[#181A20] border border-[#2B313A] text-[#EAECEF] text-[11px] rounded-lg px-2 py-1 outline-none focus:border-[#F0B90B] font-mono cursor-pointer"
                 title="Switch Camera Source"
