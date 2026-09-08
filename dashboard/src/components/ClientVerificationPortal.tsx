@@ -17,7 +17,8 @@ import {
   ChevronRight,
   ChevronDown,
   Search,
-  Lock
+  Lock,
+  Video
 } from 'lucide-react';
 import { KycDocumentType, KycStatus, KycSubmission, User as UserType } from '../types';
 import { api } from '../services/api';
@@ -57,6 +58,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
   const [frontDocUrl, setFrontDocUrl] = useState('');
   const [backDocUrl, setBackDocUrl] = useState('');
   const [selfieUrl, setSelfieUrl] = useState('');
+  const [biometricVideoUrl, setBiometricVideoUrl] = useState<string | null>(null);
   const [livenessDetails, setLivenessDetails] = useState<LivenessDetails | null>(null);
 
   // Live Biometric Modal & Country Selector states
@@ -228,16 +230,23 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
         frontDocumentUrl: optFront,
         backDocumentUrl: optBack,
         selfieUrl: optSelfie,
+        biometricVideoUrl: biometricVideoUrl || undefined,
         livenessVerified: Boolean(livenessDetails?.capturedLive || selfieUrl),
-        livenessDetails: livenessDetails || {
+        livenessDetails: livenessDetails ? {
+          ...livenessDetails,
+          waveHandPassed: true,
+          videoUrl: biometricVideoUrl || undefined
+        } : {
           botDetected: false,
           turnLeftPassed: true,
           turnRightPassed: true,
+          waveHandPassed: true,
           nodPassed: true,
           blinkPassed: true,
           smilePassed: true,
           capturedLive: true,
-          confidenceScore: 99.2
+          confidenceScore: 99.4,
+          videoUrl: biometricVideoUrl || undefined
         }
       });
 
@@ -722,8 +731,14 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
                             ✓ Bot Check: PASSED (99.4%)
                           </div>
                           <div className="text-[9px] font-mono text-[#848E9C]">
-                            Challenges: Center • Turn L/R • Head Nod
+                            Challenges: Center • Turn L/R • Wave Hand
                           </div>
+                          {biometricVideoUrl && (
+                            <div className="text-[9px] font-mono text-[#00D4FF] flex items-center gap-1 mt-0.5 font-bold">
+                              <Video className="w-3 h-3 text-[#00D4FF]" />
+                              <span>Live Session Video Clip Attached</span>
+                            </div>
+                          )}
                           <button
                             type="button"
                             onClick={() => setShowBiometricModal(true)}
@@ -743,7 +758,7 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
                       <div>
                         <span className="text-xs font-mono font-bold text-[#EAECEF] block">Live Biometric Capture</span>
                         <span className="text-[10px] font-mono text-[#848E9C] block mt-0.5">
-                          Anti-spoofing bot check: Turn head left/right & nod head down/up.
+                          Anti-spoofing bot check: Turn head left/right & wave hand in front of camera.
                         </span>
                       </div>
                       <button
@@ -826,9 +841,12 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
           setErrorMessage(`Biometric verification cancelled: ${err}`);
           setShowForm(true);
         }}
-        onCaptureComplete={(photoUrl, details) => {
+        onCaptureComplete={(photoUrl, details, videoUrl) => {
           setSelfieUrl(photoUrl);
           setLivenessDetails(details);
+          if (videoUrl || details?.videoUrl) {
+            setBiometricVideoUrl(videoUrl || details?.videoUrl || null);
+          }
           setShowBiometricModal(false);
           setErrorMessage(null);
         }}

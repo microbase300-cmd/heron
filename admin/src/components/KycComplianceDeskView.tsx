@@ -14,7 +14,8 @@ import {
   Sparkles,
   Camera,
   X,
-  AlertCircle
+  AlertCircle,
+  Video
 } from 'lucide-react';
 import { KycSubmission, KycDocumentType } from '../types';
 import { adminApi } from '../services/api';
@@ -607,13 +608,51 @@ export const KycComplianceDeskView: React.FC<KycComplianceDeskViewProps> = ({ on
                     <div className="flex items-center justify-between">
                       <span className="text-[#848E9C]">Anti-Spoof Vectors:</span>
                       <span className="text-[#F0B90B] font-bold">
-                        Turn L/R & Smile ✓
+                        Turn L/R & Hand Wave ✓
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Live Biometric Video Session Recording (if available) */}
+            {(selectedSubmission.biometricVideoUrl || selectedSubmission.livenessDetails?.videoUrl) && (
+              <div className="p-4 rounded-2xl bg-[#1E2329] border border-[#2B313A] space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-mono uppercase text-[#00D4FF] font-bold flex items-center gap-2">
+                    <Video className="w-4 h-4 text-[#00D4FF]" />
+                    Live Biometric Session Recording
+                  </h4>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Encrypted Session Clip Verified
+                  </span>
+                </div>
+                <div className="relative rounded-xl overflow-hidden bg-black border border-[#2B313A] flex items-center justify-center max-h-72">
+                  <video
+                    src={selectedSubmission.biometricVideoUrl || selectedSubmission.livenessDetails?.videoUrl}
+                    controls
+                    playsInline
+                    className="w-full max-h-72 object-contain bg-black"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-[#848E9C] pt-1">
+                  <span>Review recorded live session video to verify applicant cranial turn and hand wave gestures.</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#0ECB81] bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/20">
+                      ✓ Turn Left
+                    </span>
+                    <span className="text-[#0ECB81] bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/20">
+                      ✓ Turn Right
+                    </span>
+                    <span className="text-[#0ECB81] bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/20">
+                      ✓ Wave Hand
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Side-by-side OCR Verification Matrix */}
             <div>

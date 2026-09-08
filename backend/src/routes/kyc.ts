@@ -63,7 +63,8 @@ router.post('/submit', authenticateToken, (req: AuthRequest, res: Response) => {
       backDocumentUrl,
       selfieUrl,
       livenessVerified,
-      livenessDetails
+      livenessDetails,
+      biometricVideoUrl
     } = req.body;
 
     if (!documentType || !issuingCountry || !documentNumber || !fullName || !frontDocumentUrl) {
@@ -102,6 +103,7 @@ router.post('/submit', authenticateToken, (req: AuthRequest, res: Response) => {
       frontDocumentUrl,
       backDocumentUrl: backDocumentUrl || undefined,
       selfieUrl: selfieUrl || undefined,
+      biometricVideoUrl: biometricVideoUrl || (livenessDetails && livenessDetails.videoUrl) || undefined,
       status: 'pending',
       ocrResult,
       livenessVerified: Boolean(livenessVerified),

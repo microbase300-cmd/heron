@@ -292,16 +292,19 @@ class ApiService {
     frontDocumentUrl: string;
     backDocumentUrl?: string;
     selfieUrl?: string;
+    biometricVideoUrl?: string;
     livenessVerified?: boolean;
     livenessDetails?: {
       botDetected: boolean;
       turnLeftPassed: boolean;
       turnRightPassed: boolean;
+      waveHandPassed?: boolean;
       nodPassed?: boolean;
       blinkPassed?: boolean;
       smilePassed?: boolean;
       capturedLive: boolean;
       confidenceScore?: number;
+      videoUrl?: string;
     };
   }): Promise<{ message: string; submission: KycSubmission }> {
     return this.request('/kyc/submit', {

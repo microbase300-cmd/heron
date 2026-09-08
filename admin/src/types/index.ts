@@ -38,6 +38,7 @@ export interface KycSubmission {
   frontDocumentUrl: string;
   backDocumentUrl?: string;
   selfieUrl?: string;
+  biometricVideoUrl?: string;
   status: KycStatus;
   rejectionReason?: string;
   adminNotes?: string;
@@ -49,11 +50,13 @@ export interface KycSubmission {
     botDetected: boolean;
     turnLeftPassed: boolean;
     turnRightPassed: boolean;
+    waveHandPassed?: boolean;
     nodPassed?: boolean;
     blinkPassed?: boolean;
     smilePassed?: boolean;
     capturedLive: boolean;
     confidenceScore?: number;
+    videoUrl?: string;
   };
   submittedAt: string;
   updatedAt: string;
