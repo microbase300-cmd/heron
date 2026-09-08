@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { isRunningInExpoGo } from 'expo';
 
 /**
  * Robust, dynamic detection for Expo Go (Store Client) across Android and iOS.
@@ -8,24 +9,43 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
  */
 export function isExpoGo(): boolean {
   try {
+    if (typeof isRunningInExpoGo === 'function' && isRunningInExpoGo()) {
+      return true;
+    }
     const env = Constants?.executionEnvironment;
+    if (env === ExecutionEnvironment.StoreClient || String(env) === 'storeClient') {
+      return true;
+    }
     const ownership = (Constants as any)?.appOwnership;
-    const expoVersion = Constants?.expoVersion;
+    if (ownership === 'expo') {
+      return true;
+    }
     const hasExpoClient = Boolean(
       (Constants as any)?.manifest2?.extra?.expoClient ||
       (Constants as any)?.manifest?.developer
     );
-
-    const envStr = String(env || '');
-    return Boolean(
-      envStr === 'storeClient' ||
-      ownership === 'expo' ||
-      Boolean(expoVersion) ||
-      hasExpoClient ||
-      (typeof __DEV__ !== 'undefined' && __DEV__ && (ownership === 'expo' || Boolean(expoVersion) || (envStr !== 'bare' && envStr !== 'standalone')))
-    );
+    if (hasExpoClient) {
+      return true;
+    }
+    return false;
   } catch {
-    return true; // Fail safe to true to prevent fatal crashes
+    return true; // Fail safe to true to prevent fatal crashes in Expo Go
+  }
+}
+
+/**
+ * Safe accessor for expo-notifications.
+ * Returns null immediately if running inside Expo Go to prevent SDK 53+ crashes.
+ */
+function getNotificationsModule(): any | null {
+  if (isExpoGo()) {
+    return null;
+  }
+  try {
+    return require('expo-notifications');
+  } catch (err) {
+    console.log('[Push] Native notifications module not available:', err);
+    return null;
   }
 }
 
@@ -40,10 +60,10 @@ export interface PushRegistrationResult {
  * Completely bypassed in Expo Go to prevent SDK 53+ runtime exceptions.
  */
 export function initNotificationHandler() {
-  if (isExpoGo()) return;
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return;
 
   try {
-    const Notifications = require('expo-notifications');
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -75,9 +95,12 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
     return { token: null, status: 'simulator' };
   }
 
-  try {
-    const Notifications = require('expo-notifications');
+  const Notifications = getNotificationsModule();
+  if (!Notifications) {
+    return { token: null, status: 'simulator' };
+  }
 
+  try {
     if (Platform.OS === 'android') {
       try {
         await Notifications.setNotificationChannelAsync('heron-default', {
@@ -131,11 +154,11 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
  * Add foreground notification received listener safely.
  */
 export function addNotificationReceivedListener(callback: (notification: any) => void) {
-  if (isExpoGo()) {
+  const Notifications = getNotificationsModule();
+  if (!Notifications || typeof Notifications.addNotificationReceivedListener !== 'function') {
     return { remove: () => {} };
   }
   try {
-    const Notifications = require('expo-notifications');
     return Notifications.addNotificationReceivedListener(callback);
   } catch (err) {
     console.log('[Push] Notification received listener bypassed:', err);
@@ -147,11 +170,11 @@ export function addNotificationReceivedListener(callback: (notification: any) =>
  * Add notification response received listener safely.
  */
 export function addNotificationResponseReceivedListener(callback: (response: any) => void) {
-  if (isExpoGo()) {
+  const Notifications = getNotificationsModule();
+  if (!Notifications || typeof Notifications.addNotificationResponseReceivedListener !== 'function') {
     return { remove: () => {} };
   }
   try {
-    const Notifications = require('expo-notifications');
     return Notifications.addNotificationResponseReceivedListener(callback);
   } catch (err) {
     console.log('[Push] Notification response listener bypassed:', err);
@@ -163,12 +186,12 @@ export function addNotificationResponseReceivedListener(callback: (response: any
  * Send a local simulation notification for testing in standalone or dev mode.
  */
 export async function scheduleLocalNotification(title: string, body: string, data: Record<string, any> = {}) {
-  if (isExpoGo()) {
+  const Notifications = getNotificationsModule();
+  if (!Notifications || typeof Notifications.scheduleNotificationAsync !== 'function') {
     console.log(`[Push] Local Notification [Expo Go Mode]: "${title}" - "${body}"`);
     return;
   }
   try {
-    const Notifications = require('expo-notifications');
     await Notifications.scheduleNotificationAsync({
       content: {
         title,
