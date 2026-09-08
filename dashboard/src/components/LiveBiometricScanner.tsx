@@ -263,11 +263,12 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         if (shouldUpdateUi) {
           setBotDetectorStatus('Device movement detected: Please rotate your head, not your laptop.');
         }
-      } else if (curStep === 'initializing' && res.faceDetected) {
-        currentStepRef.current = 'center';
-        setStep('center');
-        setProgress(25);
-        setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
+      } else if (curStep === 'initializing') {
+        // Optical hardware still initializing / stabilizing - keep video hidden and loop
+        if (currentStepRef.current !== 'completed' && currentStepRef.current !== 'error' && isOpenRef.current) {
+          animationFrameRef.current = requestAnimationFrame(processVisionFrame);
+        }
+        return;
       } else if (res.faceDetected) {
         if (curStep === 'center') {
           if (shouldUpdateUi) setIsFaceCentered(res.isCentered);
@@ -303,10 +304,10 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             setLeftTurnProgress(curLeftProgress);
           }
 
-          if (curLeftProgress >= 95) {
+          if (curLeftProgress >= 50) {
             if (!stepHoldStartRef.current) {
               stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 450) {
+            } else if (Date.now() - stepHoldStartRef.current > 320) {
               turnLeftPassedRef.current = true;
               playBiometricChime(659.25); // E5
               setStepPassedToast('✓ Left Turn Verified');
@@ -321,7 +322,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           } else {
             stepHoldStartRef.current = null;
             if (shouldUpdateUi) {
-              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}%)`);
+              setBotDetectorStatus(`Step 2/4: Turn head slowly LEFT 👈 (Progress: ${curLeftProgress}% / 50%)`);
             }
           }
         } else if (curStep === 'turn_right') {
@@ -335,10 +336,10 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             setRightTurnProgress(curRightProgress);
           }
 
-          if (curRightProgress >= 95) {
+          if (curRightProgress >= 50) {
             if (!stepHoldStartRef.current) {
               stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 450) {
+            } else if (Date.now() - stepHoldStartRef.current > 320) {
               turnRightPassedRef.current = true;
               playBiometricChime(783.99); // G5
               setStepPassedToast('✓ Right Turn Verified');
@@ -355,11 +356,11 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           } else {
             stepHoldStartRef.current = null;
             if (shouldUpdateUi) {
-              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}%)`);
+              setBotDetectorStatus(`Step 3/4: Turn head slowly RIGHT 👉 (Progress: ${curRightProgress}% / 50%)`);
             }
           }
         } else if (curStep === 'wave_hand') {
-          const rawWaveProg = Math.min(100, Math.round((res.handStrokeCount / 4) * 100));
+          const rawWaveProg = Math.min(100, Math.round((res.handStrokeCount / 2) * 100));
           smoothWaveRef.current = smoothWaveRef.current * 0.70 + rawWaveProg * 0.30;
           const curWave = Math.round(smoothWaveRef.current);
 
@@ -368,10 +369,10 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             setWaveCount(res.handStrokeCount);
           }
 
-          if (curWave >= 95 || res.handWaveDetected) {
+          if (curWave >= 50 || res.handStrokeCount >= 2 || res.handWaveDetected) {
             if (!stepHoldStartRef.current) {
               stepHoldStartRef.current = Date.now();
-            } else if (Date.now() - stepHoldStartRef.current > 350) {
+            } else if (Date.now() - stepHoldStartRef.current > 300) {
               waveHandPassedRef.current = true;
               playBiometricChime(1046.50); // C6
               setStepPassedToast('✓ Hand Wave Verified: 99.4% Liveness');
@@ -388,7 +389,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           } else {
             stepHoldStartRef.current = null;
             if (shouldUpdateUi) {
-              setBotDetectorStatus(`Step 4/4: Wave your hand side-to-side in front of camera 👋 (${res.handStrokeCount}/4 strokes)`);
+              setBotDetectorStatus(`Step 4/4: Wave your hand side-to-side in front of camera 👋 (${res.handStrokeCount}/2 strokes)`);
             }
           }
         }
@@ -565,10 +566,20 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
         videoRef.current
           .play()
           .then(() => {
-            setCameraActive(true);
             isStartingRef.current = false;
             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = requestAnimationFrame(processVisionFrame);
+
+            // Finish optical hardware sensor loading completely before revealing user's face
+            setTimeout(() => {
+              if (isOpenRef.current && currentStepRef.current === 'initializing') {
+                setCameraActive(true);
+                currentStepRef.current = 'center';
+                setStep('center');
+                setProgress(25);
+                setBotDetectorStatus('Step 1/4: Center your face inside the golden target oval.');
+              }
+            }, 350);
           })
           .catch((playErr) => {
             isStartingRef.current = false;
@@ -683,7 +694,9 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
             playsInline
             muted
             className={`w-full h-full object-cover transition-opacity duration-300 ${
-              cameraActive && !capturedImage ? 'opacity-100 scale-x-[-1]' : 'opacity-0 absolute pointer-events-none'
+              cameraActive && !capturedImage && step !== 'initializing' && step !== 'error'
+                ? 'opacity-100 scale-x-[-1]'
+                : 'opacity-0 absolute pointer-events-none'
             }`}
           />
 
@@ -803,8 +816,8 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           {step === 'initializing' && !cameraError && (
             <div className="flex flex-col items-center justify-center text-center p-6 space-y-3 animate-fadeIn">
               <RefreshCw className="w-10 h-10 text-[#F0B90B] animate-spin" />
-              <p className="text-xs font-bold text-[#EAECEF]">Starting Camera Video Stream...</p>
-              <p className="text-[10px] text-[#848E9C]">Hardware acceleration active • Instant startup</p>
+              <p className="text-xs font-bold text-[#EAECEF]">Starting Biometric Camera Feed...</p>
+              <p className="text-[10px] text-[#848E9C]">Hardware acceleration active • Initializing optical sensors</p>
             </div>
           )}
 
@@ -819,15 +832,15 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                       ? 'border-[#0ECB81] shadow-[#0ECB81]/30 bg-[#0ECB81]/10'
                       : 'border-[#F0B90B] shadow-[#F0B90B]/20 bg-[#F0B90B]/5'
                     : step === 'turn_left'
-                    ? leftTurnProgress >= 90
+                    ? leftTurnProgress >= 50
                       ? 'border-[#00D4FF] shadow-[#00D4FF]/40 bg-[#00D4FF]/10'
                       : 'border-[#00D4FF]/60 shadow-[#00D4FF]/20 bg-[#00D4FF]/5'
                     : step === 'turn_right'
-                    ? rightTurnProgress >= 90
+                    ? rightTurnProgress >= 50
                       ? 'border-[#9945FF] shadow-[#9945FF]/40 bg-[#9945FF]/10'
                       : 'border-[#9945FF]/60 shadow-[#9945FF]/20 bg-[#9945FF]/5'
                     : step === 'wave_hand'
-                    ? waveProgress >= 90
+                    ? waveProgress >= 50
                       ? 'border-[#0ECB81] shadow-[#0ECB81]/40 bg-[#0ECB81]/15'
                       : 'border-[#0ECB81]/60 shadow-[#0ECB81]/20 bg-[#0ECB81]/5'
                     : 'border-[#0ECB81] bg-[#0ECB81]/15'
@@ -852,11 +865,11 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 {/* Step 2: Directional Visual Prompt - Turn Left */}
                 {step === 'turn_left' && (
                   <div className="absolute -left-14 sm:-left-16 flex flex-col items-center gap-1.5 text-[#00D4FF]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#00D4FF]/40 flex items-center justify-center ${leftTurnProgress >= 90 ? 'ring-2 ring-[#00D4FF]' : 'animate-pulse'}`}>
+                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#00D4FF]/40 flex items-center justify-center ${leftTurnProgress >= 50 ? 'ring-2 ring-[#00D4FF]' : 'animate-pulse'}`}>
                       <ArrowLeft className="w-7 h-7" />
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#00D4FF]/30">
-                      {leftTurnProgress >= 90 ? '✓ Hold' : `${leftTurnProgress}%`}
+                      {leftTurnProgress >= 50 ? '✓ Hold' : `${leftTurnProgress}%`}
                     </span>
                   </div>
                 )}
@@ -864,11 +877,11 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 {/* Step 3: Directional Visual Prompt - Turn Right */}
                 {step === 'turn_right' && (
                   <div className="absolute -right-14 sm:-right-16 flex flex-col items-center gap-1.5 text-[#9945FF]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#9945FF]/40 flex items-center justify-center ${rightTurnProgress >= 90 ? 'ring-2 ring-[#9945FF]' : 'animate-pulse'}`}>
+                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#9945FF]/40 flex items-center justify-center ${rightTurnProgress >= 50 ? 'ring-2 ring-[#9945FF]' : 'animate-pulse'}`}>
                       <ArrowRight className="w-7 h-7" />
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#9945FF]/30">
-                      {rightTurnProgress >= 90 ? '✓ Hold' : `${rightTurnProgress}%`}
+                      {rightTurnProgress >= 50 ? '✓ Hold' : `${rightTurnProgress}%`}
                     </span>
                   </div>
                 )}
@@ -922,13 +935,13 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
 
                   <div className="text-[10px] text-center font-mono font-bold">
                     {step === 'turn_left' && (
-                      <span className={leftTurnProgress >= 90 ? 'text-[#0ECB81]' : 'text-[#00D4FF]'}>
-                        {leftTurnProgress >= 90 ? '✓ Hold Steady Left (Verifying...)' : 'Turn head slowly LEFT to fill progress 👈'}
+                      <span className={leftTurnProgress >= 50 ? 'text-[#0ECB81]' : 'text-[#00D4FF]'}>
+                        {leftTurnProgress >= 50 ? '✓ Hold Steady Left (Verifying...)' : 'Turn head slowly LEFT to reach 50% 👈'}
                       </span>
                     )}
                     {step === 'turn_right' && (
-                      <span className={rightTurnProgress >= 90 ? 'text-[#0ECB81]' : 'text-[#9945FF]'}>
-                        {rightTurnProgress >= 90 ? '✓ Hold Steady Right (Verifying...)' : 'Turn head slowly RIGHT to fill progress 👉'}
+                      <span className={rightTurnProgress >= 50 ? 'text-[#0ECB81]' : 'text-[#9945FF]'}>
+                        {rightTurnProgress >= 50 ? '✓ Hold Steady Right (Verifying...)' : 'Turn head slowly RIGHT to reach 50% 👉'}
                       </span>
                     )}
                   </div>
@@ -957,10 +970,10 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                   </div>
 
                   <div className="text-[10px] text-center font-mono font-bold">
-                    {waveProgress >= 90 ? (
+                    {waveProgress >= 50 ? (
                       <span className="text-[#0ECB81]">✓ Hand Wave Verified! Finalizing...</span>
                     ) : (
-                      <span className="text-[#F0B90B]">Wave hand side-to-side in front of camera 👋 ({waveCount}/4 strokes)</span>
+                      <span className="text-[#F0B90B]">Wave hand side-to-side in front of camera 👋 ({waveCount}/2 strokes)</span>
                     )}
                   </div>
                 </div>
@@ -977,7 +990,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           )}
 
           {/* Top Real-Time Telemetry HUD */}
-          {cameraActive && !capturedImage && step !== 'error' && (
+          {cameraActive && !capturedImage && step !== 'error' && step !== 'initializing' && (
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] font-mono pointer-events-none">
               <div className="flex items-center gap-2">
                 <div className="px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#0ECB81] flex items-center gap-1.5 backdrop-blur-sm">

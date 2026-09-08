@@ -279,7 +279,7 @@ export class LightweightVisionEngine {
               now - this.waveState.lastStrokeTime > 160
             ) {
               // Reversal detected!
-              this.waveState.strokeCount = Math.min(4, this.waveState.strokeCount + 1);
+              this.waveState.strokeCount = Math.min(2, this.waveState.strokeCount + 1);
               this.waveState.lastStrokeTime = now;
             }
             this.waveState.lastDirection = curDir;
@@ -288,7 +288,7 @@ export class LightweightVisionEngine {
         this.waveState.lastHandX = currentHandX;
       }
 
-      if (this.waveState.strokeCount >= 4) {
+      if (this.waveState.strokeCount >= 2) {
         handWaveDetected = true;
       }
     }
