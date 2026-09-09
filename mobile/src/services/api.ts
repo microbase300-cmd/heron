@@ -20,7 +20,7 @@ import {
 
 // Dynamic host determination for Physical Devices, Emulators, and Web
 const resolveDefaultHost = (): string => {
-  return 'http://2.59.161.183/api';
+  return 'https://api.stealthssolutions.com/api';
 };
 
 let currentApiHost = resolveDefaultHost();
