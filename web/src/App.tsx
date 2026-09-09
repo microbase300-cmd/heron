@@ -14,6 +14,19 @@ function ScrollToTop() {
   return null
 }
 
+const getDashboardUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'stealthssolutions.com' || host === 'www.stealthssolutions.com') {
+      return 'https://app.stealthssolutions.com';
+    }
+    if (host === '2.59.161.183') {
+      return 'http://app.stealthssolutions.com';
+    }
+  }
+  return 'http://localhost:5173';
+};
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -84,7 +97,7 @@ function Navbar() {
           <div className="nav-mobile-extra">
             <a
               className="btn btn-outline"
-              href="http://localhost:5173"
+              href={getDashboardUrl()}
               target="_blank"
               rel="noopener noreferrer"
               onClick={closeMenu}
@@ -104,7 +117,7 @@ function Navbar() {
         <div className="navcta">
           <a
             className="btn btn-outline"
-            href="http://localhost:5173"
+            href={getDashboardUrl()}
             target="_blank"
             rel="noopener noreferrer"
             title="Access the secure investor dashboard"
@@ -185,7 +198,7 @@ function Footer({
             <Link to="/strategies#process">Investment Process</Link>
             <Link to="/pricing#simulator">Yield Simulator</Link>
             <a
-              href="http://localhost:5173"
+              href={getDashboardUrl()}
               target="_blank"
               rel="noopener noreferrer"
             >
