@@ -111,7 +111,19 @@ export default function Home() {
       <section className="section section-dark">
         <div className="container strategy-rail">
           <Reveal>
-            <div className="strategy-art" />
+            <div className="strategy-art">
+              <img
+                src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
+                alt="Real Investment Portfolio Architecture"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '20px',
+                  filter: 'brightness(0.85) contrast(1.1)',
+                }}
+              />
+            </div>
           </Reveal>
 
           <Reveal className="delay-1">
