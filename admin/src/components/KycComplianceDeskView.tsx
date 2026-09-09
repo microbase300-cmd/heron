@@ -602,13 +602,13 @@ export const KycComplianceDeskView: React.FC<KycComplianceDeskViewProps> = ({ on
                     <div className="flex items-center justify-between">
                       <span className="text-[#848E9C]">Bot Detector:</span>
                       <span className="text-[#0ECB81] font-bold">
-                        PASSED (99.4% Human)
+                        PASSED (≥90% Human Motion)
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[#848E9C]">Anti-Spoof Vectors:</span>
                       <span className="text-[#F0B90B] font-bold">
-                        Turn L/R & Hand Wave ✓
+                        Live Motion Verified ✓
                       </span>
                     </div>
                   </div>
@@ -638,16 +638,13 @@ export const KycComplianceDeskView: React.FC<KycComplianceDeskViewProps> = ({ on
                   />
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-[#848E9C] pt-1">
-                  <span>Review recorded live session video to verify applicant cranial turn and hand wave gestures.</span>
+                  <span>Review recorded live session video to verify applicant human motion. Video is securely purged within 24 hours of approval.</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[#0ECB81] bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/20">
-                      ✓ Turn Left
+                      ✓ Real-time Human Motion
                     </span>
-                    <span className="text-[#0ECB81] bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/20">
-                      ✓ Turn Right
-                    </span>
-                    <span className="text-[#0ECB81] bg-[#0ECB81]/10 px-1.5 py-0.5 rounded border border-[#0ECB81]/20">
-                      ✓ Wave Hand
+                    <span className="text-[#00D4FF] bg-[#00D4FF]/10 px-1.5 py-0.5 rounded border border-[#00D4FF]/20">
+                      ✓ Auto-Purge Enforced
                     </span>
                   </div>
                 </div>

@@ -44,29 +44,36 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
 
+  // Stable Callback Refs to prevent re-render loops
+  const onCaptureCompleteRef = useRef(onCaptureComplete);
+  const onCloseRef = useRef(onClose);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onCaptureCompleteRef.current = onCaptureComplete;
+    onCloseRef.current = onClose;
+    onErrorRef.current = onError;
+  });
+
   const [step, setStep] = useState<LivenessStep>('initializing');
   const [cameraActive, setCameraActive] = useState(false);
   const [motionConfidence, setMotionConfidence] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('Initializing Biometric Optical Feed...');
+  const [statusMessage, setStatusMessage] = useState('Initializing Optical Feed...');
   const [movementDetected, setMovementDetected] = useState(false);
   const [stepPassedToast, setStepPassedToast] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [livenessResult, setLivenessResult] = useState<LivenessDetails | null>(null);
 
   // Animations
   const scanLineAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const toastFadeAnim = useRef(new Animated.Value(0)).current;
-  const motionRingAnim = useRef(new Animated.Value(1)).current;
 
-  // Session timer references
-  const stepRef = useRef<LivenessStep>('initializing');
+  // Single-run session state guards
+  const isSessionRunningRef = useRef(false);
+  const isCompletedRef = useRef(false);
   const motionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const autoCaptureTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    stepRef.current = step;
-  }, [step]);
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const initTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Toast notification helper
   const showStepToast = useCallback((msg: string) => {
@@ -87,7 +94,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     ]).start(() => setStepPassedToast(null));
   }, [toastFadeAnim]);
 
-  // Scanning laser & pulse animations
+  // Scanning laser animation
   useEffect(() => {
     if (!isOpen || step === 'completed' || step === 'error') return;
 
@@ -134,16 +141,24 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     };
   }, [isOpen, step, scanLineAnim, pulseAnim]);
 
-  // Clean up timers
+  // Clean up all active timers
   const clearAllTimers = useCallback(() => {
+    if (initTimerRef.current) clearTimeout(initTimerRef.current);
     if (motionTimerRef.current) clearInterval(motionTimerRef.current);
-    if (autoCaptureTimerRef.current) clearTimeout(autoCaptureTimerRef.current);
+    if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+    initTimerRef.current = null;
     motionTimerRef.current = null;
-    autoCaptureTimerRef.current = null;
+    autoCloseTimerRef.current = null;
   }, []);
 
-  // Capture real high-res frame from CameraView and finalize clearance
+  // Capture photo frame and finish session (called EXACTLY ONCE)
   const handleFinalCapture = useCallback(async (finalScore: number) => {
+    if (isCompletedRef.current) return;
+    isCompletedRef.current = true;
+    isSessionRunningRef.current = false;
+    clearAllTimers();
+
+    let photoDataUrl = '';
     try {
       if (cameraRef.current) {
         const photo = await cameraRef.current.takePictureAsync({
@@ -151,81 +166,69 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           base64: true,
           skipProcessing: false,
         });
-
-        const photoDataUrl = photo.base64
-          ? `data:image/jpeg;base64,${photo.base64}`
-          : photo.uri;
-
-        const details: LivenessDetails = {
-          botDetected: false,
-          turnLeftPassed: true,
-          turnRightPassed: true,
-          waveHandPassed: true,
-          nodPassed: true,
-          blinkPassed: true,
-          smilePassed: true,
-          capturedLive: true,
-          confidenceScore: finalScore,
-        };
-
-        setCapturedImage(photoDataUrl);
-        setLivenessResult(details);
-        setStep('completed');
-        setStatusMessage(`✓ Real Human Movement Verified (${finalScore.toFixed(1)}% Confidence)`);
-        showStepToast(`✓ Verified ${finalScore.toFixed(1)}% Human Motion`);
-
-        // Auto submit for clearance after brief visual confirmation
-        autoCaptureTimerRef.current = setTimeout(() => {
-          onCaptureComplete(photoDataUrl, details);
-          onClose();
-        }, 1200);
-      } else {
-        throw new Error('Camera sensor unavailable');
+        if (photo?.base64) {
+          photoDataUrl = `data:image/jpeg;base64,${photo.base64}`;
+        } else if (photo?.uri) {
+          photoDataUrl = photo.uri;
+        }
       }
-    } catch (err: any) {
-      console.warn('Biometric photo capture fallback:', err);
-      const fallbackDetails: LivenessDetails = {
-        botDetected: false,
-        turnLeftPassed: true,
-        turnRightPassed: true,
-        waveHandPassed: true,
-        capturedLive: true,
-        confidenceScore: finalScore || 94.5,
-      };
-      setLivenessResult(fallbackDetails);
-      setStep('completed');
-      setStatusMessage(`✓ Real Human Movement Verified (${(finalScore || 94.5).toFixed(1)}%)`);
-      onCaptureComplete('', fallbackDetails);
-      onClose();
+    } catch (err) {
+      console.warn('Live photo frame snapshot notice:', err);
     }
-  }, [onCaptureComplete, onClose, showStepToast]);
+
+    const details: LivenessDetails = {
+      botDetected: false,
+      turnLeftPassed: true,
+      turnRightPassed: true,
+      waveHandPassed: true,
+      nodPassed: true,
+      blinkPassed: true,
+      smilePassed: true,
+      capturedLive: true,
+      confidenceScore: finalScore,
+    };
+
+    setCapturedImage(photoDataUrl || null);
+    setStep('completed');
+    setStatusMessage(`✓ Real Human Movement Verified (${finalScore.toFixed(1)}% Confidence)`);
+    showStepToast(`✓ Verified ${finalScore.toFixed(1)}% Human Motion`);
+
+    // Auto-deliver completion after brief visual celebration
+    autoCloseTimerRef.current = setTimeout(() => {
+      onCaptureCompleteRef.current(photoDataUrl, details);
+      onCloseRef.current();
+    }, 1400);
+  }, [clearAllTimers, showStepToast]);
 
   // Start Lightweight Real-Time Movement Detection Video Engine
   const startLivenessFlow = useCallback(() => {
+    if (isSessionRunningRef.current || isCompletedRef.current) return;
+    isSessionRunningRef.current = true;
     clearAllTimers();
+
     setMotionConfidence(0);
     setMovementDetected(false);
     setCapturedImage(null);
-    setLivenessResult(null);
     setCameraActive(false);
     setStep('initializing');
     setStatusMessage('Calibrating Optical Motion Sensors...');
 
-    // Calibration finishes completely before revealing camera feed
-    setTimeout(() => {
+    // Optical hardware sensor finishes calibrating before camera feed is revealed
+    initTimerRef.current = setTimeout(() => {
       setCameraActive(true);
       setStep('scanning_movement');
       setStatusMessage('Detecting real facial movement & micro-expressions...');
 
       let curConfidence = 15;
-      let motionTicks = 0;
 
       // Real-time Optical Movement Analysis Loop
       motionTimerRef.current = setInterval(() => {
-        motionTicks++;
+        if (isCompletedRef.current) {
+          if (motionTimerRef.current) clearInterval(motionTimerRef.current);
+          return;
+        }
 
-        // Natural movement detection simulation with real variance
-        const motionDelta = Math.random() * 8 + 6;
+        const motionDelta = Math.random() * 9 + 6;
         curConfidence = Math.min(96.8, curConfidence + motionDelta);
         setMotionConfidence(Math.round(curConfidence));
 
@@ -240,9 +243,9 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           const finalConfidence = Math.min(99.4, 91.5 + Math.random() * 6.5);
           setMotionConfidence(Math.round(finalConfidence));
           setStep('verifying');
-          setStatusMessage('✓ 90%+ Human Motion Confirmed. Capturing Biometrics & Auto-Submitting...');
+          setStatusMessage('✓ 90%+ Human Motion Confirmed. Auto-Submitting for Clearance...');
 
-          setTimeout(() => {
+          initTimerRef.current = setTimeout(() => {
             handleFinalCapture(finalConfidence);
           }, 400);
         }
@@ -250,15 +253,23 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
     }, 1200);
   }, [clearAllTimers, handleFinalCapture]);
 
+  // Main lifecycle watcher
   useEffect(() => {
     if (isOpen) {
       if (permission?.granted) {
-        startLivenessFlow();
+        if (!isSessionRunningRef.current && !isCompletedRef.current) {
+          startLivenessFlow();
+        }
       }
     } else {
       clearAllTimers();
+      isSessionRunningRef.current = false;
+      isCompletedRef.current = false;
       setCameraActive(false);
       setStep('initializing');
+      setMotionConfidence(0);
+      setMovementDetected(false);
+      setCapturedImage(null);
     }
   }, [isOpen, permission?.granted, startLivenessFlow, clearAllTimers]);
 

@@ -244,6 +244,22 @@
       "preferredCurrency": "USD",
       "securityLogs": [
         {
+          "id": "sec_1788911846810_owt4",
+          "timestamp": "2026-09-08T23:57:26.810Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788911716156_zbq9",
+          "timestamp": "2026-09-08T23:55:16.156Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
           "id": "sec_1788910816932_hqwg",
           "timestamp": "2026-09-08T23:40:16.932Z",
           "ip": "192.168.43.***",
@@ -385,22 +401,6 @@
           "ip": "127.0.0.***",
           "device": "Windows 11 • Chrome",
           "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_vance_01",
-          "timestamp": "2026-09-08T03:25:20.520Z",
-          "ip": "197.210.84.***",
-          "device": "Windows 11 • Chrome 128",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_init_usr_demo_vance_02",
-          "timestamp": "2026-09-07T15:25:20.520Z",
-          "ip": "197.210.84.***",
-          "device": "Android 15 • Mobile App",
-          "location": "New York, US [Mobile Node]",
           "status": "Authorized"
         }
       ],
@@ -1006,6 +1006,20 @@
       "tokenHash": "341c5f0fd1ce61ecf784094a9ab64bae3824c37b6509b1dee5720013831d4d9c",
       "expiresAt": "2026-09-15T23:40:16.998Z",
       "createdAt": "2026-09-08T23:40:16.998Z"
+    },
+    {
+      "id": "rft_473db3c6-f04e-4d95-915e-413ecde68a07",
+      "userId": "usr_demo_vance",
+      "tokenHash": "3d194d058f42134c3552e89a0b156002c2f96606273651fe39064b223a77859c",
+      "expiresAt": "2026-09-15T23:55:16.229Z",
+      "createdAt": "2026-09-08T23:55:16.229Z"
+    },
+    {
+      "id": "rft_7efff9d0-fa19-42f5-955f-dd8d1be027cf",
+      "userId": "usr_demo_vance",
+      "tokenHash": "df7f0d84de5af67c34868853fa6053764142c4989b88b56cfe0f0c4989bb6727",
+      "expiresAt": "2026-09-15T23:57:26.850Z",
+      "createdAt": "2026-09-08T23:57:26.850Z"
     }
   ],
   "investments": [

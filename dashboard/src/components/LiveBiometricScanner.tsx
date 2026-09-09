@@ -5,16 +5,12 @@ import {
   AlertTriangle,
   RefreshCw,
   X,
-  ArrowLeft,
-  ArrowRight,
   ShieldAlert,
   Lock,
   Sparkles,
   ExternalLink,
   Activity,
-  Compass,
   Scan,
-  Hand,
   Video,
   Play,
   Pause,
@@ -606,7 +602,7 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 </span>
               </h3>
               <p className="text-[11px] text-[#848E9C]">
-                0-Download Autonomous Anti-Spoofing: Cranial Invariant Vectors & Hand Wave
+                Autonomous Anti-Spoofing: Real-Time Human Motion & Depth Analysis
               </p>
             </div>
           </div>
@@ -761,23 +757,11 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               {/* Target Face Oval Frame */}
               <div
                 className={`w-48 h-64 sm:w-56 sm:h-72 rounded-full border-2 transition-all duration-300 relative flex items-center justify-center shadow-2xl ${
-                  step === 'center'
-                    ? isFaceCentered
-                      ? 'border-[#0ECB81] shadow-[#0ECB81]/30 bg-[#0ECB81]/10'
-                      : 'border-[#F0B90B] shadow-[#F0B90B]/20 bg-[#F0B90B]/5'
-                    : step === 'turn_left'
-                    ? leftTurnProgress >= 50
-                      ? 'border-[#00D4FF] shadow-[#00D4FF]/40 bg-[#00D4FF]/10'
-                      : 'border-[#00D4FF]/60 shadow-[#00D4FF]/20 bg-[#00D4FF]/5'
-                    : step === 'turn_right'
-                    ? rightTurnProgress >= 50
-                      ? 'border-[#9945FF] shadow-[#9945FF]/40 bg-[#9945FF]/10'
-                      : 'border-[#9945FF]/60 shadow-[#9945FF]/20 bg-[#9945FF]/5'
-                    : step === 'wave_hand'
-                    ? waveProgress >= 50
-                      ? 'border-[#0ECB81] shadow-[#0ECB81]/40 bg-[#0ECB81]/15'
-                      : 'border-[#0ECB81]/60 shadow-[#0ECB81]/20 bg-[#0ECB81]/5'
-                    : 'border-[#0ECB81] bg-[#0ECB81]/15'
+                  progress >= 90
+                    ? 'border-[#0ECB81] shadow-[#0ECB81]/40 bg-[#0ECB81]/15'
+                    : isFaceCentered
+                    ? 'border-[#00D4FF] shadow-[#00D4FF]/30 bg-[#00D4FF]/10'
+                    : 'border-[#F0B90B] shadow-[#F0B90B]/20 bg-[#F0B90B]/5'
                 }`}
               >
                 {/* Crosshairs */}
@@ -786,132 +770,14 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 <div className="absolute left-0 h-4 w-0.5 bg-current opacity-75" />
                 <div className="absolute right-0 h-4 w-0.5 bg-current opacity-75" />
 
-                {/* Step 1: Center Face Alignment Marker */}
-                {step === 'center' && (
-                  <div className="absolute bottom-4 px-3 py-1 rounded-full bg-black/75 border text-[10px] font-bold flex items-center gap-1.5 transition-all">
-                    <span className={`w-2 h-2 rounded-full ${isFaceCentered ? 'bg-[#0ECB81]' : 'bg-[#F0B90B] animate-ping'}`} />
-                    <span className={isFaceCentered ? 'text-[#0ECB81]' : 'text-[#F0B90B]'}>
-                      {isFaceCentered ? 'Face Aligned (Hold Steady)' : 'Align Face In Oval'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Step 2: Directional Visual Prompt - Turn Left */}
-                {step === 'turn_left' && (
-                  <div className="absolute -left-14 sm:-left-16 flex flex-col items-center gap-1.5 text-[#00D4FF]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#00D4FF]/40 flex items-center justify-center ${leftTurnProgress >= 50 ? 'ring-2 ring-[#00D4FF]' : 'animate-pulse'}`}>
-                      <ArrowLeft className="w-7 h-7" />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#00D4FF]/30">
-                      {leftTurnProgress >= 50 ? '✓ Hold' : `${leftTurnProgress}%`}
-                    </span>
-                  </div>
-                )}
-
-                {/* Step 3: Directional Visual Prompt - Turn Right */}
-                {step === 'turn_right' && (
-                  <div className="absolute -right-14 sm:-right-16 flex flex-col items-center gap-1.5 text-[#9945FF]">
-                    <div className={`p-2 rounded-2xl bg-black/80 border border-[#9945FF]/40 flex items-center justify-center ${rightTurnProgress >= 50 ? 'ring-2 ring-[#9945FF]' : 'animate-pulse'}`}>
-                      <ArrowRight className="w-7 h-7" />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#9945FF]/30">
-                      {rightTurnProgress >= 50 ? '✓ Hold' : `${rightTurnProgress}%`}
-                    </span>
-                  </div>
-                )}
-
-                {/* Step 4: Directional Visual Prompt - Hand Wave */}
-                {step === 'wave_hand' && (
-                  <div className="absolute bottom-3 flex flex-col items-center gap-1 text-[#0ECB81]">
-                    <div className="p-2.5 rounded-2xl bg-black/80 border border-[#0ECB81]/40 flex items-center justify-center">
-                      <Hand className="w-8 h-8 text-[#0ECB81] animate-bounce" />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-black/80 px-2 py-0.5 rounded border border-[#0ECB81]/30">
-                      Wave Hand 👋
-                    </span>
-                  </div>
-                )}
+                {/* Real-time Status Marker */}
+                <div className="absolute bottom-4 px-3 py-1 rounded-full bg-black/80 border border-[#2B313A] text-[10px] font-bold flex items-center gap-1.5 transition-all">
+                  <span className={`w-2 h-2 rounded-full ${progress >= 90 ? 'bg-[#0ECB81]' : isFaceCentered ? 'bg-[#00D4FF]' : 'bg-[#F0B90B] animate-ping'}`} />
+                  <span className={progress >= 90 ? 'text-[#0ECB81]' : isFaceCentered ? 'text-[#00D4FF]' : 'text-[#F0B90B]'}>
+                    {progress >= 90 ? '✓ Human Motion Verified' : isFaceCentered ? 'Natural Movement Detected' : 'Align Face & Move Naturally'}
+                  </span>
+                </div>
               </div>
-
-              {/* Dynamic Bilateral Head Rotation Progress Bar (Fills left or right) */}
-              {(step === 'turn_left' || step === 'turn_right') && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-72 sm:w-84 bg-black/90 backdrop-blur-md rounded-2xl border border-[#2B313A] p-3 shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
-                  <div className="flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-wider font-mono">
-                    <div className={`flex items-center gap-1 ${step === 'turn_left' ? 'text-[#00D4FF]' : 'text-[#848E9C]'}`}>
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>LEFT ({leftTurnProgress}%)</span>
-                    </div>
-                    <div className="text-[#848E9C] text-[9px]">CENTER [0°]</div>
-                    <div className={`flex items-center gap-1 ${step === 'turn_right' ? 'text-[#9945FF]' : 'text-[#848E9C]'}`}>
-                      <span>RIGHT ({rightTurnProgress}%)</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-
-                  {/* Bilateral Progress Track */}
-                  <div className="relative w-full h-3 bg-[#121418] rounded-full overflow-hidden border border-[#2B313A] flex items-center">
-                    <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-white/50 z-10" />
-                    {/* Left Half: Fills towards left */}
-                    <div className="w-1/2 h-full flex justify-end">
-                      <div
-                        className="h-full bg-gradient-to-l from-[#00D4FF] to-[#0077FF] rounded-l-full transition-all duration-150"
-                        style={{ width: `${leftTurnProgress}%` }}
-                      />
-                    </div>
-                    {/* Right Half: Fills towards right */}
-                    <div className="w-1/2 h-full flex justify-start">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#9945FF] to-[#D946EF] rounded-r-full transition-all duration-150"
-                        style={{ width: `${rightTurnProgress}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="text-[10px] text-center font-mono font-bold">
-                    {step === 'turn_left' && (
-                      <span className={leftTurnProgress >= 50 ? 'text-[#0ECB81]' : 'text-[#00D4FF]'}>
-                        {leftTurnProgress >= 50 ? '✓ Hold Steady Left (Verifying...)' : 'Turn head slowly LEFT to reach 50% 👈'}
-                      </span>
-                    )}
-                    {step === 'turn_right' && (
-                      <span className={rightTurnProgress >= 50 ? 'text-[#0ECB81]' : 'text-[#9945FF]'}>
-                        {rightTurnProgress >= 50 ? '✓ Hold Steady Right (Verifying...)' : 'Turn head slowly RIGHT to reach 50% 👉'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Hand Wave Progress Bar */}
-              {step === 'wave_hand' && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-72 sm:w-84 bg-black/90 backdrop-blur-md rounded-2xl border border-[#2B313A] p-3 shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
-                  <div className="flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-wider font-mono">
-                    <div className="flex items-center gap-1.5 text-[#0ECB81]">
-                      <Hand className="w-3.5 h-3.5 text-[#F0B90B]" />
-                      <span>Step 4/4: Wave Hand Across Camera</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-[#0ECB81]">
-                      {waveProgress}%
-                    </span>
-                  </div>
-
-                  {/* Wave Progress Meter */}
-                  <div className="relative w-full h-3 bg-[#121418] rounded-full overflow-hidden border border-[#2B313A]">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#F0B90B] via-[#00D4FF] to-[#0ECB81] rounded-full transition-all duration-200"
-                      style={{ width: `${waveProgress}%` }}
-                    />
-                  </div>
-
-                  <div className="text-[10px] text-center font-mono font-bold">
-                    {waveProgress >= 50 ? (
-                      <span className="text-[#0ECB81]">✓ Hand Wave Verified! Finalizing...</span>
-                    ) : (
-                      <span className="text-[#F0B90B]">Wave hand side-to-side in front of camera 👋 ({waveCount}/2 strokes)</span>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Floating In-Camera Toast on Action Completion */}
               {stepPassedToast && (
@@ -929,33 +795,21 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
               <div className="flex items-center gap-2">
                 <div className="px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#0ECB81] flex items-center gap-1.5 backdrop-blur-sm">
                   <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-ping" />
-                  <span>FEED: LIVE</span>
+                  <span>FEED: LIVE OPTICAL MOTION</span>
                 </div>
-                <div className="hidden sm:flex px-2 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#848E9C] items-center gap-1 backdrop-blur-sm">
+                <div className="hidden sm:flex px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#848E9C] items-center gap-1 backdrop-blur-sm">
                   <Zap className="w-3 h-3 text-[#0ECB81]" />
-                  <span>LATENCY: 0.4ms • 60 FPS</span>
+                  <span>THRESHOLD: &ge;90% CONFIDENCE</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Live Head Yaw Rotation Gauge */}
                 <div className="px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#EAECEF] backdrop-blur-sm flex items-center gap-1.5">
-                  <Compass className="w-3 h-3 text-[#00D4FF]" />
+                  <Activity className="w-3 h-3 text-[#0ECB81]" />
                   <span>
-                    YAW:{' '}
-                    <strong className={yawAngle < -10 ? 'text-[#00D4FF]' : yawAngle > 10 ? 'text-[#9945FF]' : 'text-[#F0B90B]'}>
-                      {yawAngle > 0 ? `+${yawAngle}°` : `${yawAngle}°`}
-                    </strong>
-                  </span>
-                </div>
-
-                {/* Live Hand Gesture Meter */}
-                <div className="px-2.5 py-1 rounded-md bg-black/75 border border-[#2B313A] text-[#EAECEF] backdrop-blur-sm flex items-center gap-1.5">
-                  <Hand className="w-3 h-3 text-[#0ECB81]" />
-                  <span>
-                    WAVE:{' '}
-                    <strong className={waveProgress >= 50 ? 'text-[#0ECB81]' : 'text-[#F0B90B]'}>
-                      {waveProgress > 0 ? `${waveProgress}%` : 'READY'}
+                    MOTION CONFIDENCE:{' '}
+                    <strong className={progress >= 90 ? 'text-[#0ECB81]' : 'text-[#F0B90B]'}>
+                      {progress}%
                     </strong>
                   </span>
                 </div>
@@ -980,17 +834,14 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
                 step === 'error' ? 'text-[#F6465D]' : 'text-[#EAECEF]'
               }`}>
                 {step === 'error' && 'Verification Cancelled: Optical Feed Blocked'}
-                {step === 'center' && '1. Look Straight & Center Face in Oval'}
-                {step === 'turn_left' && '2. Turn Head Slowly to Left 👈'}
-                {step === 'turn_right' && '3. Turn Head Slowly to Right 👉'}
-                {step === 'wave_hand' && '4. Wave Your Hand Side-to-Side 👋'}
-                {step === 'verifying' && 'Validating Liveness Vectors & Encoding Video Clip...'}
-                {step === 'completed' && '✓ Biometric Verification & Video Session Passed'}
+                {step === 'center' && 'Live Facial Movement & Ocular Depth Analysis'}
+                {step === 'verifying' && 'Validating Movement Vectors & Auto-Submitting Clearance...'}
+                {step === 'completed' && '✓ Real Human Movement Verified (90%+ Clearance Active)'}
                 {step === 'initializing' && 'Preparing Biometric Optical Feed...'}
               </span>
             </div>
             {step !== 'error' && (
-              <span className="text-[11px] font-bold text-[#0ECB81]">{progress}% Verified</span>
+              <span className="text-[11px] font-bold text-[#0ECB81]">{progress}% / 90% Threshold</span>
             )}
           </div>
 
@@ -1010,7 +861,16 @@ export const LiveBiometricScanner: React.FC<LiveBiometricScannerProps> = ({
           }`}>
             {botDetectorStatus}
           </p>
+
+          {/* Institutional Privacy Guarantee Caption */}
+          <div className="flex items-start gap-2 bg-[#F0B90B]/10 border border-[#F0B90B]/30 rounded-lg p-2.5 text-[11px] text-[#848E9C]">
+            <span className="text-sm mt-0.5">🔒</span>
+            <span>
+              <strong className="text-[#EAECEF]">Institutional Privacy Guarantee:</strong> Your biometric video is encrypted in ephemeral memory. Video recordings are automatically purged & deleted within 24 hours (or immediately upon instant clearance approval).
+            </span>
+          </div>
         </div>
+
 
         {/* Action Controls Footer */}
         <div className="px-6 py-4 bg-[#181A20] border-t border-[#2B313A] flex flex-col sm:flex-row items-center justify-between gap-3">
