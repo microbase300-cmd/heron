@@ -5,7 +5,7 @@ Institutional-grade digital asset management ecosystem consisting of 4 independe
 
 | Application | Technology | Default Port | Launcher Script | Description |
 |---|---|---|---|---|
-| **Marketing Web App** | React 18 + Vite + Tailwind | `3000` | `START-WEB.bat` | Public institutional showcase, interactive yield simulator, Binance live feed, and anti-phishing safe client routing. |
+| **Marketing Web App** | React 18 + Vite + Tailwind | `3000` | `START-WEB.bat` | Public institutional showcase, interactive yield simulator, institutional live feed, and anti-phishing safe client routing. |
 | **Investor Dashboard** | React 18 + Vite + Tailwind + Recharts | `5173` | `START-DASHBOARD.bat` | Client investor portal, algorithmic compounding curves, asset allocation matrices, wallet deposits/withdrawals, KYC & security vault. |
 | **Executive Admin Desk** | React 18 + Vite + Tailwind | `5174` | `START-ADMIN.bat` | Protected executive operations desk, user directory & balance adjustments, transaction settlement queue, escrow overrides, plan configuration. |
 | **Institutional API Backend** | Node.js + Express + TypeScript + PostgreSQL | `5000` | `START-BACKEND.bat` | REST API, PostgreSQL connection pooling & dual-mode fallback, 15m JWT + 7d rotated refresh tokens, 10s background maturity engine. |
@@ -68,6 +68,6 @@ npm run dev
 ## 📊 Core Features & Technical Stack
 - **PostgreSQL Database**: Auto-runs DDL schema and seed migrations on connected instances, with transparent fallback adapter.
 - **Authentication**: Stateless 15-minute JWT access tokens + rotated cryptographically secure 7-day refresh tokens.
-- **Market Data**: Live Binance REST ticker feed with 10s TTL caching and historical OHLCV candlestick generation.
+- **Market Data**: Live institutional REST ticker feed with 10s TTL caching and historical OHLCV candlestick generation.
 - **Visualizations**: Interactive Recharts compounding trajectory curves and asset distribution donuts.
 - **Security**: Anti-phishing Safe Browsing compliance, RBAC middleware, and cold-custody audit simulation.

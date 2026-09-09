@@ -44,7 +44,7 @@ class MarketDataService {
   private readonly CACHE_TTL_MS = 10000; // 10 seconds
 
   /**
-   * Fetches real-time 24h ticker data from Binance with caching
+   * Fetches real-time 24h ticker data from Institutional Market Data Feed with caching
    */
   public async getTickers(): Promise<MarketTicker[]> {
     const now = Date.now();
@@ -61,7 +61,7 @@ class MarketDataService {
       });
       clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error(`Binance HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`Market Feed HTTP ${res.status}`);
 
       const data = (await res.json()) as any[];
       const map = new Map<string, any>();
@@ -90,7 +90,7 @@ class MarketDataService {
       this.lastFetchedAt = now;
       return formatted;
     } catch (err: any) {
-      console.warn('⚠️ [Market Data] Binance ticker live feed error, serving cached/fallback:', err.message);
+      console.warn('⚠️ [Market Data] Live ticker feed error, serving cached/fallback:', err.message);
       return this.cachedTickers.length > 0 ? this.cachedTickers : FALLBACK_TICKERS;
     }
   }

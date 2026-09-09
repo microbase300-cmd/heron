@@ -193,12 +193,12 @@ export const ExecutiveMetricsView: React.FC<ExecutiveMetricsViewProps> = ({
           </div>
         </div>
 
-        {/* Live Binance Market Tickers Feed */}
+        {/* Live Institutional Market Tickers Feed */}
         <div className="p-6 rounded-xl glass-panel bg-[#1E2329] border border-[#2B313A] space-y-4">
           <div className="flex items-center justify-between border-b border-[#2B313A] pb-4">
             <h3 className="font-sans text-lg font-bold text-[#EAECEF] flex items-center gap-2 tracking-tight">
               <Activity className="w-4 h-4 text-[#F0B90B]" />
-              Live Binance Liquidity Feeds
+              Live Institutional Liquidity Feeds
             </h3>
             <span className="text-[10px] font-mono text-[#0ECB81] bg-[#0ECB81]/15 border border-[#0ECB81]/30 px-2 py-0.5 rounded-full font-bold">
               10s Cache TTL

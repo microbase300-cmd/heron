@@ -67,7 +67,7 @@
   const nav = document.querySelector('.navlinks');
   if(menuBtn && nav){menuBtn.addEventListener('click',()=>nav.classList.toggle('open'));}
 
-  // live market feed (Binance public API)
+  // live market feed (institutional public API)
   const marketRoot = document.querySelector('[data-market]');
   if (marketRoot && window.React && window.ReactDOM) {
     const {createElement:h,useEffect,useMemo,useState} = React;

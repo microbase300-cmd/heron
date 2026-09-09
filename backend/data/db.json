@@ -244,6 +244,62 @@
       "preferredCurrency": "USD",
       "securityLogs": [
         {
+          "id": "sec_1788957800512_0ntu",
+          "timestamp": "2026-09-09T12:43:20.512Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788957750548_yos0",
+          "timestamp": "2026-09-09T12:42:30.548Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788957670731_0j0n",
+          "timestamp": "2026-09-09T12:41:10.731Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788955978910_euul",
+          "timestamp": "2026-09-09T12:12:58.910Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788954844037_4sjp",
+          "timestamp": "2026-09-09T11:54:04.037Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788954744993_8o9j",
+          "timestamp": "2026-09-09T11:52:24.993Z",
+          "ip": "192.168.43.***",
+          "device": "Web Terminal [Secured]",
+          "location": "Frankfurt, DE [Secured Gateway]",
+          "status": "Authorized"
+        },
+        {
+          "id": "sec_1788954621057_ol8e",
+          "timestamp": "2026-09-09T11:50:21.057Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
           "id": "sec_1788915451155_hhze",
           "timestamp": "2026-09-09T00:57:31.155Z",
           "ip": "127.0.0.***",
@@ -342,62 +398,6 @@
         {
           "id": "sec_1788874344344_tks8",
           "timestamp": "2026-09-08T13:32:24.344Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788873408995_71r0",
-          "timestamp": "2026-09-08T13:16:48.995Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788854169905_afh2",
-          "timestamp": "2026-09-08T07:56:09.905Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788853031168_bzjs",
-          "timestamp": "2026-09-08T07:37:11.168Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788852034888_26dc",
-          "timestamp": "2026-09-08T07:20:34.889Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788850703435_0gr8",
-          "timestamp": "2026-09-08T06:58:23.435Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788849039455_37zj",
-          "timestamp": "2026-09-08T06:30:39.455Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788847801604_pyzx",
-          "timestamp": "2026-09-08T06:10:01.604Z",
           "ip": "127.0.0.***",
           "device": "Windows 11 • Chrome",
           "location": "New York, US [Cloudflare Edge]",
@@ -1027,6 +1027,55 @@
       "tokenHash": "a55f9d61062e40f7018cbb3d0c71253a3665832c4c9d7c0660e0d1e4a318daec",
       "expiresAt": "2026-09-16T00:57:31.237Z",
       "createdAt": "2026-09-09T00:57:31.237Z"
+    },
+    {
+      "id": "rft_68229ce9-1bce-4f92-b7b9-6ecc0156fc15",
+      "userId": "usr_demo_vance",
+      "tokenHash": "40b342b3e6bfe70b67c7bc4f3994e3360234ea1d9251c4db8316f04e9d41140a",
+      "expiresAt": "2026-09-16T11:50:21.150Z",
+      "createdAt": "2026-09-09T11:50:21.152Z"
+    },
+    {
+      "id": "rft_07fb9c95-4d29-4fe1-b2ef-5dc0c4e651d1",
+      "userId": "usr_demo_vance",
+      "tokenHash": "4426eb160a5cf110fd4ebad0bbbcea1c4812d5ebe7b264c3b960fbbdfe236b09",
+      "expiresAt": "2026-09-16T11:52:25.022Z",
+      "createdAt": "2026-09-09T11:52:25.022Z"
+    },
+    {
+      "id": "rft_419757c8-c2fd-4747-9e43-981ddd2c2f94",
+      "userId": "usr_demo_vance",
+      "tokenHash": "2e3aeffee4bd59d8d54f51674ac9e75f46568a16616fd873230b870cf130eab5",
+      "expiresAt": "2026-09-16T11:54:04.070Z",
+      "createdAt": "2026-09-09T11:54:04.070Z"
+    },
+    {
+      "id": "rft_12d96882-44ea-42ea-b88b-e9c13a0b15e3",
+      "userId": "usr_demo_vance",
+      "tokenHash": "2a6212fac60394c8ba83c997961e25c2b49a2dbc5213ba923d2de986e7ae9bd9",
+      "expiresAt": "2026-09-16T12:12:58.993Z",
+      "createdAt": "2026-09-09T12:12:58.993Z"
+    },
+    {
+      "id": "rft_6024ba89-4211-48c4-8352-8b7e060346bb",
+      "userId": "usr_demo_vance",
+      "tokenHash": "3b8c98913b9a2b9849dcad33de9bd4539266a89cc3950d67331de1e9049070c5",
+      "expiresAt": "2026-09-16T12:41:10.816Z",
+      "createdAt": "2026-09-09T12:41:10.817Z"
+    },
+    {
+      "id": "rft_4fd59564-2c99-4c05-a30f-ece3cd7955a5",
+      "userId": "usr_demo_vance",
+      "tokenHash": "f792a4235882cd9ec20d5cb2e7def23ce20e1562f66dce8cce6ae2d98e7ef5c5",
+      "expiresAt": "2026-09-16T12:42:30.580Z",
+      "createdAt": "2026-09-09T12:42:30.584Z"
+    },
+    {
+      "id": "rft_382aa25b-4668-408a-a7f0-385dd9b5a2fb",
+      "userId": "usr_demo_vance",
+      "tokenHash": "b5342d31133bf360b46312ec68b16c22ae2ef7b3f89a5711077e1f0e96de79c3",
+      "expiresAt": "2026-09-16T12:43:20.562Z",
+      "createdAt": "2026-09-09T12:43:20.562Z"
     }
   ],
   "investments": [

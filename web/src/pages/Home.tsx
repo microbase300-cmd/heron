@@ -658,7 +658,7 @@ export default function Home() {
             </Reveal>
 
             <div className="market-note">
-              Public Binance live ticker stream
+              Public institutional live ticker stream
             </div>
           </div>
 
@@ -724,14 +724,14 @@ export default function Home() {
               }}
             >
               <iframe
-                src="https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=en&symbol=BINANCE%3ABTCUSDT&interval=60&timezone=Etc%2FUTC&theme=dark&style=1&withdateranges=true&hide_side_toolbar=false&allow_symbol_change=true&save_image=false&calendar=false&studies=%5B%5D"
+                src="https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=en&symbol=COINBASE%3ABTCUSD&interval=60&timezone=Etc%2FUTC&theme=dark&style=1&withdateranges=true&hide_side_toolbar=false&allow_symbol_change=true&save_image=false&calendar=false&studies=%5B%5D"
                 style={{
                   width: '100%',
                   height: 520,
                   border: 0,
                 }}
                 loading="lazy"
-                title="TradingView BTCUSDT chart"
+                title="TradingView BTCUSD chart"
               />
             </div>
           </Reveal>

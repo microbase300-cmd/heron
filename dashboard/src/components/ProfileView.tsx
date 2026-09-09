@@ -59,7 +59,7 @@ const DEFAULT_WHITELISTED_WALLETS: WhitelistedWallet[] = [
     asset: 'ETH',
     network: 'Ethereum Mainnet',
     address: '0x882194f8a7e6d5c4b3a201948572615049382710',
-    label: 'Binance Institutional Custody',
+    label: 'Institutional Primary Custody',
     addedAt: '2026-09-01T08:12:00Z'
   }
 ];
@@ -455,7 +455,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
       </div>
 
-      {/* 2. BINANCE-STYLE TAB SELECTOR */}
+      {/* 2. INSTITUTIONAL TAB SELECTOR */}
       <div className="border-b border-[#2B313A] flex gap-2 sm:gap-6 overflow-x-auto no-scrollbar">
         {[
           { id: 'security', label: 'Security & Protection', icon: ShieldCheck },
@@ -1196,7 +1196,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   type="text"
                   value={newWalletLabel}
                   onChange={e => setNewWalletLabel(e.target.value)}
-                  placeholder="e.g. Ledger Nano Vault / Binance Deposit"
+                  placeholder="e.g. Ledger Nano Vault / Cold Storage"
                   required
                   className="w-full px-3 py-2 bg-[#181A20] border border-[#2B313A] rounded-lg text-sm text-[#EAECEF] focus:outline-none focus:border-[#F0B90B]"
                 />

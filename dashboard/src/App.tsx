@@ -124,7 +124,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#181A20] text-[#EAECEF] overflow-hidden">
-      {/* Top Binance Live Ticker Tape */}
+      {/* Top Institutional Live Ticker Tape */}
       <TickerBar />
 
       <div className="flex-1 flex overflow-hidden relative">

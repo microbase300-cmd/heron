@@ -19,7 +19,7 @@ export const TickerBar: React.FC = () => {
     <div className="w-full bg-[#181A20] border-b border-[#2B313A] text-xs py-2 px-4 flex items-center justify-between overflow-x-auto select-none">
       <div className="flex items-center gap-2 pr-5 border-r border-[#2B313A] shrink-0 text-[#848E9C] font-mono text-[11px]">
         <Radio className="w-3.5 h-3.5 text-[#0ECB81] animate-pulse" />
-        <span className="uppercase tracking-widest text-[10px] font-semibold text-[#EAECEF]">Binance Pro Feed</span>
+        <span className="uppercase tracking-widest text-[10px] font-semibold text-[#EAECEF]">Institutional Live Feed</span>
       </div>
 
       <div className="flex items-center gap-8 overflow-x-auto no-scrollbar px-4">

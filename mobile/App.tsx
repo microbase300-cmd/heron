@@ -96,7 +96,7 @@ const TouchablePlatform = ({ onPress, style, children, onLongPress }: any) => {
 };
 
 // ============================================================================
-// LUXURY OPENING SPLASH ANIMATION (BINANCE PRO THEMED • HERON ASSETS)
+// LUXURY OPENING SPLASH ANIMATION (INSTITUTIONAL PRO THEMED • HERON ASSETS)
 // ============================================================================
 const TITLE_CHARS = ['H', 'E', 'R', 'O', 'N', ' ', 'A', 'S', 'S', 'E', 'T', 'S'];
 
@@ -106,7 +106,7 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
   const exitAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // 1. Minimalist Binance-style Logo Entry
+    // 1. Minimalist Logo Entry
     Animated.parallel([
       Animated.timing(logoFadeAnim, {
         toValue: 1,
@@ -121,7 +121,7 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // 2. Brief pause then exit, exactly like Binance
+      // 2. Brief pause then exit
       setTimeout(() => {
         Animated.timing(exitAnim, {
           toValue: 0,
@@ -165,7 +165,7 @@ function OpeningSplashScreen({ onFinish }: { onFinish: () => void }) {
 
 
 // ============================================================================
-// LUXURY CUSTOM BINANCE PRO ALERT MODAL
+// LUXURY CUSTOM INSTITUTIONAL ALERT MODAL
 // ============================================================================
 interface CustomAlertState {
   visible: boolean;
@@ -1232,7 +1232,7 @@ function MainAppContent() {
                       {biometricStatus?.biometricType === 'face' ? '👤' : biometricStatus?.biometricType === 'fingerprint' ? '👆' : '🔒'}
                     </Text>
                     <Text style={styles.biometricQuickLoginText}>
-                      Quick Sign In with {biometricStatus?.biometricLabel || 'Biometrics'}
+                      Biometric Logins
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -1371,7 +1371,7 @@ function MainAppContent() {
       <ExpoStatusBar style="light" />
       <NavigationBar style="dark" />
 
-      {/* Binance-Style Top Mobile Header */}
+      {/* Institutional Top Mobile Header */}
       <View style={styles.appHeader}>
         <TouchableOpacity
           style={styles.headerAvatarBtn}
@@ -1457,18 +1457,18 @@ function MainAppContent() {
             colors={['#F0B90B', '#FFFFFF']}
             progressBackgroundColor="#1E2329"
             tintColor="#F0B90B"
-            title="Bybit Protocol • Syncing Market Liquidity..."
+            title="Heron Protocol • Syncing Market Liquidity..."
             titleColor="#F0B90B"
           />
         }
       >
-        {/* Bybit-Style Institutional Sync Banner */}
+        {/* Institutional Protocol Sync Banner */}
         {refreshing && (
-          <View style={styles.bybitSyncBanner}>
+          <View style={styles.protocolSyncBanner}>
             <ActivityIndicator size="small" color="#F0B90B" style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.bybitSyncTitle}>BYBIT PROTOCOL • SYNCING REAL-TIME DATA</Text>
-              <Text style={styles.bybitSyncSub}>Fetching institutional orderbooks, yield accruals & ledger...</Text>
+              <Text style={styles.protocolSyncTitle}>HERON PROTOCOL • SYNCING REAL-TIME DATA</Text>
+              <Text style={styles.protocolSyncSub}>Fetching institutional orderbooks, yield accruals & ledger...</Text>
             </View>
           </View>
         )}
@@ -1476,7 +1476,7 @@ function MainAppContent() {
         {activeTab === 'overview' && (
           /* TAB 1: OVERVIEW */
           <View style={styles.tabContent}>
-            {/* Binance-Style Hero Balance */}
+            {/* Institutional Hero Balance */}
             <View style={styles.heroBalanceCard}>
               <View style={styles.balanceHeader}>
                 <Text style={styles.cardEyebrow}>Total Balance ({preferredCurr})</Text>
@@ -1571,7 +1571,7 @@ function MainAppContent() {
               </TouchableOpacity>
             )}
 
-            {/* Binance-Style Action Grid */}
+            {/* Institutional Action Grid */}
             <View style={styles.actionGridRow}>
               <TouchablePlatform style={styles.actionGridBtn} onPress={() => setShowDepositModal(true)}>
                 <View style={styles.actionGridIconBox}>
@@ -2691,7 +2691,7 @@ function MainAppContent() {
       </Modal>
 
       {/* ========================================================================= */}
-      {/* MODAL 7: PROFILE & SECURITY CENTER MODAL (BINANCE STYLE) */}
+      {/* MODAL 7: PROFILE & SECURITY CENTER MODAL (INSTITUTIONAL STYLE) */}
       {/* ========================================================================= */}
       <Modal visible={showProfileModal} animationType="slide">
         <SafeAreaView style={[styles.profileSafeContainer, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0) }]}>
@@ -4332,7 +4332,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  bybitSyncBanner: {
+  protocolSyncBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1E2329',
@@ -4348,13 +4348,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  bybitSyncTitle: {
+  protocolSyncTitle: {
     color: '#F0B90B',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
   },
-  bybitSyncSub: {
+  protocolSyncSub: {
     color: '#848E9C',
     fontSize: 10,
     marginTop: 2,
@@ -5205,7 +5205,7 @@ const styles = StyleSheet.create({
   // --- Opening Splash Screen Styles ---
   splashContainer: {
     flex: 1,
-    backgroundColor: '#181A20', // Binance Dark Background
+    backgroundColor: '#181A20', // Institutional Dark Background
     justifyContent: 'center',
     alignItems: 'center',
   },

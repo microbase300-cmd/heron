@@ -19,8 +19,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Planned / In Progress
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
 
-## [1.8.1] - 2026-09-09
-### Added & Enhanced
+## [1.8.2] - 2026-09-09
+### Enhanced & Refactored
+- **Biometric Login Wording Standardization (`mobile/App.tsx`)**:
+  - Simplified and standardized the biometric sign-in button text to strictly read **`Biometric Logins`** across all device orientations and auth states.
+- **Ecosystem-Wide Terminology & Branding Sanitization (`mobile/`, `dashboard/`, `admin/`, `web/`, `backend/`, `root`)**:
+  - Removed all occurrences of "Bybit" and "Binance" words across user-facing screens, navigation items, subtitles, and code comments while keeping 100% of underlying API feeds, color palettes (`#181A20`, `#1E2329`, `#2B313A`, `#F0B90B`, `#0ECB81`, `#F6465D`), and CSS classes completely functional.
+  - Added CSS class aliases (`.btn-heron` alongside `.btn-binance`, `.btn-heron-secondary` alongside `.btn-binance-secondary`) in `dashboard/src/index.css` and `admin/src/index.css`.
+  - Replaced user-facing titles and headers:
+    - `dashboard/Sidebar.tsx`: `"Binance Pro Engine"` -> `"Institutional Engine"`.
+    - `dashboard/TickerBar.tsx`: `"Binance Pro Feed"` -> `"Institutional Live Feed"`.
+    - `dashboard/ProfileView.tsx`: `"Binance Institutional Custody"` -> `"Institutional Primary Custody"`.
+    - `admin/ExecutiveMetricsView.tsx`: `"Live Binance Liquidity Feeds"` -> `"Live Institutional Liquidity Feeds"`.
+    - `web/Home.tsx` & `index.html`: `"Public Binance live ticker feed"` -> `"Public institutional live ticker feed"`.
+    - `web/Home.tsx` & `index.html`: TradingView chart widget embeds updated from `BINANCE:BTCUSDT` to clean `COINBASE:BTCUSD` institutional symbol.
+    - `backend/services/marketData.ts`: Cleaned internal logs and method docstrings while preserving the Binance 24h ticker and OHLCV klines endpoints with 10s caching.
+    - `mobile/App.tsx`: Replaced Bybit sync banners and protocol labels with `"HERON PROTOCOL • SYNCING REAL-TIME DATA"`.
 - **Biometric Authentication (Face ID / Fingerprint) System for Mobile App (`mobile/`, `backend/`)**:
   - **Hardware Sensor Integration (`mobile/src/services/biometrics.ts`)**:
     - Installed and configured `expo-local-authentication` (`~57.0.2`).

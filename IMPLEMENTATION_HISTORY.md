@@ -422,6 +422,20 @@ graph TD
    - Integrated a sleek "Quick Sign In with Biometrics" action button on the mobile Login form.
 4. **Backend Schema & Profile Route Synchronization (`backend/src/routes/auth.ts`, `backend/src/services/db.ts`, `backend/src/types/index.ts`)**:
    - Added `biometricsEnabled` property to user record and `/api/auth/profile` update endpoint.
+### Phase 13: Biometric Logins Standardization & Brand Sanitization
+1. **Biometric Sign-In Wording (`mobile/App.tsx`)**:
+   - Updated the biometric sign-in button label strictly to **`Biometric Logins`** across all states.
+2. **Ecosystem-Wide Terminology & Branding Cleanup (`mobile/`, `dashboard/`, `admin/`, `web/`, `backend/`, `root`)**:
+   - Replaced all user-facing occurrences of "Bybit" and "Binance" with "Institutional" / "Heron Protocol".
+   - Preserved all underlying visual styling, color hexes (`#181A20`, `#1E2329`, `#2B313A`, `#F0B90B`, `#0ECB81`, `#F6465D`), and API integration endpoints.
+   - Added backwards-compatible CSS aliases `.btn-heron` and `.btn-heron-secondary` alongside existing `.btn-binance` classes in `dashboard/src/index.css` and `admin/src/index.css`.
+   - Updated TradingView chart embeds in `web/` and `index.html` to `COINBASE:BTCUSD`.
+3. **Verification**:
+   - Mobile: `npx tsc --noEmit` (0 errors).
+   - Dashboard: `npm run build` (Exit Code 0).
+   - Admin: `npm run build` (Exit Code 0).
+   - Backend: `npm run build` (Exit Code 0).
+   - Web: `npm run build` (Exit Code 0).
 
 ---
 

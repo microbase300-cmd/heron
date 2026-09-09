@@ -88,11 +88,11 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
             <defs>
-              <linearGradient id="binanceGoldGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="heronGoldGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#F0B90B" stopOpacity={0.35} />
                 <stop offset="95%" stopColor="#F0B90B" stopOpacity={0.0} />
               </linearGradient>
-              <linearGradient id="binanceEmeraldGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="heronEmeraldGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#0ECB81" stopOpacity={0.2} />
                 <stop offset="95%" stopColor="#0ECB81" stopOpacity={0.0} />
               </linearGradient>
@@ -148,7 +148,7 @@ export const PortfolioYieldChart: React.FC<PortfolioYieldChartProps> = ({
               stroke="#F0B90B"
               strokeWidth={2.5}
               fillOpacity={1}
-              fill="url(#binanceGoldGradient)"
+              fill="url(#heronGoldGradient)"
             />
 
             <Area

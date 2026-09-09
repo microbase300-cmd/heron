@@ -22,7 +22,7 @@
   }
 }
 
-/* Binance Pro Matte & Elevated Card Surfaces */
+/* Institutional Pro Matte & Elevated Card Surfaces */
 .glass-card {
   background: #1E2329;
   border: 1px solid #2B313A;
@@ -72,8 +72,8 @@
   box-shadow: 0 0 0 1px #F0B90B;
 }
 
-/* Binance Button Presets */
-.btn-binance {
+/* Institutional Button Presets */
+.btn-binance, .btn-heron {
   background: #F0B90B;
   color: #181A20;
   font-weight: 700;
@@ -81,17 +81,17 @@
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-binance:hover {
+.btn-binance:hover, .btn-heron:hover {
   background: #FCD535;
   box-shadow: 0 0 16px rgba(240, 185, 11, 0.35);
   transform: translateY(-1px);
 }
 
-.btn-binance:active {
+.btn-binance:active, .btn-heron:active {
   transform: scale(0.98);
 }
 
-.btn-binance-secondary {
+.btn-binance-secondary, .btn-heron-secondary {
   background: #2B313A;
   color: #EAECEF;
   font-weight: 600;
@@ -100,13 +100,13 @@
   transition: all 0.18s ease;
 }
 
-.btn-binance-secondary:hover {
+.btn-binance-secondary:hover, .btn-heron-secondary:hover {
   background: #363D47;
   color: #F0B90B;
   border-color: #F0B90B;
 }
 
-/* Custom Binance Yellow Range Slider */
+/* Custom Gold Range Slider */
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   height: 18px;

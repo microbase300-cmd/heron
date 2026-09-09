@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
             <div>
               <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans">HERON ASSETS TRUSTEE</div>
-              <div className="text-[9px] tracking-wider uppercase text-[#F0B90B] font-sans font-bold mt-0.5">Binance Pro Engine</div>
+              <div className="text-[9px] tracking-wider uppercase text-[#F0B90B] font-sans font-bold mt-0.5">Institutional Engine</div>
             </div>
           </a>
 

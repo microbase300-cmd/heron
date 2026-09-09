@@ -16,7 +16,7 @@ body {
   background-attachment: fixed;
 }
 
-/* Custom Binance Pro Glassmorphism & Panels */
+/* Custom Institutional Glassmorphism & Panels */
 .glass-panel {
   background: #1E2329;
   border: 1px solid #2B313A;
@@ -51,7 +51,7 @@ body {
   box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.2);
 }
 
-.btn-binance {
+.btn-binance, .btn-heron {
   background: #F0B90B;
   color: #181A20;
   font-weight: 700;
@@ -59,13 +59,13 @@ body {
   border-radius: 0.5rem;
 }
 
-.btn-binance:hover:not(:disabled) {
+.btn-binance:hover:not(:disabled), .btn-heron:hover:not(:disabled) {
   background: #FCD535;
   box-shadow: 0 4px 14px rgba(240, 185, 11, 0.35);
   transform: translateY(-1px);
 }
 
-.btn-binance:active:not(:disabled) {
+.btn-binance:active:not(:disabled), .btn-heron:active:not(:disabled) {
   transform: translateY(0);
 }
 

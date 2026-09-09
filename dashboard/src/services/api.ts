@@ -176,11 +176,11 @@ class ApiService {
     return this.request<{ transactions: Transaction[] }>(`/transactions${query}`);
   }
 
-  // Public live Binance prices
+  // Public live institutional market prices
   async getMarketTickers(): Promise<Array<{ symbol: string; price: number; change24h: number }>> {
     try {
       const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-      if (!res.ok) throw new Error('Binance error');
+      if (!res.ok) throw new Error('Live ticker feed error');
       const all = await res.json();
       const targets = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT'];
       return targets.map(s => {
