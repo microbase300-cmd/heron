@@ -44,8 +44,8 @@ const resolveDefaultHost = (): string => {
     }
   } catch {}
 
-  // Default fallback
-  return 'http://192.168.43.149:5000/api';
+  // Production VPS Live Backend API
+  return 'https://api.stealthssolutions.com/api';
 };
 
 let currentApiHost = resolveDefaultHost();
