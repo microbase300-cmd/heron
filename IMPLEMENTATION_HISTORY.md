@@ -409,6 +409,20 @@ graph TD
 2. **Typecheck & Verification**:
    - `mobile/`: `npx tsc --noEmit` (Exit Code 0).
 
+### Phase 12: Biometric Authentication (Face ID / Fingerprint) System (Mobile App)
+1. **Hardware Biometric Sensing Module (`mobile/src/services/biometrics.ts`)**:
+   - Installed `expo-local-authentication` (`~57.0.2`).
+   - Implemented `getBiometricStatusAsync()` querying sensor availability, user enrollment, and biometric type (`Face ID`, `Touch ID / Fingerprint`, `Iris`).
+   - Implemented `authenticateWithBiometricsAsync()` supporting native iOS Biometrics and Android BiometricPrompt with fallback options.
+2. **Account & Security Center Biometric Toggle (`mobile/App.tsx`)**:
+   - Added a dedicated **Biometric Authentication** card in Profile Modal (Security & Defense tab).
+   - Real-time hardware status indicators (`✓ HARDWARE ENROLLED`, `⚠️ NOT ENROLLED IN OS`, `○ NO HARDWARE`).
+   - Active switch toggle requiring live biometric verification challenge before committing enablement.
+3. **Quick Biometric Sign-In Gateway (`mobile/App.tsx`)**:
+   - Integrated a sleek "Quick Sign In with Biometrics" action button on the mobile Login form.
+4. **Backend Schema & Profile Route Synchronization (`backend/src/routes/auth.ts`, `backend/src/services/db.ts`, `backend/src/types/index.ts`)**:
+   - Added `biometricsEnabled` property to user record and `/api/auth/profile` update endpoint.
+
 ---
 
 ## 3. Standard Operational Commands

@@ -653,6 +653,7 @@ class DatabaseService {
     if (updates.twoFactorEnabled !== undefined) user.twoFactorEnabled = updates.twoFactorEnabled;
     if (updates.whitelistEnabled !== undefined) user.whitelistEnabled = updates.whitelistEnabled;
     if (updates.preferredCurrency !== undefined) user.preferredCurrency = updates.preferredCurrency;
+    if (updates.biometricsEnabled !== undefined) user.biometricsEnabled = updates.biometricsEnabled;
 
     this.save();
     return user;

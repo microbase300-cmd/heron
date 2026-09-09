@@ -106,6 +106,7 @@ export interface User {
   securityLogs?: SecurityLogItem[];
   preferredCurrency?: string;
   pushTokens?: string[];
+  biometricsEnabled?: boolean;
 }
 
 export interface RefreshToken {

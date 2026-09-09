@@ -30,6 +30,11 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { mobileApi } from './src/services/api';
 import { LiveBiometricScanner } from './src/components/LiveBiometricScanner';
 import {
+  getBiometricStatusAsync,
+  authenticateWithBiometricsAsync,
+  BiometricStatus
+} from './src/services/biometrics';
+import {
   registerForPushNotificationsAsync,
   scheduleLocalNotification,
   addNotificationReceivedListener,
@@ -278,6 +283,8 @@ function MainAppContent() {
   const [regStep, setRegStep] = useState<1 | 2>(1);
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
+  const [biometricLoading, setBiometricLoading] = useState(false);
 
   // Custom Alert Modal State
   const [customAlert, setCustomAlert] = useState<CustomAlertState>({
@@ -599,7 +606,53 @@ function MainAppContent() {
     };
   }, [currentUser]);
 
+  // Hardware Biometric Capability Check (Face ID / Fingerprint / BiometricPrompt)
+  useEffect(() => {
+    getBiometricStatusAsync().then(status => {
+      setBiometricStatus(status);
+    });
+  }, []);
+
   // Auth Handlers
+  const handleBiometricQuickLogin = async () => {
+    if (!biometricStatus?.hasHardware) {
+      showCustomAlert('Sensor Unavailable', 'Biometric hardware is not available on this device.', 'warning');
+      return;
+    }
+    if (!biometricStatus?.isEnrolled) {
+      showCustomAlert('Biometrics Not Enrolled', 'Please set up Face ID or Fingerprint in your device Settings before logging in.', 'warning');
+      return;
+    }
+
+    const authRes = await authenticateWithBiometricsAsync('Authorize access to Heron Assets Trustee');
+    if (!authRes.success) {
+      if (authRes.error) {
+        showCustomAlert('Biometric Verification Failed', authRes.error, 'error');
+      }
+      return;
+    }
+
+    // Biometric match passed!
+    if (authEmail && authPassword) {
+      handleLogin();
+    } else {
+      setAuthLoading(true);
+      try {
+        const profileRes = await mobileApi.getProfile();
+        if (profileRes?.user) {
+          setCurrentUser(profileRes.user);
+          showCustomAlert('Biometric Access Granted', `Welcome back, ${profileRes.user.name}. Your portfolio is authenticated.`, 'success');
+        } else {
+          showCustomAlert('Credentials Required', 'Please enter your email and password once to connect your biometric vault.', 'info');
+        }
+      } catch (err: any) {
+        showCustomAlert('Sign In Required', 'Please log in with your credentials once to link biometric access.', 'info');
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+  };
+
   const handleLogin = async () => {
     if (!authEmail.trim() || !authPassword.trim()) {
       showCustomAlert('Missing Credentials', 'Please enter both your investor email and master password.', 'warning');
@@ -671,6 +724,61 @@ function MainAppContent() {
   };
 
   // Profile & Security Operations
+  const handleToggleBiometrics = async () => {
+    if (!currentUser) return;
+    const targetState = !currentUser.biometricsEnabled;
+
+    if (targetState) {
+      setBiometricLoading(true);
+      const status = await getBiometricStatusAsync();
+      setBiometricStatus(status);
+
+      if (!status.hasHardware) {
+        setBiometricLoading(false);
+        showCustomAlert(
+          'Hardware Unavailable',
+          'Biometric authentication hardware (Face ID / Fingerprint) is not available on this device.',
+          'warning'
+        );
+        return;
+      }
+
+      if (!status.isEnrolled) {
+        setBiometricLoading(false);
+        showCustomAlert(
+          'Biometrics Not Enrolled',
+          `No biometric credentials detected. Please enroll your ${status.biometricLabel} in device settings before enabling.`,
+          'warning'
+        );
+        return;
+      }
+
+      const authRes = await authenticateWithBiometricsAsync(
+        `Verify your ${status.biometricLabel} to enable Biometric Protection`
+      );
+      setBiometricLoading(false);
+
+      if (!authRes.success) {
+        if (authRes.error) {
+          showCustomAlert('Verification Failed', authRes.error, 'error');
+        }
+        return;
+      }
+    }
+
+    try {
+      await mobileApi.updateProfile({ biometricsEnabled: targetState });
+      setCurrentUser(prev => prev ? { ...prev, biometricsEnabled: targetState } : null);
+      showCustomAlert(
+        'Biometric Security',
+        `Biometric Authentication (${biometricStatus?.biometricLabel || 'Face ID / Fingerprint'}) is now ${targetState ? 'ACTIVATED' : 'DEACTIVATED'}.`,
+        'success'
+      );
+    } catch (e: any) {
+      showCustomAlert('Update Notice', e.message || 'Could not update biometric status.', 'error');
+    }
+  };
+
   const handleToggle2FA = async () => {
     if (!currentUser) return;
     const newVal = !currentUser.twoFactorEnabled;
@@ -1112,6 +1220,22 @@ function MainAppContent() {
                     <Text style={styles.goldBtnText}>Access Portfolio</Text>
                   )}
                 </TouchableOpacity>
+
+                {biometricStatus?.hasHardware && biometricStatus?.isEnrolled && (
+                  <TouchableOpacity
+                    style={styles.biometricQuickLoginBtn}
+                    onPress={handleBiometricQuickLogin}
+                    disabled={authLoading}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.biometricQuickLoginIcon}>
+                      {biometricStatus?.biometricType === 'face' ? '👤' : biometricStatus?.biometricType === 'fingerprint' ? '👆' : '🔒'}
+                    </Text>
+                    <Text style={styles.biometricQuickLoginText}>
+                      Quick Sign In with {biometricStatus?.biometricLabel || 'Biometrics'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               /* 2-STEP OTP REGISTRATION FORM */
@@ -2854,6 +2978,53 @@ function MainAppContent() {
             {/* TAB 1: SECURITY & DEFENSE */}
             {profileTab === 'security' && (
               <View style={styles.profileSectionContent}>
+                {/* Biometric Authentication (Face ID / Touch ID / Biometrics) Card */}
+                <View style={styles.secItemCard}>
+                  <View style={styles.secItemLeft}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <Text style={{ fontSize: 16 }}>
+                        {biometricStatus?.biometricType === 'face' ? '👤' : biometricStatus?.biometricType === 'fingerprint' ? '👆' : '🔒'}
+                      </Text>
+                      <Text style={styles.secItemTitle}>
+                        {biometricStatus?.biometricLabel || 'Biometric Authentication'}
+                      </Text>
+                    </View>
+                    <Text style={styles.secItemSub}>
+                      {biometricStatus?.hasHardware
+                        ? biometricStatus?.isEnrolled
+                          ? 'Instant app unlock and biometric signature authorization'
+                          : 'Hardware detected • Enroll Face ID / Fingerprint in OS settings'
+                        : 'Biometric hardware sensor is unavailable on this device'}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                      <View style={[
+                        styles.biometricMiniTag,
+                        biometricStatus?.hasHardware && biometricStatus?.isEnrolled && { backgroundColor: 'rgba(14,203,129,0.15)', borderColor: 'rgba(14,203,129,0.35)' },
+                        (!biometricStatus?.hasHardware || !biometricStatus?.isEnrolled) && { backgroundColor: 'rgba(240,185,11,0.15)', borderColor: 'rgba(240,185,11,0.35)' }
+                      ]}>
+                        <Text style={[
+                          styles.biometricMiniTagText,
+                          biometricStatus?.hasHardware && biometricStatus?.isEnrolled && { color: '#0ECB81' },
+                          (!biometricStatus?.hasHardware || !biometricStatus?.isEnrolled) && { color: '#F0B90B' }
+                        ]}>
+                          {biometricStatus?.hasHardware
+                            ? biometricStatus?.isEnrolled
+                              ? '✓ HARDWARE ENROLLED'
+                              : '⚠️ NOT ENROLLED IN OS'
+                            : '○ NO HARDWARE'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Switch
+                    value={currentUser.biometricsEnabled ?? false}
+                    onValueChange={handleToggleBiometrics}
+                    disabled={biometricLoading}
+                    trackColor={{ false: '#2B313A', true: '#0ECB81' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+
                 {/* Change Password Card */}
                 <View style={styles.secItemCard}>
                   <View style={styles.secItemLeft}>
@@ -6103,6 +6274,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#F0B90B',
+  },
+  biometricMiniTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  biometricMiniTagText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  biometricQuickLoginBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(240, 185, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(240, 185, 11, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginTop: 10,
+  },
+  biometricQuickLoginIcon: {
+    fontSize: 16,
+  },
+  biometricQuickLoginText: {
+    color: '#F0B90B',
+    fontSize: 13,
+    fontWeight: 'bold',
   },
   antiPhishingEditRow: {
     flexDirection: 'row',

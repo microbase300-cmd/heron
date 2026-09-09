@@ -321,13 +321,14 @@ router.put('/profile', authenticateToken, (req: AuthRequest, res: Response): voi
       return;
     }
 
-    const { name, antiPhishingCode, twoFactorEnabled, whitelistEnabled, preferredCurrency } = req.body;
+    const { name, antiPhishingCode, twoFactorEnabled, whitelistEnabled, preferredCurrency, biometricsEnabled } = req.body;
     const updatedUser = db.updateUserProfile(req.user.userId, {
       name,
       antiPhishingCode,
       twoFactorEnabled,
       whitelistEnabled,
       preferredCurrency,
+      biometricsEnabled,
     });
 
     if (!updatedUser) {

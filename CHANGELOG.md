@@ -17,8 +17,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Planned / In Progress
-- [ ] Biometric Authentication (FaceID / Fingerprint) toggle for mobile app.
 - [ ] Multi-sig cold storage withdrawal approval threshold rules in backend.
+
+## [1.8.1] - 2026-09-09
+### Added & Enhanced
+- **Biometric Authentication (Face ID / Fingerprint) System for Mobile App (`mobile/`, `backend/`)**:
+  - **Hardware Sensor Integration (`mobile/src/services/biometrics.ts`)**:
+    - Installed and configured `expo-local-authentication` (`~57.0.2`).
+    - Implemented `getBiometricStatusAsync()` to query hardware capability, enrollment state, and biometric classification (`Face ID / Facial Recognition`, `Touch ID / Fingerprint`, `Iris Recognition`).
+    - Built `authenticateWithBiometricsAsync()` supporting native iOS Biometrics and Android BiometricPrompt with custom security messages and passcode fallback support.
+  - **Account & Security Center Biometric Toggle (`mobile/App.tsx`)**:
+    - Added dedicated **Biometric Authentication** toggle card in the Profile Modal (Security & Defense tab).
+    - Features real-time hardware status pills (`✓ HARDWARE ENROLLED`, `⚠️ NOT ENROLLED IN OS`, `○ NO HARDWARE`).
+    - Enforced mandatory verification challenge: enabling the switch triggers an active biometric test ensuring hardware validation before the state is committed.
+  - **Quick Biometric Sign-In Gateway (`mobile/App.tsx`)**:
+    - Added a sleek "Quick Sign In with Biometrics" button on the login form for devices with enrolled biometric hardware.
+  - **Backend Synchronization (`backend/src/routes/auth.ts`, `backend/src/services/db.ts`, `backend/src/types/index.ts`)**:
+    - Extended user schema and `/api/auth/profile` endpoint to persist `biometricsEnabled` preferences across sessions.
 
 ## [1.8.0] - 2026-09-08
 ### Production Transition & Full Error Propagation

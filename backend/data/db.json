@@ -244,6 +244,14 @@
       "preferredCurrency": "USD",
       "securityLogs": [
         {
+          "id": "sec_1788915451155_hhze",
+          "timestamp": "2026-09-09T00:57:31.155Z",
+          "ip": "127.0.0.***",
+          "device": "Windows 11 • Chrome",
+          "location": "New York, US [Cloudflare Edge]",
+          "status": "Authorized"
+        },
+        {
           "id": "sec_1788911846810_owt4",
           "timestamp": "2026-09-08T23:57:26.810Z",
           "ip": "192.168.43.***",
@@ -390,14 +398,6 @@
         {
           "id": "sec_1788847801604_pyzx",
           "timestamp": "2026-09-08T06:10:01.604Z",
-          "ip": "127.0.0.***",
-          "device": "Windows 11 • Chrome",
-          "location": "New York, US [Cloudflare Edge]",
-          "status": "Authorized"
-        },
-        {
-          "id": "sec_1788845237908_d1tz",
-          "timestamp": "2026-09-08T05:27:17.908Z",
           "ip": "127.0.0.***",
           "device": "Windows 11 • Chrome",
           "location": "New York, US [Cloudflare Edge]",
@@ -1020,6 +1020,13 @@
       "tokenHash": "df7f0d84de5af67c34868853fa6053764142c4989b88b56cfe0f0c4989bb6727",
       "expiresAt": "2026-09-15T23:57:26.850Z",
       "createdAt": "2026-09-08T23:57:26.850Z"
+    },
+    {
+      "id": "rft_6946817b-e3ec-431c-837c-1b5a3c60d7a4",
+      "userId": "usr_demo_vance",
+      "tokenHash": "a55f9d61062e40f7018cbb3d0c71253a3665832c4c9d7c0660e0d1e4a318daec",
+      "expiresAt": "2026-09-16T00:57:31.237Z",
+      "createdAt": "2026-09-09T00:57:31.237Z"
     }
   ],
   "investments": [

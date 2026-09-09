@@ -1,4 +1,4 @@
-﻿# Heron Assets Trustee — Complete Project & Conversation History
+# Heron Assets Trustee — Complete Project & Conversation History
 *Built and developed by Microbase.*
 
 ---
@@ -118,6 +118,20 @@ graph TD
    - *Fix*: Replaced directional overlays with the unified real-time live human motion oval guide and confidence telemetry HUD.
 3. **Purge of Demo Accounts & Mock Fallbacks**:
    - Removed synthetic offline fallbacks across `mobile/src/services/api.ts` and `dashboard/src/services/api.ts` to ensure real server error propagation.
+
+---
+
+### Phase 9: Biometric Authentication (Face ID / Fingerprint) System
+- **Hardware Integration (`mobile/src/services/biometrics.ts`)**:
+  - Integrated `expo-local-authentication` (`~57.0.2`).
+  - Added hardware sensing checks (`hasHardwareAsync()`, `isEnrolledAsync()`) supporting Face ID, Touch ID, Android BiometricPrompt, and Iris sensors.
+- **Account & Security Center Toggle**:
+  - Added a dedicated Biometric Authentication switch in the mobile Profile Modal (Security & Defense tab) with real-time hardware status tags (`✓ HARDWARE ENROLLED`, `⚠️ NOT ENROLLED IN OS`, `○ NO HARDWARE`).
+  - Enforced a mandatory live biometric challenge upon enabling the toggle to verify sensor enrollment before committing the preference.
+- **Quick Biometric Sign-In**:
+  - Added one-tap "Quick Sign In with Biometrics" button on the mobile Login screen.
+- **Backend Sync**:
+  - Synchronized `biometricsEnabled` flag in `backend/src/routes/auth.ts`, `backend/src/services/db.ts`, and TypeScript definitions.
 
 ---
 
