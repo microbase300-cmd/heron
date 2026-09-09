@@ -1,6 +1,8 @@
 import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig, DEFAULT_PLANS, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, KycDocumentType } from '../types';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+  ? 'https://api.stealthssolutions.com/api'
+  : 'http://localhost:5000/api';
 
 class ApiService {
   private getToken(): string | null {

@@ -98,8 +98,6 @@ function Navbar() {
             <a
               className="btn btn-outline"
               href={getDashboardUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={closeMenu}
             >
               Client Access ↗
@@ -118,8 +116,6 @@ function Navbar() {
           <a
             className="btn btn-outline"
             href={getDashboardUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
             title="Access the secure investor dashboard"
           >
             Client Access ↗
