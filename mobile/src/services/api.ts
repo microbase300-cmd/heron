@@ -20,32 +20,7 @@ import {
 
 // Dynamic host determination for Physical Devices, Emulators, and Web
 const resolveDefaultHost = (): string => {
-  try {
-    if (Platform.OS === 'web') {
-      return 'http://localhost:5000/api';
-    }
-
-    // Check if running inside Expo Go with hostUri (contains host PC IP address)
-    const hostUri = Constants?.expoConfig?.hostUri || (Constants as any)?.manifest2?.extra?.expoClient?.hostUri || (Constants as any)?.manifest?.debuggerHost;
-    if (hostUri && typeof hostUri === 'string') {
-      const ip = hostUri.split(':')[0];
-      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
-        return `http://${ip}:5000/api`;
-      }
-    }
-
-    // Check scriptURL
-    const scriptURL = (NativeModules as any)?.SourceCode?.scriptURL;
-    if (scriptURL && typeof scriptURL === 'string') {
-      const match = scriptURL.match(/https?:\/\/([^/:]+)/);
-      if (match && match[1] && match[1] !== 'localhost' && match[1] !== '127.0.0.1') {
-        return `http://${match[1]}:5000/api`;
-      }
-    }
-  } catch {}
-
-  // Production VPS Live Backend API
-  return 'https://api.stealthssolutions.com/api';
+  return 'http://2.59.161.183/api';
 };
 
 let currentApiHost = resolveDefaultHost();
