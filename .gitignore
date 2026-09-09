@@ -27,7 +27,5 @@ yarn-error.log*
 Thumbs.db
 
 # Native generated folders
-mobile/android/
 mobile/ios/
-android/
 ios/
