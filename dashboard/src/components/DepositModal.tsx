@@ -375,7 +375,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 className="w-full py-3.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs font-mono uppercase tracking-wider transition-all shadow-md shadow-[#F0B90B]/15 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
               >
                 <Send className="w-4 h-4" />
-                <span>{isSubmitting ? 'Submitting Receipt...' : 'Notify Settlement Desk ↗'}</span>
+                <span>{isSubmitting ? 'Submitting Transfer Receipt...' : 'I Have Made Deposit ↗'}</span>
               </button>
             </form>
           </>
