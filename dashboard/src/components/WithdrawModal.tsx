@@ -230,6 +230,13 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
               </div>
             </div>
 
+            <div className="p-3 rounded-lg bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[#F0B90B] text-[11px] font-mono leading-relaxed space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <span>📩 Check Inbox & Spam Folder</span>
+              </div>
+              <p className="text-[#848E9C]">Verification code sent to your registered email. If you don't see it in a few seconds, please check your <strong>Spam / Junk</strong> folder.</p>
+            </div>
+
             <div>
               <label className="block text-xs font-mono text-[#848E9C] mb-1 text-center">
                 Enter 6-Digit Withdrawal Authorization Code

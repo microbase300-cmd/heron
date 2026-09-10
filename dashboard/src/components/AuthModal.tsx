@@ -270,6 +270,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
               <div className="text-xs font-sans font-bold text-gold">{email}</div>
             </div>
 
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] font-mono leading-relaxed space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-amber-400">
+                <span>📩 Check Inbox & Spam Folder</span>
+              </div>
+              <p>We've dispatched your 6-digit code. If it doesn't appear in your main inbox within 30 seconds, please check your <strong>Spam / Junk</strong> folder.</p>
+            </div>
+
             <div>
               <label className="block text-xs font-mono text-white/50 mb-1 text-center">
                 Enter 6-Digit Verification Code

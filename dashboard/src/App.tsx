@@ -30,6 +30,7 @@ export const App: React.FC = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Initial load
   useEffect(() => {
@@ -53,6 +54,8 @@ export const App: React.FC = () => {
       } catch {
         // If not logged in, prompt auth modal
         setIsAuthOpen(true);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
     init();
@@ -121,6 +124,19 @@ export const App: React.FC = () => {
     setUser(u);
     setIsAuthOpen(false);
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#181A20] text-[#EAECEF]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-2 border-[#F0B90B] border-t-transparent animate-spin" />
+          <div className="font-mono text-xs text-[#848E9C] tracking-wider uppercase animate-pulse">
+            Establishing Institutional Security Session...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#181A20] text-[#EAECEF] overflow-hidden">
