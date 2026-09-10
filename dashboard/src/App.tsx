@@ -308,6 +308,7 @@ export const App: React.FC = () => {
         isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}
         onDepositSuccess={refreshData}
+        transactions={transactions}
       />
 
       <WithdrawModal
