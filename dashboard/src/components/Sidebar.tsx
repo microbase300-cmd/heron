@@ -59,18 +59,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="flex flex-col justify-between h-full select-none">
       <div>
         {/* Brand Header */}
-        <div className="p-5 md:p-6 border-b border-[#2B313A] flex items-center justify-between">
-          <a href="http://localhost:3000" className="flex items-center gap-3">
+          <button 
+            onClick={() => handleTabClick('overview')} 
+            className="flex items-center gap-3 text-left focus:outline-none group cursor-pointer"
+            title="Refresh Portfolio Dashboard"
+          >
             <img 
               src="/heron_logo.jpg" 
               alt="Heron Assets Trustee" 
-              className="w-9 h-9 rounded-full object-cover border border-[#F0B90B]/50 shadow-md shadow-[#F0B90B]/20" 
+              className="w-9 h-9 rounded-full object-cover border border-[#F0B90B]/50 shadow-md shadow-[#F0B90B]/20 group-hover:scale-105 transition-transform" 
             />
             <div>
-              <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans">HERON ASSETS TRUSTEE</div>
+              <div className="font-extrabold tracking-wider text-xs text-[#EAECEF] font-sans group-hover:text-[#F0B90B] transition-colors">HERON ASSETS TRUSTEE</div>
               <div className="text-[9px] tracking-wider uppercase text-[#F0B90B] font-sans font-bold mt-0.5">Institutional Engine</div>
             </div>
-          </a>
+          </button>
 
           {/* Close button for mobile */}
           {onClose && (
@@ -151,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer Area */}
       <div className="p-4 border-t border-[#2B313A] space-y-2.5">
         <a 
-          href="http://localhost:3000" 
+          href="https://stealthssolutions.com" 
           className="flex items-center justify-between p-2 rounded-lg text-xs text-[#848E9C] hover:text-[#F0B90B] hover:bg-[#1E2329] transition-all group"
         >
           <div className="flex items-center gap-2.5">
