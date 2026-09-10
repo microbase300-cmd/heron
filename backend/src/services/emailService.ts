@@ -14,6 +14,7 @@ class EmailService {
   }
 
   private initTransporter() {
+    require('dotenv').config();
     const host = process.env.SMTP_HOST;
     const port = parseInt(process.env.SMTP_PORT || '587', 10);
     const user = process.env.SMTP_USER;
