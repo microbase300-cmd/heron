@@ -191,8 +191,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 </div>
 
                 {activeTrackedTx.status === 'pending' ? (
-                  <div className="p-3 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[#F0B90B] text-xs font-mono leading-relaxed text-left">
-                    <p>💡 Your deposit notification is actively being processed by our settlement desk. You will receive an instant notification once your deposit is confirmed.</p>
+                  <div className="p-3.5 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[#F0B90B] text-xs font-mono leading-relaxed text-left space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-[#F0B90B]">
+                      <span>💡 Deposit Processing in Progress</span>
+                    </div>
+                    <p>Your deposit notification is actively being processed by our settlement desk.</p>
+                    <p className="text-amber-300 font-bold pt-1 border-t border-[#F0B90B]/20">
+                      ⚠️ Please do NOT refresh or close this page. The screen will automatically update as soon as your deposit is confirmed or verified.
+                    </p>
                   </div>
                 ) : activeTrackedTx.status === 'completed' ? (
                   <div className="p-3 rounded-xl bg-[#0ECB81]/10 border border-[#0ECB81]/30 text-[#0ECB81] text-xs font-mono leading-relaxed text-left">
