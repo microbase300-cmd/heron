@@ -98,6 +98,8 @@ export type TransactionStatus = 'pending' | 'completed' | 'rejected' | 'failed' 
 export interface Transaction {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   type: TransactionType;
   amount: number;
   asset: string;

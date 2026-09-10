@@ -62,6 +62,8 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
     const matchesSearch =
       t.id.toLowerCase().includes(term) ||
       t.userId.toLowerCase().includes(term) ||
+      (t.userName && t.userName.toLowerCase().includes(term)) ||
+      (t.userEmail && t.userEmail.toLowerCase().includes(term)) ||
       (t.txHash && t.txHash.toLowerCase().includes(term)) ||
       (t.note && t.note.toLowerCase().includes(term)) ||
       (t.holdReason && t.holdReason.toLowerCase().includes(term)) ||
@@ -299,17 +301,34 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
                 filtered.map((tx) => (
                   <tr key={tx.id} className="hover:bg-[#2B313A]/30 transition-colors">
                     <td className="py-3.5 px-4">
-                      <div className="font-mono font-bold text-[#EAECEF] text-xs flex items-center gap-1.5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-6 h-6 rounded bg-[#F0B90B]/15 border border-[#F0B90B]/30 flex items-center justify-center text-[11px] font-bold text-[#F0B90B]">
+                          {(tx.userName || tx.userId).charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-sans font-bold text-[#EAECEF] text-xs flex items-center gap-1.5">
+                            <span>{tx.userName || 'Investor'}</span>
+                            {tx.userEmail && (
+                              <span className="text-[10px] font-mono text-[#848E9C] font-normal">
+                                ({tx.userEmail})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="font-mono text-[11px] text-[#F0B90B] flex items-center gap-1">
                         <span>{tx.id}</span>
                         {tx.txHash && (
-                          <span className="text-[10px] text-[#F0B90B] font-mono truncate max-w-[140px]" title={tx.txHash}>
-                            ({tx.txHash})
+                          <span className="text-[10px] text-[#848E9C] font-mono truncate max-w-[120px]" title={tx.txHash}>
+                            • Hash: {tx.txHash.slice(0, 10)}...
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-[#848E9C] font-sans mt-0.5 max-w-sm truncate">
-                        {tx.note || `User: ${tx.userId}`}
-                      </div>
+                      {tx.note && (
+                        <div className="text-[11px] text-[#848E9C] font-sans mt-0.5 max-w-sm truncate">
+                          Memo: {tx.note}
+                        </div>
+                      )}
                       {tx.holdReason && (
                         <div className="text-[10px] text-amber-400 font-mono mt-0.5 flex items-center gap-1">
                           <AlertTriangle className="w-2.5 h-2.5 shrink-0" />

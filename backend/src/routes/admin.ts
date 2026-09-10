@@ -129,7 +129,19 @@ router.post('/users/:id/status', (req: AuthRequest, res: Response) => {
 router.get('/transactions', (_req: AuthRequest, res: Response) => {
   try {
     const transactions = db.getAllTransactions();
-    res.json(transactions);
+    const users = db.getAllUsers();
+    const userMap = new Map(users.map((u) => [u.id, { name: u.name, email: u.email }]));
+
+    const enriched = transactions.map((t) => {
+      const u = userMap.get(t.userId);
+      return {
+        ...t,
+        userName: u ? u.name : 'Unknown Investor',
+        userEmail: u ? u.email : undefined,
+      };
+    });
+
+    res.json(enriched);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch platform transactions.' });
   }

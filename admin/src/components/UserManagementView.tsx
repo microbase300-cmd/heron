@@ -76,7 +76,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     }
 
     return matchesSearch && matchesCategory;
-  });
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const totalFunded = users.filter(u => u.balance > 0).length;
   const totalUnfunded = users.filter(u => u.balance === 0).length;
