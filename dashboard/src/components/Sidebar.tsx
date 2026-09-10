@@ -59,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="flex flex-col justify-between h-full select-none">
       <div>
         {/* Brand Header */}
+        <div className="p-5 md:p-6 border-b border-[#2B313A] flex items-center justify-between">
           <button 
             onClick={() => handleTabClick('overview')} 
             className="flex items-center gap-3 text-left focus:outline-none group cursor-pointer"
