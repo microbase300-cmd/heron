@@ -231,8 +231,11 @@ export const NewInvestmentView: React.FC<NewInvestmentViewProps> = ({
                 <span className="text-2xl font-sans text-[#F0B90B] font-bold mr-3">$</span>
                 <input
                   type="number"
-                  value={amount}
-                  onChange={(e) => handleAmountChange(parseFloat(e.target.value) || 0)}
+                  value={amount === 0 ? '' : amount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleAmountChange(val === '' ? 0 : parseFloat(val));
+                  }}
                   min={100}
                   step={50}
                   className="w-full bg-transparent text-3xl font-sans font-bold text-[#EAECEF] outline-none"

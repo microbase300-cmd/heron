@@ -170,8 +170,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
               </div>
               <input
                 type="number"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                value={amount === 0 ? '' : amount}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setAmount(val === '' ? 0 : parseFloat(val));
+                }}
                 step={10}
                 min={10}
                 className="w-full p-3 rounded-lg bg-[#181A20] border border-[#2B313A] text-[#EAECEF] font-sans text-lg font-bold focus:border-[#F0B90B] focus:outline-none"
