@@ -268,12 +268,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
             <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center space-y-1">
               <div className="text-[11px] font-mono text-white/50">Verification Code Sent To:</div>
               <div className="text-xs font-sans font-bold text-gold">{email}</div>
-              {devOtp && (
-                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-mono">
-                  <span>Security Code:</span>
-                  <strong>{devOtp}</strong>
-                </div>
-              )}
             </div>
 
             <div>

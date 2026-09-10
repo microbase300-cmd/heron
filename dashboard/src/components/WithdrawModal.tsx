@@ -228,14 +228,6 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 <span>Destination:</span>
                 <span className="text-[#EAECEF]">{address.slice(0, 8)}...{address.slice(-6)}</span>
               </div>
-
-              {devOtp && (
-                <div className="mt-2 pt-2 border-t border-[#2B313A] text-center">
-                  <span className="px-3 py-1 rounded-full bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[#F0B90B] text-xs font-mono font-bold">
-                    Security Code: <strong>{devOtp}</strong>
-                  </span>
-                </div>
-              )}
             </div>
 
             <div>

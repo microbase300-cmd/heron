@@ -677,11 +677,7 @@ function MainAppContent() {
     }
     setAuthLoading(true);
     try {
-      const res = await mobileApi.sendRegistrationOtp(authEmail.trim());
-      if (res.devOtp) {
-        setDevOtpCode(res.devOtp);
-        setAuthOtp(res.devOtp);
-      }
+      await mobileApi.sendRegistrationOtp(authEmail.trim());
       setRegStep(2);
       showCustomAlert('Security OTP Dispatched', `A 6-digit security verification code was dispatched to ${authEmail}.`, 'success');
     } catch (err: any) {
@@ -1055,11 +1051,7 @@ function MainAppContent() {
     }
     setModalLoading(true);
     try {
-      const res = await mobileApi.requestWithdrawalOtp(amt, withdrawAsset);
-      if (res.devOtp) {
-        setWithdrawDevOtp(res.devOtp);
-        setWithdrawOtp(res.devOtp);
-      }
+      await mobileApi.requestWithdrawalOtp(amt, withdrawAsset);
       setWithdrawStep(2);
       showCustomAlert('OTP Dispatched', 'A 6-digit security authorization code was sent to your registered email.', 'info');
     } catch (err: any) {
@@ -1302,11 +1294,6 @@ function MainAppContent() {
                       <Text style={styles.otpNoticeSub}>
                         Enter the 6-digit confirmation code dispatched to {authEmail}.
                       </Text>
-                      {devOtpCode && (
-                        <View style={styles.devOtpBadge}>
-                          <Text style={styles.devOtpText}>🛡️ Passcode: {devOtpCode}</Text>
-                        </View>
-                      )}
                     </View>
 
                     <Text style={styles.fieldLabel}>6-Digit OTP Code</Text>
@@ -2341,14 +2328,6 @@ function MainAppContent() {
                     <Text style={styles.otpNoticeBody}>
                       Enter the 6-digit authorization code dispatched to {currentUser.email}
                     </Text>
-                    {withdrawDevOtp && (
-                      <TouchableOpacity
-                        style={styles.devPill}
-                        onPress={() => setWithdrawOtp(withdrawDevOtp)}
-                      >
-                        <Text style={styles.devPillText}>🛡️ Passcode: {withdrawDevOtp} (Tap to autofill)</Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
 
                   <Text style={styles.fieldLabel}>6-Digit Security OTP</Text>

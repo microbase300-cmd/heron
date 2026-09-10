@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../services/db';
 import { otpService } from '../services/otpService';
+import { emailService } from '../services/emailService';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -101,7 +102,7 @@ router.post('/deposit', requireAuth, (req: AuthRequest, res: Response): void => 
 });
 
 // Request Withdrawal OTP
-router.post('/request-withdrawal-otp', requireAuth, (req: AuthRequest, res: Response): void => {
+router.post('/request-withdrawal-otp', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.userId || req.user!.id;
     const user = db.getUserById(userId);
@@ -111,10 +112,11 @@ router.post('/request-withdrawal-otp', requireAuth, (req: AuthRequest, res: Resp
     }
 
     const otp = otpService.generateOtp(user.email, 'withdrawal');
+    await emailService.sendOtpEmail({ to: user.email, code: otp.code, purpose: 'withdrawal' });
+
     res.json({
       message: `Withdrawal authorization code sent to ${user.email}. Valid for 10 minutes.`,
       expiresAt: otp.expiresAt,
-      devOtp: otp.code // Included for testing
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to generate withdrawal authorization code.' });

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../services/db';
 import { authService } from '../services/authService';
 import { otpService } from '../services/otpService';
+import { emailService } from '../services/emailService';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { User } from '../types';
 
@@ -104,10 +105,11 @@ router.post('/send-registration-otp', async (req: Request, res: Response): Promi
     }
 
     const otp = otpService.generateOtp(cleanEmail, 'registration');
+    await emailService.sendOtpEmail({ to: cleanEmail, code: otp.code, purpose: 'registration' });
+
     res.json({
       message: `Security verification OTP sent to ${cleanEmail}. Valid for 10 minutes.`,
       expiresAt: otp.expiresAt,
-      devOtp: otp.code, // Included for zero-friction sandbox testing
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to dispatch registration OTP.' });
