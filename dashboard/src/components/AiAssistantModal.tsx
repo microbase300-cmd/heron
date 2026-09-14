@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Sparkles, User, Headphones, Minimize2 } from 'lucide-react';
+import { Bot, Send, Sparkles, User, Headphones, Minimize2, Mic, Volume2, VolumeX } from 'lucide-react';
 import { api } from '../services/api';
 
 interface ChatMessage {
@@ -15,6 +15,9 @@ export const AiAssistantModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -25,6 +28,79 @@ export const AiAssistantModal: React.FC = () => {
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Speech Synthesis (Text to Speech - 0MB Server RAM)
+  const speakText = (content: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if (!voiceEnabled) return;
+
+    const cleanSpoken = content
+      .replace(/[•\*\_#\[\]]/g, ' ')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpoken);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('David'))) || voices.find(v => v.lang.startsWith('en'));
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Voice Input (Speech to Text - 0MB Server RAM)
+  const toggleVoiceInput = () => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in your browser. Please try Chrome, Edge, or Safari.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInput(transcript);
+          setIsListening(false);
+        }
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -63,6 +139,9 @@ export const AiAssistantModal: React.FC = () => {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, aiMsg]);
+      if (voiceEnabled) {
+        speakText(aiMsg.text);
+      }
     } catch {
       const fallbackMsg: ChatMessage = {
         id: `ai_err_${Date.now()}`,
@@ -121,7 +200,26 @@ export const AiAssistantModal: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isSpeaking && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    setIsSpeaking(false);
+                  }
+                  setVoiceEnabled(!voiceEnabled);
+                }}
+                className={`p-1.5 rounded-lg transition-all ${
+                  voiceEnabled
+                    ? 'text-[#F0B90B] bg-[#F0B90B]/15 border border-[#F0B90B]/30'
+                    : 'text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A]'
+                }`}
+                title={voiceEnabled ? 'Voice response active (Click to mute)' : 'Voice response muted (Click to unmute)'}
+              >
+                {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </button>
+
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all"
@@ -167,12 +265,25 @@ export const AiAssistantModal: React.FC = () => {
                     </div>
                   )}
 
-                  <div
-                    className={`text-[9px] font-mono mt-1 ${
-                      m.sender === 'user' ? 'text-[#181A20]/60 text-right' : 'text-[#848E9C]'
-                    }`}
-                  >
-                    {m.time}
+                  <div className="flex items-center justify-between mt-1 pt-0.5">
+                    <span
+                      className={`text-[9px] font-mono ${
+                        m.sender === 'user' ? 'text-[#181A20]/60' : 'text-[#848E9C]'
+                      }`}
+                    >
+                      {m.time}
+                    </span>
+                    {m.sender === 'ai' && (
+                      <button
+                        type="button"
+                        onClick={() => speakText(m.text)}
+                        className="text-[9px] font-mono text-[#F0B90B] hover:text-[#FCD535] flex items-center gap-1 opacity-80 hover:opacity-100"
+                        title="Listen to this response"
+                      >
+                        <Volume2 className="w-2.5 h-2.5" />
+                        <span>Listen</span>
+                      </button>
+                    )}
                   </div>
 
                   {m.sender === 'ai' && m.suggestions && m.suggestions.length > 0 && (
@@ -232,12 +343,27 @@ export const AiAssistantModal: React.FC = () => {
 
           {/* Input Footer */}
           <form onSubmit={handleSend} className="p-3 bg-[#181A20] border-t border-[#2B313A] flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleVoiceInput}
+              className={`p-2 rounded-xl transition-all ${
+                isListening
+                  ? 'bg-[#F6465D] text-white shadow-lg shadow-[#F6465D]/40 animate-pulse'
+                  : 'bg-[#1E2329] border border-[#2B313A] text-[#848E9C] hover:text-[#F0B90B] hover:border-[#F0B90B]/30'
+              }`}
+              title={isListening ? "Listening... click to stop" : "Click to speak with voice"}
+            >
+              <Mic className="w-4 h-4" />
+            </button>
+
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about plans, deposits, security..."
-              className="flex-1 bg-[#1E2329] border border-[#2B313A] focus:border-[#F0B90B] rounded-xl px-3.5 py-2 text-xs text-[#EAECEF] outline-none font-sans placeholder:text-[#848E9C]/60"
+              placeholder={isListening ? "Listening... speak now" : "Ask about plans, deposits, security..."}
+              className={`flex-1 bg-[#1E2329] border ${
+                isListening ? 'border-[#F0B90B]' : 'border-[#2B313A]'
+              } focus:border-[#F0B90B] rounded-xl px-3.5 py-2 text-xs text-[#EAECEF] outline-none font-sans placeholder:text-[#848E9C]/60`}
             />
             <button
               type="submit"

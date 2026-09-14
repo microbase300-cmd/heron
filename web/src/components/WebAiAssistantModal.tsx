@@ -13,6 +13,9 @@ export default function WebAiAssistantModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [isListening, setIsListening] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -33,6 +36,91 @@ export default function WebAiAssistantModal() {
       scrollToBottom()
     }
   }, [messages, isOpen])
+
+  // Speech Synthesis (Text to Speech - 0MB Server RAM)
+  const speakText = (content: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    window.speechSynthesis.cancel() // stop any ongoing speech
+    if (!voiceEnabled) return
+
+    // Clean markdown and bullet characters for natural pronunciation
+    const cleanSpoken = content
+      .replace(/[•\*\_#\[\]]/g, ' ')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpoken)
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+
+    // Prefer English institutional voice if available
+    const voices = window.speechSynthesis.getVoices()
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('David'))) || voices.find(v => v.lang.startsWith('en'))
+    if (preferredVoice) {
+      utterance.voice = preferredVoice
+    }
+
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+
+    window.speechSynthesis.speak(utterance)
+  }
+
+  // Voice Input (Speech to Text - 0MB Server RAM)
+  const toggleVoiceInput = () => {
+    if (typeof window === 'undefined') return
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in your browser. Please try Chrome, Edge, or Safari.")
+      return
+    }
+
+    if (isListening) {
+      setIsListening(false)
+      return
+    }
+
+    try {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.lang = 'en-US'
+
+      recognition.onstart = () => {
+        setIsListening(true)
+      }
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        if (transcript) {
+          setInput(transcript)
+          setIsListening(false)
+        }
+      }
+
+      recognition.onerror = () => {
+        setIsListening(false)
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognition.start()
+    } catch {
+      setIsListening(false)
+    }
+  }
+
+  // Stop voice when modal closes
+  useEffect(() => {
+    if (!isOpen && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+  }, [isOpen])
 
   const getApiUrl = () => {
     if (typeof window !== 'undefined') {
@@ -77,6 +165,9 @@ export default function WebAiAssistantModal() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
       setMessages((prev) => [...prev, aiMsg])
+      if (voiceEnabled) {
+        speakText(aiMsg.text)
+      }
     } catch {
       const fallbackMsg: ChatMessage = {
         id: 'ai_err_' + Date.now(),
@@ -213,26 +304,66 @@ export default function WebAiAssistantModal() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: 'none',
-                color: '#fff',
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-              title="Close"
-            >
-              ✕
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isSpeaking && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel()
+                    setIsSpeaking(false)
+                  }
+                  setVoiceEnabled(!voiceEnabled)
+                }}
+                style={{
+                  background: voiceEnabled ? 'rgba(214, 168, 79, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  border: voiceEnabled ? '1px solid rgba(214, 168, 79, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  color: voiceEnabled ? 'var(--gold, #d6a84f)' : '#848E9C',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+                title={voiceEnabled ? 'Voice responses active (Click to mute)' : 'Voice responses muted (Click to unmute)'}
+              >
+                {voiceEnabled ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                  </svg>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: 'none',
+                  color: '#fff',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Quick suggestions */}
@@ -356,9 +487,36 @@ export default function WebAiAssistantModal() {
                     ))}
                   </div>
                 )}
-                <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.35)', marginTop: '3px', padding: '0 4px' }}>
-                  {m.time}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', padding: '0 4px' }}>
+                  <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.35)' }}>
+                    {m.time}
+                  </span>
+                  {m.sender === 'ai' && (
+                    <button
+                      type="button"
+                      onClick={() => speakText(m.text)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gold, #d6a84f)',
+                        cursor: 'pointer',
+                        padding: '0 2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        fontSize: '9px',
+                        opacity: 0.75
+                      }}
+                      title="Listen to this response"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                      </svg>
+                      <span>Listen</span>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
 
@@ -383,15 +541,41 @@ export default function WebAiAssistantModal() {
               alignItems: 'center'
             }}
           >
+            <button
+              type="button"
+              onClick={toggleVoiceInput}
+              style={{
+                background: isListening ? '#ef4444' : 'rgba(255, 255, 255, 0.08)',
+                color: isListening ? '#fff' : 'var(--gold, #d6a84f)',
+                border: isListening ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.15)',
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: isListening ? '0 0 12px rgba(239, 68, 68, 0.6)' : 'none'
+              }}
+              title={isListening ? "Listening... click to stop" : "Click to speak with voice"}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+              </svg>
+            </button>
+
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about plans, custody, deposits..."
+              placeholder={isListening ? "Listening... speak now" : "Ask about plans, custody, deposits..."}
               style={{
                 flex: 1,
                 background: '#1E2329',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                border: isListening ? '1px solid var(--gold, #d6a84f)' : '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: '999px',
                 padding: '8px 14px',
                 color: '#fff',
