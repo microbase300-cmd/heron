@@ -315,7 +315,7 @@ class ApiService {
     });
   }
 
-  async askAssistant(message: string): Promise<{ reply: string; matched: boolean; supportRequired: boolean }> {
+  async askAssistant(message: string): Promise<{ reply: string; matched: boolean; supportRequired: boolean; suggestions?: string[] }> {
     return this.request('/assistant/chat', {
       method: 'POST',
       body: JSON.stringify({ message })

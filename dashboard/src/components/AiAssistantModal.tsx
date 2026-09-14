@@ -7,6 +7,7 @@ interface ChatMessage {
   sender: 'ai' | 'user';
   text: string;
   supportRequired?: boolean;
+  suggestions?: string[];
   time: string;
 }
 
@@ -58,6 +59,7 @@ export const AiAssistantModal: React.FC = () => {
         sender: 'ai',
         text: res.reply,
         supportRequired: res.supportRequired,
+        suggestions: res.suggestions || [],
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, aiMsg]);
@@ -172,6 +174,20 @@ export const AiAssistantModal: React.FC = () => {
                   >
                     {m.time}
                   </div>
+
+                  {m.sender === 'ai' && m.suggestions && m.suggestions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5 pt-1.5 border-t border-[#2B313A]/50">
+                      {m.suggestions.map((s, sIdx) => (
+                        <button
+                          key={sIdx}
+                          onClick={() => setInput(s)}
+                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#2B313A] hover:bg-[#363D47] text-[#F0B90B] border border-[#F0B90B]/20 transition-all text-left"
+                        >
+                          {s} →
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {m.sender === 'user' && (
