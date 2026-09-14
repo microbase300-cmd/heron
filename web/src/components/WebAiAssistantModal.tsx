@@ -5,6 +5,7 @@ interface ChatMessage {
   sender: 'ai' | 'user'
   text: string
   supportRequired?: boolean
+  suggestions?: string[]
   time: string
 }
 
@@ -72,6 +73,7 @@ export default function WebAiAssistantModal() {
         sender: 'ai',
         text: data.reply || 'I am currently unable to answer that question.',
         supportRequired: Boolean(data.supportRequired),
+        suggestions: data.suggestions || [],
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
       setMessages((prev) => [...prev, aiMsg])
@@ -268,13 +270,16 @@ export default function WebAiAssistantModal() {
 
           {/* Message History */}
           <div
+            className="ai-modal-scrollbar"
             style={{
               flex: 1,
               overflowY: 'auto',
               padding: '14px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px'
+              gap: '12px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(214, 168, 79, 0.4) transparent'
             }}
           >
             {messages.map((m) => (
@@ -324,6 +329,33 @@ export default function WebAiAssistantModal() {
                     </div>
                   )}
                 </div>
+
+                {/* Follow up suggestions */}
+                {m.sender === 'ai' && m.suggestions && m.suggestions.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px', maxWidth: '85%' }}>
+                    {m.suggestions.map((s, sIdx) => (
+                      <button
+                        key={sIdx}
+                        type="button"
+                        onClick={() => {
+                          setInput(s)
+                        }}
+                        style={{
+                          fontSize: '10.5px',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(214, 168, 79, 0.25)',
+                          color: 'var(--gold, #d6a84f)',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        {s} →
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.35)', marginTop: '3px', padding: '0 4px' }}>
                   {m.time}
                 </span>

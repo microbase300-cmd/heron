@@ -9,6 +9,7 @@ const router = Router();
 interface IntentHandler {
   id: string;
   patterns: (string | RegExp)[];
+  keywords?: string[];
   responses: string[];
   followUps?: string[];
   supportRequired?: boolean;
@@ -18,6 +19,7 @@ const INTENTS: IntentHandler[] = [
   // 1. GREETINGS & CASUAL INTERACTION
   {
     id: 'greeting',
+    keywords: ['hi', 'hello', 'hey', 'greetings', 'morning', 'afternoon', 'evening', 'yo', 'sup'],
     patterns: [
       /^(hi|hello|hey|greetings|good morning|good afternoon|good evening|yo|sup|howdy)(\b|!|\?)/i,
       'hello there',
@@ -36,6 +38,7 @@ const INTENTS: IntentHandler[] = [
   // 2. BOT IDENTITY & ROLE
   {
     id: 'identity',
+    keywords: ['who', 'bot', 'ai', 'robot', 'assistant', 'concierge', 'name', 'human'],
     patterns: [
       /who are you/i,
       /what are you/i,
@@ -56,14 +59,19 @@ const INTENTS: IntentHandler[] = [
   // 3. ABOUT HERON / COMPANY OVERVIEW
   {
     id: 'company_about',
+    keywords: ['company', 'heron', 'trustee', 'about', 'firm', 'business', 'platform', 'mission', 'background', 'overview', 'details'],
     patterns: [
       /what is heron/i,
       /about heron/i,
-      /tell me about (the )?company/i,
+      /tell me (more )?about (your |the )?company/i,
+      /tell me (more )?about (your |the )?platform/i,
+      /tell me more about/i,
+      /more about your company/i,
       /who owns heron/i,
       /where is heron located/i,
-      /what does (this )?company do/i,
-      /about your platform/i
+      /what does (this |your )?company do/i,
+      /about your platform/i,
+      /information about (the |your )?company/i
     ],
     responses: [
       "Heron Assets Trustee is an institutional digital asset stewardship firm. We specialize in automated escrow-backed yield compounding across high-liquidity decentralized markets, protected by multi-signature cold custody.",
@@ -75,6 +83,7 @@ const INTENTS: IntentHandler[] = [
   // 4. SPECIFIC PLAN: AMATEUR
   {
     id: 'plan_amateur',
+    keywords: ['amateur', 'starter', 'entry', 'cheapest', '100', 'min', 'minimum'],
     patterns: [
       /amateur plan/i,
       /amateur tier/i,
@@ -94,6 +103,7 @@ const INTENTS: IntentHandler[] = [
   // 5. SPECIFIC PLAN: STANDARD
   {
     id: 'plan_standard',
+    keywords: ['standard', '2000', '2,000', 'second'],
     patterns: [
       /standard plan/i,
       /standard tier/i,
@@ -110,6 +120,7 @@ const INTENTS: IntentHandler[] = [
   // 6. SPECIFIC PLAN: PREMIUM
   {
     id: 'plan_premium',
+    keywords: ['premium', '6000', '6,000', 'third'],
     patterns: [
       /premium plan/i,
       /premium tier/i,
@@ -126,6 +137,7 @@ const INTENTS: IntentHandler[] = [
   // 7. SPECIFIC PLAN: RETIREMENT
   {
     id: 'plan_retirement',
+    keywords: ['retirement', 'pension', '11000', '11,000', 'highest', 'best', 'max'],
     patterns: [
       /retirement plan/i,
       /retirement tier/i,
@@ -146,6 +158,7 @@ const INTENTS: IntentHandler[] = [
   // 8. ALL PLANS SUMMARY
   {
     id: 'plans_all',
+    keywords: ['plan', 'plans', 'package', 'packages', 'tier', 'tiers', 'rate', 'rates', 'yield', 'yields', 'return', 'returns', 'earn', 'roi', 'options', 'mandates'],
     patterns: [
       /plans/i,
       /packages/i,
@@ -167,6 +180,7 @@ const INTENTS: IntentHandler[] = [
   // 9. HOW TO DEPOSIT
   {
     id: 'deposit_process',
+    keywords: ['deposit', 'fund', 'funding', 'pay', 'crypto', 'usdt', 'btc', 'eth', 'sol', 'transfer', 'address', 'wallet'],
     patterns: [
       /how (do|can) i deposit/i,
       /deposit steps/i,
@@ -187,6 +201,7 @@ const INTENTS: IntentHandler[] = [
   // 10. DEPOSIT TIME / PENDING STATUS
   {
     id: 'deposit_speed',
+    keywords: ['pending', 'speed', 'confirmation', 'confirm', 'time', 'delay', 'wait', 'minutes', 'hours'],
     patterns: [
       /how long (does|for) deposit/i,
       /deposit confirmation time/i,
@@ -204,6 +219,7 @@ const INTENTS: IntentHandler[] = [
   // 11. WITHDRAWAL PROCESS & RULES
   {
     id: 'withdraw_process',
+    keywords: ['withdraw', 'withdrawal', 'cashout', 'payout', 'disbursement', 'fees', 'fee'],
     patterns: [
       /how (do|can) i withdraw/i,
       /withdrawal steps/i,
@@ -223,6 +239,7 @@ const INTENTS: IntentHandler[] = [
   // 12. WITHDRAWAL TIME
   {
     id: 'withdraw_speed',
+    keywords: ['arrive', 'instant', 'speed', 'when', 'receive', 'release'],
     patterns: [
       /how long (does|for) withdraw/i,
       /instant withdraw/i,
@@ -238,6 +255,7 @@ const INTENTS: IntentHandler[] = [
   // 13. SECURITY & CUSTODY
   {
     id: 'security_custody',
+    keywords: ['safe', 'security', 'legit', 'scam', 'custody', 'cold', 'vault', 'protected', 'protection', 'insurance', '2fa', 'otp'],
     patterns: [
       /security/i,
       /is it safe/i,
@@ -259,6 +277,7 @@ const INTENTS: IntentHandler[] = [
   // 14. AFFILIATE / REFERRAL PROGRAM
   {
     id: 'affiliate_referral',
+    keywords: ['referral', 'affiliate', 'invite', 'commission', 'bonus', 'partner', 'friend', 'network'],
     patterns: [
       /referral/i,
       /affiliate/i,
@@ -277,6 +296,7 @@ const INTENTS: IntentHandler[] = [
   // 15. KYC / VERIFICATION
   {
     id: 'kyc_verification',
+    keywords: ['kyc', 'verify', 'verification', 'identity', 'passport', 'id', 'documents'],
     patterns: [
       /kyc/i,
       /verify identity/i,
@@ -295,6 +315,7 @@ const INTENTS: IntentHandler[] = [
   // 16. CONTACT HUMAN SUPPORT / ESCALATION
   {
     id: 'support_contact',
+    keywords: ['support', 'human', 'agent', 'person', 'email', 'desk', 'help', 'contact', 'customer', 'talk'],
     patterns: [
       /contact (human|support|admin|help|team|desk)/i,
       /human support/i,
@@ -315,6 +336,7 @@ const INTENTS: IntentHandler[] = [
   // 17. GRATITUDE / COURTESY
   {
     id: 'courtesy',
+    keywords: ['thank', 'thanks', 'thx', 'appreciate', 'great', 'awesome', 'cool', 'perfect'],
     patterns: [
       /^(thanks|thank you|thx|appreciate it|great|awesome|cool|perfect|good job)(\b|!)/i
     ],
@@ -349,30 +371,46 @@ router.post('/chat', (req: Request, res: Response) => {
       return;
     }
 
-    const cleaned = message.trim();
-    if (!cleaned) {
+    const raw = message.trim();
+    if (!raw) {
       res.status(400).json({ error: 'Message cannot be empty.' });
       return;
     }
 
-    // Match intents with score ranking
+    // Normalize and tokenize message
+    const cleaned = raw.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+    const tokens = cleaned.split(/\s+/).filter(Boolean);
+
+    // Intent Scorer across Regex + Exact Substring + Semantic Keyword Density
     let bestIntent: IntentHandler | null = null;
     let highestScore = 0;
 
     for (const intent of INTENTS) {
       let score = 0;
+
+      // 1. Regex & Direct Pattern Testing
       for (const pattern of intent.patterns) {
         if (pattern instanceof RegExp) {
-          if (pattern.test(cleaned)) {
-            score += 4; // Regex pattern match has high confidence
+          if (pattern.test(raw) || pattern.test(cleaned)) {
+            score += 6; // High confidence for targeted regex
           }
         } else {
           const lowerPattern = pattern.toLowerCase();
-          const lowerMsg = cleaned.toLowerCase();
-          if (lowerMsg === lowerPattern) {
-            score += 5; // Exact match
-          } else if (lowerMsg.includes(lowerPattern)) {
-            score += 2; // Substring match
+          if (cleaned === lowerPattern) {
+            score += 8; // Exact complete sentence match
+          } else if (cleaned.includes(lowerPattern)) {
+            score += 4; // Substring match
+          }
+        }
+      }
+
+      // 2. Semantic Keyword & Token Density
+      if (intent.keywords) {
+        for (const kw of intent.keywords) {
+          if (tokens.includes(kw)) {
+            score += 3; // Word token exact match
+          } else if (cleaned.includes(kw)) {
+            score += 1.5; // Partial word match
           }
         }
       }
@@ -383,7 +421,8 @@ router.post('/chat', (req: Request, res: Response) => {
       }
     }
 
-    if (bestIntent && highestScore > 0) {
+    // Confidence threshold (score >= 3 indicates genuine intent match)
+    if (bestIntent && highestScore >= 3) {
       const reply = getRandomElement(bestIntent.responses);
       res.json({
         reply,
