@@ -10,6 +10,7 @@ import adminRoutes from './routes/admin';
 import marketRoutes from './routes/market';
 import notificationsRoutes from './routes/notifications';
 import kycRoutes from './routes/kyc';
+import assistantRoutes from './routes/assistant';
 import { dbPool } from './db';
 import { startInvestmentEngine } from './services/investmentEngine';
 
@@ -54,6 +55,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/kyc', kycRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 import path from 'path';
 

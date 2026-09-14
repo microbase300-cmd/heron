@@ -13,6 +13,7 @@ import { ProfileView } from './components/ProfileView';
 import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AuthModal } from './components/AuthModal';
+import { AiAssistantModal } from './components/AiAssistantModal';
 import { LayoutDashboard, Timer, TrendingUp, ArrowDownLeft, Menu } from 'lucide-react';
 import { ExchangeRatesData, DEFAULT_EXCHANGE_RATES } from './utils/currency';
 
@@ -324,6 +325,9 @@ export const App: React.FC = () => {
         isOpen={isAuthOpen}
         onSuccess={handleAuthSuccess}
       />
+
+      {/* Floating Lightweight Institutional AI Assistant */}
+      <AiAssistantModal />
     </div>
   );
 };

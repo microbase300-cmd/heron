@@ -314,6 +314,13 @@ class ApiService {
       body: JSON.stringify(data)
     });
   }
+
+  async askAssistant(message: string): Promise<{ reply: string; matched: boolean; supportRequired: boolean }> {
+    return this.request('/assistant/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+  }
 }
 
 export const api = new ApiService();
