@@ -80,7 +80,7 @@ export default function Company() {
             <Reveal>
               <div className="portrait">
                 <img
-                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80"
+                  src="/leadership/director_senior_black_man.jpg"
                   alt="Managing Director portrait"
                 />
                 <div className="portrait-meta">
@@ -93,7 +93,7 @@ export default function Company() {
             <Reveal className="delay-1">
               <div className="portrait">
                 <img
-                  src="https://images.unsplash.com/photo-1573496799515-eebbb63814f2?auto=format&fit=crop&w=800&q=80"
+                  src="/leadership/strategy_senior_white_woman.jpg"
                   alt="Head of Investment Strategy portrait"
                 />
                 <div className="portrait-meta">
@@ -106,7 +106,7 @@ export default function Company() {
             <Reveal className="delay-2">
               <div className="portrait">
                 <img
-                  src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80"
+                  src="/leadership/operations_young_white_man.jpg"
                   alt="Head of Risk & Operations portrait"
                 />
                 <div className="portrait-meta">
