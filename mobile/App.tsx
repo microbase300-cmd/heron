@@ -392,7 +392,18 @@ function MainAppContent() {
   // Notification popup & message box states
   const [priorityPopUpNotif, setPriorityPopUpNotif] = useState<NotificationMessage | null>(null);
   const [selectedDetailNotif, setSelectedDetailNotif] = useState<NotificationMessage | null>(null);
+  const [inAppToast, setInAppToast] = useState<NotificationMessage | null>(null);
   const seenMobilePopupsRef = useRef<Set<string>>(new Set());
+
+  // Auto-dismiss in-app notification toast after 6 seconds
+  useEffect(() => {
+    if (inAppToast) {
+      const timer = setTimeout(() => {
+        setInAppToast(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [inAppToast]);
 
   // Investments tab filter
   const [investmentFilter, setInvestmentFilter] = useState<'all' | 'active' | 'matured' | 'completed' | 'cancelled'>('all');
@@ -431,9 +442,10 @@ function MainAppContent() {
         if (showDepositModal) { setShowDepositModal(false); return true; }
         if (showWithdrawModal) { setShowWithdrawModal(false); return true; }
         if (showInvestModal) { setShowInvestModal(false); return true; }
-        if (showNotificationModal) { setShowNotificationModal(false); return true; }
-        if (selectedDetailNotif) { setSelectedDetailNotif(null); return true; }
+        if (inAppToast) { setInAppToast(null); return true; }
         if (priorityPopUpNotif) { setPriorityPopUpNotif(null); return true; }
+        if (selectedDetailNotif) { setSelectedDetailNotif(null); return true; }
+        if (showNotificationModal) { setShowNotificationModal(false); return true; }
         
         if (activeTab !== 'overview') {
           setActiveTab('overview');
@@ -445,7 +457,7 @@ function MainAppContent() {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => backHandler.remove();
     }
-  }, [showKycModal, showProfileModal, showDepositModal, showWithdrawModal, showInvestModal, showNotificationModal, selectedDetailNotif, priorityPopUpNotif, activeTab]);
+  }, [showKycModal, showProfileModal, showDepositModal, showWithdrawModal, showInvestModal, showNotificationModal, selectedDetailNotif, priorityPopUpNotif, inAppToast, activeTab]);
 
   // Helper to dynamically match deposit asset to active receiving addresses
   const getSelectedDepositWallet = () => {
@@ -544,9 +556,18 @@ function MainAppContent() {
             (n.type === 'alert' || n.type === 'success' || n.type === 'warning') &&
             !seenMobilePopupsRef.current.has(n.id)
         );
-        if (urgent && !priorityPopUpNotif) {
+        if (urgent) {
           seenMobilePopupsRef.current.add(urgent.id);
-          setPriorityPopUpNotif(urgent);
+          // Trigger non-blocking in-app heads-up notification banner
+          setInAppToast(urgent);
+
+          // Only show centered priority modal if no other modal is currently active
+          const isAnyModalActive = showDepositModal || showWithdrawModal || showInvestModal || 
+                                   showNotificationModal || showProfileModal || showKycModal || 
+                                   showChangePasswordModal || showAddWalletModal;
+          if (!isAnyModalActive && !priorityPopUpNotif) {
+            setPriorityPopUpNotif(urgent);
+          }
         }
       }
       if (refRes.status === 'fulfilled') setReferralData(refRes.value);
@@ -2491,61 +2512,148 @@ function MainAppContent() {
       {/* ========================================================================= */}
       {/* MODAL 4: NOTIFICATIONS CENTER DRAWER */}
       {/* ========================================================================= */}
-      <Modal visible={showNotificationModal} transparent animationType="slide">
+      {/* ========================================================================= */}
+      {/* MODAL 4: NOTIFICATIONS CENTER DRAWER */}
+      {/* ========================================================================= */}
+      <Modal visible={showNotificationModal} transparent animationType="slide" statusBarTranslucent>
         <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={() => {
+              setSelectedDetailNotif(null);
+              setShowNotificationModal(false);
+            }} 
+          />
           <View style={styles.modalSheet}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.modalTitle}>Notifications ({notifications.length})</Text>
-              <TouchableOpacity onPress={() => setShowNotificationModal(false)}>
-                <Text style={styles.closeBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.sheetBody}>
-              {notifications.length === 0 ? (
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>All caught up! No notifications.</Text>
-                </View>
-              ) : (
-                notifications.map((n) => (
-                  <TouchableOpacity
-                    key={n.id}
-                    style={[styles.notifCard, !n.isRead && styles.notifCardUnread]}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setSelectedDetailNotif(n);
-                      if (!n.isRead) {
-                        mobileApi.markNotificationRead(n.id);
-                        setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item));
-                        setUnreadCount(c => Math.max(0, c - 1));
-                      }
-                    }}
+            {selectedDetailNotif ? (
+              /* Inline Subview: Detail Message inside Drawer - eliminates double modal overlay clash */
+              <View style={{ flex: 1 }}>
+                <View style={styles.sheetHeader}>
+                  <TouchableOpacity 
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4 }}
+                    onPress={() => setSelectedDetailNotif(null)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <View style={styles.notifTop}>
-                      <Text style={styles.notifTitle}>{n.title}</Text>
+                    <Text style={{ color: '#F0B90B', fontSize: 16, fontWeight: 'bold', marginRight: 6 }}>←</Text>
+                    <Text style={{ color: '#F0B90B', fontSize: 13, fontWeight: 'bold' }}>All Notifications</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      setSelectedDetailNotif(null);
+                      setShowNotificationModal(false);
+                    }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.closeBtnText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView style={styles.msgBoxBodyScroll} showsVerticalScrollIndicator={false}>
+                  <View style={styles.msgBoxInnerContent}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                       <View style={[
                         styles.notifTypeBadge,
-                        n.type === 'alert' && { backgroundColor: 'rgba(240,185,11,0.2)', borderColor: 'rgba(240,185,11,0.4)' },
-                        n.type === 'success' && { backgroundColor: 'rgba(14,203,129,0.2)', borderColor: 'rgba(14,203,129,0.4)' }
+                        selectedDetailNotif.type === 'alert' && { backgroundColor: 'rgba(240,185,11,0.2)', borderColor: 'rgba(240,185,11,0.4)' },
+                        selectedDetailNotif.type === 'success' && { backgroundColor: 'rgba(14,203,129,0.2)', borderColor: 'rgba(14,203,129,0.4)' }
                       ]}>
                         <Text style={[
                           styles.notifType,
-                          n.type === 'alert' && { color: '#F0B90B' },
-                          n.type === 'success' && { color: '#0ECB81' }
-                        ]}>{n.type.toUpperCase()}</Text>
+                          selectedDetailNotif.type === 'alert' && { color: '#F0B90B' },
+                          selectedDetailNotif.type === 'success' && { color: '#0ECB81' }
+                        ]}>{selectedDetailNotif.type.toUpperCase()}</Text>
                       </View>
-                    </View>
-                    <Text style={styles.notifMsg} numberOfLines={2}>{n.message}</Text>
-                    <View style={styles.notifFooterRow}>
-                      <Text style={styles.notifMeta}>
-                        {n.sender || 'Executive Desk'} • {new Date(n.createdAt).toLocaleDateString()}
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontVariant: ['tabular-nums'] }}>
+                        {new Date(selectedDetailNotif.createdAt).toLocaleString()}
                       </Text>
-                      <Text style={styles.notifTapOpen}>Tap to View Message →</Text>
                     </View>
+                    <Text style={styles.msgDetailHeadline}>{selectedDetailNotif.title}</Text>
+                    <Text style={styles.msgDetailText}>{selectedDetailNotif.message}</Text>
+                  </View>
+
+                  <View style={styles.msgDetailMetaGrid}>
+                    <View style={styles.msgMetaItem}>
+                      <Text style={styles.msgMetaLabel}>DISPATCHED BY</Text>
+                      <Text style={styles.msgMetaValue}>{selectedDetailNotif.sender || 'Chief Risk Officer'}</Text>
+                    </View>
+                    <View style={styles.msgMetaItem}>
+                      <Text style={styles.msgMetaLabel}>CATEGORY</Text>
+                      <Text style={[styles.msgMetaValue, { color: '#F0B90B' }]}>{selectedDetailNotif.type.toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.msgMetaItem}>
+                      <Text style={styles.msgMetaLabel}>STATUS</Text>
+                      <Text style={[styles.msgMetaValue, { color: '#0ECB81' }]}>Verified & Logged</Text>
+                    </View>
+                  </View>
+                </ScrollView>
+
+                <TouchableOpacity
+                  style={[styles.goldBtnFull, { marginTop: 14 }]}
+                  onPress={() => setSelectedDetailNotif(null)}
+                >
+                  <Text style={styles.goldBtnText}>Back to Notifications</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              /* Notifications List */
+              <>
+                <View style={styles.sheetHeader}>
+                  <Text style={styles.modalTitle}>Notifications ({notifications.length})</Text>
+                  <TouchableOpacity 
+                    onPress={() => setShowNotificationModal(false)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.closeBtnText}>✕</Text>
                   </TouchableOpacity>
-                ))
-              )}
-            </ScrollView>
+                </View>
+
+                <ScrollView style={styles.sheetBody}>
+                  {notifications.length === 0 ? (
+                    <View style={styles.emptyCard}>
+                      <Text style={styles.emptyText}>All caught up! No notifications.</Text>
+                    </View>
+                  ) : (
+                    notifications.map((n) => (
+                      <TouchableOpacity
+                        key={n.id}
+                        style={[styles.notifCard, !n.isRead && styles.notifCardUnread]}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          setSelectedDetailNotif(n);
+                          if (!n.isRead) {
+                            mobileApi.markNotificationRead(n.id);
+                            setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item));
+                            setUnreadCount(c => Math.max(0, c - 1));
+                          }
+                        }}
+                      >
+                        <View style={styles.notifTop}>
+                          <Text style={styles.notifTitle}>{n.title}</Text>
+                          <View style={[
+                            styles.notifTypeBadge,
+                            n.type === 'alert' && { backgroundColor: 'rgba(240,185,11,0.2)', borderColor: 'rgba(240,185,11,0.4)' },
+                            n.type === 'success' && { backgroundColor: 'rgba(14,203,129,0.2)', borderColor: 'rgba(14,203,129,0.4)' }
+                          ]}>
+                            <Text style={[
+                              styles.notifType,
+                              n.type === 'alert' && { color: '#F0B90B' },
+                              n.type === 'success' && { color: '#0ECB81' }
+                            ]}>{n.type.toUpperCase()}</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.notifMsg} numberOfLines={2}>{n.message}</Text>
+                        <View style={styles.notifFooterRow}>
+                          <Text style={styles.notifMeta}>
+                            {n.sender || 'Executive Desk'} • {new Date(n.createdAt).toLocaleDateString()}
+                          </Text>
+                          <Text style={styles.notifTapOpen}>Tap to View Message →</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </ScrollView>
+              </>
+            )}
           </View>
         </View>
       </Modal>
@@ -2553,13 +2661,20 @@ function MainAppContent() {
       {/* ========================================================================= */}
       {/* MODAL 5: PRIORITY ALERT & SUCCESS POP-UP MODAL */}
       {/* ========================================================================= */}
-      <Modal visible={!!priorityPopUpNotif} transparent animationType="fade">
-        <View style={styles.modalOverlayCenter}>
-          <View style={[
-            styles.priorityPopUpCard,
-            priorityPopUpNotif?.type === 'alert' && { borderColor: '#F0B90B' },
-            priorityPopUpNotif?.type === 'success' && { borderColor: '#0ECB81' }
-          ]}>
+      <Modal visible={!!priorityPopUpNotif} transparent animationType="fade" statusBarTranslucent>
+        <TouchableOpacity 
+          style={styles.modalOverlayCenter}
+          activeOpacity={1}
+          onPress={() => setPriorityPopUpNotif(null)}
+        >
+          <Pressable 
+            style={[
+              styles.priorityPopUpCard,
+              priorityPopUpNotif?.type === 'alert' && { borderColor: '#F0B90B' },
+              priorityPopUpNotif?.type === 'success' && { borderColor: '#0ECB81' }
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.priorityPopUpHeader}>
               <View style={[
                 styles.priorityIconCircle,
@@ -2576,14 +2691,19 @@ function MainAppContent() {
                   {priorityPopUpNotif?.type === 'alert' ? 'Security & Settlement Alert' : 'Operational Confirmation'}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setPriorityPopUpNotif(null)}>
+              <TouchableOpacity 
+                onPress={() => setPriorityPopUpNotif(null)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Text style={styles.closeBtnText}>✕</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.priorityContentBox}>
               <Text style={styles.priorityHeadline}>{priorityPopUpNotif?.title}</Text>
-              <Text style={styles.priorityBody}>{priorityPopUpNotif?.message}</Text>
+              <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
+                <Text style={styles.priorityBody}>{priorityPopUpNotif?.message}</Text>
+              </ScrollView>
             </View>
 
             <View style={styles.priorityMetaRow}>
@@ -2608,16 +2728,23 @@ function MainAppContent() {
             >
               <Text style={styles.goldBtnText}>Acknowledge & Confirm</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </Pressable>
+        </TouchableOpacity>
       </Modal>
 
       {/* ========================================================================= */}
-      {/* MODAL 6: DEDICATED MESSAGE BOX MODAL (FOR ALL CLICKED NOTIFICATIONS) */}
+      {/* MODAL 6: DEDICATED MESSAGE BOX MODAL (ONLY WHEN NOTIFICATION DRAWER IS CLOSED) */}
       {/* ========================================================================= */}
-      <Modal visible={!!selectedDetailNotif} transparent animationType="fade">
-        <View style={styles.modalOverlayCenter}>
-          <View style={styles.msgBoxCard}>
+      <Modal visible={!showNotificationModal && !!selectedDetailNotif} transparent animationType="fade" statusBarTranslucent>
+        <TouchableOpacity 
+          style={styles.modalOverlayCenter}
+          activeOpacity={1}
+          onPress={() => setSelectedDetailNotif(null)}
+        >
+          <Pressable 
+            style={styles.msgBoxCard}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.msgBoxHeader}>
               <View style={styles.msgBoxIconBadge}>
                 <Text style={{ fontSize: 18 }}>✉️</Text>
@@ -2626,12 +2753,15 @@ function MainAppContent() {
                 <Text style={styles.msgBoxSubtitle}>OFFICIAL DISPATCH • {selectedDetailNotif?.type?.toUpperCase()}</Text>
                 <Text style={styles.msgBoxMainTitle}>Executive Communication Box</Text>
               </View>
-              <TouchableOpacity onPress={() => setSelectedDetailNotif(null)}>
+              <TouchableOpacity 
+                onPress={() => setSelectedDetailNotif(null)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Text style={styles.closeBtnText}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.msgBoxBodyScroll}>
+            <ScrollView style={styles.msgBoxBodyScroll} showsVerticalScrollIndicator={false}>
               <View style={styles.msgBoxInnerContent}>
                 <Text style={styles.msgDetailHeadline}>{selectedDetailNotif?.title}</Text>
                 <Text style={styles.msgDetailText}>{selectedDetailNotif?.message}</Text>
@@ -2665,8 +2795,8 @@ function MainAppContent() {
             >
               <Text style={styles.goldBtnText}>Close Message Box</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </Pressable>
+        </TouchableOpacity>
       </Modal>
 
       {/* ========================================================================= */}
@@ -3974,6 +4104,62 @@ function MainAppContent() {
         }}
       />
 
+      {/* In-App Floating Heads-Up Notification Banner (Toast) */}
+      {inAppToast && (
+        <View 
+          style={[
+            styles.inAppToastContainer,
+            { top: Math.max(insets.top + 8, Platform.OS === 'android' ? 36 : 16) }
+          ]}
+          pointerEvents="box-none"
+        >
+          <TouchableOpacity
+            style={[
+              styles.inAppToastCard,
+              inAppToast.type === 'alert' && { borderColor: '#F0B90B' },
+              inAppToast.type === 'success' && { borderColor: '#0ECB81' }
+            ]}
+            activeOpacity={0.9}
+            onPress={() => {
+              const notif = inAppToast;
+              setInAppToast(null);
+              setShowNotificationModal(false);
+              setSelectedDetailNotif(notif);
+              if (!notif.isRead) {
+                mobileApi.markNotificationRead(notif.id);
+                setNotifications(prev => prev.map(item => item.id === notif.id ? { ...item, isRead: true } : item));
+                setUnreadCount(c => Math.max(0, c - 1));
+              }
+            }}
+          >
+            <View style={[
+              styles.inAppToastIcon,
+              inAppToast.type === 'alert' && { backgroundColor: 'rgba(240,185,11,0.2)' },
+              inAppToast.type === 'success' && { backgroundColor: 'rgba(14,203,129,0.2)' }
+            ]}>
+              <Text style={{ fontSize: 16 }}>{inAppToast.type === 'alert' ? '⚠️' : '🛡️'}</Text>
+            </View>
+            <View style={{ flex: 1, marginHorizontal: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.inAppToastTag}>HERON DISPATCH</Text>
+                <Text style={{ fontSize: 8, color: inAppToast.type === 'alert' ? '#F0B90B' : '#0ECB81', fontWeight: 'bold' }}>
+                  {inAppToast.type.toUpperCase()}
+                </Text>
+              </View>
+              <Text style={styles.inAppToastTitle} numberOfLines={1}>{inAppToast.title}</Text>
+              <Text style={styles.inAppToastMsg} numberOfLines={1}>{inAppToast.message}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.inAppToastDismiss}
+              onPress={() => setInAppToast(null)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={{ color: '#848E9C', fontSize: 14, fontWeight: 'bold' }}>✕</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Custom Luxury Alert Modal */}
       <CustomAlertModal alert={customAlert} onDismiss={hideCustomAlert} />
     </SafeAreaView>
@@ -4980,6 +5166,8 @@ const styles = StyleSheet.create({
   priorityPopUpCard: {
     width: '100%',
     maxWidth: 380,
+    maxHeight: '85%',
+    flexShrink: 1,
     backgroundColor: '#1E2329',
     borderRadius: 22,
     borderWidth: 2,
@@ -4991,6 +5179,57 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.95,
     shadowRadius: 28,
     elevation: 25,
+  },
+  // In-App Floating Notification Banner
+  inAppToastContainer: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    zIndex: 99999,
+    elevation: 35,
+  },
+  inAppToastCard: {
+    backgroundColor: '#1E2329',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#F0B90B',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.85,
+    shadowRadius: 18,
+    elevation: 20,
+  },
+  inAppToastIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(240,185,11,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inAppToastTag: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#F0B90B',
+    letterSpacing: 1.2,
+  },
+  inAppToastTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 1,
+  },
+  inAppToastMsg: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 1,
+  },
+  inAppToastDismiss: {
+    padding: 6,
+    marginLeft: 4,
   },
   priorityPopUpHeader: {
     flexDirection: 'row',

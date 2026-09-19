@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const meta = TAB_TITLES[currentTab] || TAB_TITLES.overview;
 
   return (
-    <header className="h-16 md:h-20 border-b border-[#2B313A] bg-[#181A20]/95 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-10">
+    <header className="h-16 md:h-20 border-b border-[#2B313A] bg-[#181A20]/95 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30">
       <div className="flex items-center gap-3" style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
         {/* Mobile Hamburger Menu Toggle */}
         {onOpenMobileNav && (

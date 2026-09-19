@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bell, 
   Check, 
@@ -84,6 +85,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  // Lock body scroll when modal is active to prevent overlay desync & scrolling glitches
+  useEffect(() => {
+    if (priorityPopUp || selectedNotification) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [priorityPopUp, selectedNotification]);
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -306,12 +318,28 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         </div>
       )}
 
-      {/* 1. AUTOMATIC POP-UP MODAL FOR URGENT ALERTS */}
-      {priorityPopUp && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#1E2329] border border-[#F0B90B]/50 p-6 sm:p-8 shadow-2xl shadow-black">
+      {/* Mobile Backdrop for Notification Dropdown */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* 1. AUTOMATIC POP-UP MODAL FOR URGENT ALERTS (Portaled to document.body with z-[999999]) */}
+      {priorityPopUp && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPriorityPopUp(null);
+          }}
+        >
+          <div 
+            className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#1E2329] border border-[#F0B90B]/50 p-5 sm:p-8 shadow-2xl shadow-black max-h-[85vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header Crest */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#2B313A]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#2B313A] shrink-0">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-lg ${
                   priorityPopUp.type === 'alert' || priorityPopUp.type === 'warning'
@@ -338,15 +366,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               </div>
 
               <button
+                type="button"
                 onClick={() => setPriorityPopUp(null)}
                 className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all cursor-pointer"
+                aria-label="Close alert"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Message Body Box */}
-            <div className="py-6 space-y-4">
+            {/* Message Body Box - Scrollable */}
+            <div className="py-4 sm:py-6 space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar">
               <div className="p-4 rounded-xl bg-[#181A20] border border-[#2B313A]">
                 <h4 className="text-sm font-bold text-[#EAECEF] mb-2 font-sans tracking-tight">
                   {priorityPopUp.title}
@@ -370,7 +400,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
             </div>
 
             {/* Actions */}
-            <div className="pt-4 border-t border-[#2B313A] flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#2B313A] flex items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setPriorityPopUp(null)}
@@ -388,15 +418,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* 2. DEDICATED MESSAGE BOX MODAL */}
-      {selectedNotification && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 sm:p-8 shadow-2xl shadow-black">
+      {/* 2. DEDICATED MESSAGE BOX MODAL (Portaled to document.body with z-[999999]) */}
+      {selectedNotification && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedNotification(null);
+          }}
+        >
+          <div 
+            className="relative w-full max-w-lg mx-auto my-auto rounded-2xl bg-[#1E2329] border border-[#2B313A] p-5 sm:p-8 shadow-2xl shadow-black max-h-[85vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#2B313A]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#2B313A] shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B]">
                   <Mail className="w-5 h-5 text-[#F0B90B]" />
@@ -415,15 +454,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               </div>
 
               <button
+                type="button"
                 onClick={() => setSelectedNotification(null)}
                 className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all cursor-pointer"
+                aria-label="Close message"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Message Body */}
-            <div className="py-6 space-y-4">
+            <div className="py-4 sm:py-6 space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar">
               <div className="p-5 rounded-xl bg-[#181A20] border border-[#2B313A] space-y-3">
                 <h4 className="text-base font-sans font-bold text-[#EAECEF] leading-snug tracking-tight">
                   {selectedNotification.title}
@@ -455,7 +496,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
             </div>
 
             {/* Footer Actions */}
-            <div className="pt-4 border-t border-[#2B313A] flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#2B313A] flex items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
@@ -465,7 +506,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
