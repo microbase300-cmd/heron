@@ -110,23 +110,40 @@ export default function Home() {
       {/* Strategy Rail */}
       <section className="section section-dark">
         <div className="container strategy-rail">
-          <Reveal>
-            <div className="strategy-art">
-              <img
-                src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
-                alt="Real Investment Portfolio Architecture"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: '20px',
-                  filter: 'brightness(0.85) contrast(1.1)',
-                }}
-              />
+          <Reveal className="strategy-reveal-col">
+            <div className="strategy-art strategy-video-card">
+              <div className="strategy-video-container">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/1YyAzVmP9xQ?rel=0&modestbranding=1"
+                  title="Cryptocurrency Explained — What is Cryptocurrency?"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="lazy"
+                  className="strategy-video-iframe"
+                />
+              </div>
+
+              <div className="strategy-video-info">
+                <div className="strategy-video-pill">
+                  <span className="strategy-video-dot" />
+                  <span>Digital Asset Intelligence</span>
+                </div>
+                <h3 className="strategy-video-heading">
+                  Cryptocurrency Architecture & Distributed Consensus
+                </h3>
+                <p className="strategy-video-text">
+                  A comprehensive overview of how cryptographic currencies, decentralized ledgers, and automated execution mechanisms redefine global digital wealth.
+                </p>
+                <div className="strategy-video-tags">
+                  <span className="strategy-tag">Decentralized Ledgers</span>
+                  <span className="strategy-tag">Cold Custody</span>
+                  <span className="strategy-tag">Automated Yield</span>
+                </div>
+              </div>
             </div>
           </Reveal>
 
-          <Reveal className="delay-1">
+          <Reveal className="strategy-reveal-col delay-1">
             <div className="strategy-copy">
               <div>
                 <div className="eyebrow">03 / investment architecture</div>
