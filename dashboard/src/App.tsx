@@ -14,6 +14,7 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AuthModal } from './components/AuthModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { IosInstallPrompt } from './components/IosInstallPrompt';
 import { LayoutDashboard, Timer, TrendingUp, ArrowDownLeft, Menu } from 'lucide-react';
 import { ExchangeRatesData, DEFAULT_EXCHANGE_RATES } from './utils/currency';
 
@@ -328,6 +329,9 @@ export const App: React.FC = () => {
 
       {/* Floating Lightweight Institutional AI Assistant */}
       <AiAssistantModal />
+
+      {/* iOS & PWA Native Smart Install Prompt */}
+      <IosInstallPrompt />
     </div>
   );
 };

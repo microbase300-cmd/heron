@@ -1,0 +1,18 @@
+{
+  "short_name": "Heron Assets",
+  "name": "Heron Assets Trustee",
+  "description": "Institutional Digital Asset Wealth & Smart Escrow Platform",
+  "icons": [
+    {
+      "src": "/heron_logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#060807",
+  "theme_color": "#060807",
+  "display": "standalone",
+  "orientation": "portrait"
+}
