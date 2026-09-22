@@ -7,14 +7,26 @@ interface ReferralsViewProps {
 }
 
 export const ReferralsView: React.FC<ReferralsViewProps> = ({ data }) => {
-  const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
-  const referralLink = data?.referralLink || 'http://localhost:5173/register?ref=HERON-8821';
+  // Dynamic origin fallback so the link matches the exact host the user is currently on
+  const rawCode = data?.referralCode || 'HERON-8821';
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://app.heronassetstrusteess.com';
+  const referralLink = data?.referralLink && !data.referralLink.includes('localhost')
+    ? data.referralLink 
+    : `${currentOrigin}/?ref=${rawCode}`;
 
-  const handleCopy = () => {
+  const handleCopyLink = () => {
     navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(rawCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
   return (
@@ -24,32 +36,65 @@ export const ReferralsView: React.FC<ReferralsViewProps> = ({ data }) => {
         <p className="text-xs text-[#848E9C] font-mono mt-0.5">Earn up to 30% instant commission on referred capital allocations across all 4 tiers.</p>
       </div>
 
-      {/* Referral Link Hero Box */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#1E2329] border border-[#2B313A] relative overflow-hidden shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <span className="text-[11px] font-mono text-[#F0B90B] uppercase tracking-widest flex items-center gap-1.5 font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-[#F0B90B]" /> Your Client Invitation Link
-            </span>
-            <div className="text-xl sm:text-2xl font-sans font-bold text-[#EAECEF] tracking-tight">
-              Share institutional investments. Receive instant wallet payouts.
+      {/* Referral Link & Unique Code Hero Box */}
+      <div className="p-6 sm:p-8 rounded-2xl bg-[#1E2329] border border-[#2B313A] relative overflow-hidden shadow-xl space-y-6">
+        <div className="space-y-2">
+          <span className="text-[11px] font-mono text-[#F0B90B] uppercase tracking-widest flex items-center gap-1.5 font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-[#F0B90B]" /> Your Sovereign Invitation Suite
+          </span>
+          <div className="text-xl sm:text-2xl font-sans font-bold text-[#EAECEF] tracking-tight">
+            Share institutional investments. Receive instant wallet payouts.
+          </div>
+          <p className="text-xs text-[#848E9C] max-w-2xl leading-relaxed">
+            When prospective investors click your referral link, the registration portal opens and automatically applies your unique code. Commissions are credited to your balance the moment their capital is confirmed.
+          </p>
+        </div>
+
+        {/* Dual Cards: Invitation Link + Unique Code */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
+          {/* 1. Full Referral Link */}
+          <div className="lg:col-span-8 p-4 rounded-xl bg-[#181A20] border border-[#2B313A] flex flex-col justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-mono uppercase text-[#848E9C] font-semibold flex items-center gap-1.5 mb-1.5">
+                <Share2 className="w-3 h-3 text-[#F0B90B]" /> Direct Invitation Link (Auto-Registration)
+              </div>
+              <div className="w-full px-3.5 py-2.5 rounded-lg bg-[#121418] border border-[#2B313A] font-mono text-xs text-[#0ECB81] truncate select-all">
+                {referralLink}
+              </div>
             </div>
-            <p className="text-xs text-[#848E9C] max-w-xl">
-              Commissions are automatically credited to your available balance the exact moment a referred investor confirms their investment.
-            </p>
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <span className="text-[11px] text-[#848E9C] font-mono hidden sm:inline">
+                Pre-fills referral code upon click
+              </span>
+              <button
+                onClick={handleCopyLink}
+                className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 shadow-md shadow-[#F0B90B]/15 active:scale-95 cursor-pointer ml-auto"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedLink ? 'Copied Link!' : 'Copy Invitation Link'}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="w-full md:w-auto shrink-0 flex flex-col sm:flex-row items-center gap-2">
-            <div className="w-full sm:w-80 px-4 py-3 rounded-xl bg-[#181A20] border border-[#2B313A] font-mono text-xs text-[#EAECEF] truncate">
-              {referralLink}
+          {/* 2. Standalone Unique Referral Code */}
+          <div className="lg:col-span-4 p-4 rounded-xl bg-[#181A20] border border-[#2B313A] flex flex-col justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-mono uppercase text-[#848E9C] font-semibold flex items-center gap-1.5 mb-1.5">
+                <ShieldCheck className="w-3 h-3 text-[#0ECB81]" /> Unique Referral Code
+              </div>
+              <div className="w-full px-3.5 py-2.5 rounded-lg bg-[#121418] border border-[#0ECB81]/40 font-mono text-sm font-bold text-[#EAECEF] tracking-wider text-center select-all truncate">
+                {rawCode}
+              </div>
             </div>
-            <button
-              onClick={handleCopy}
-              className="w-full sm:w-auto px-5 py-3 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 shadow-md shadow-[#F0B90B]/15 active:scale-95"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied Link' : 'Copy Link'}</span>
-            </button>
+            <div className="pt-1">
+              <button
+                onClick={handleCopyCode}
+                className="w-full py-2 rounded-lg bg-[#2B313A] hover:bg-[#363D47] hover:border-[#0ECB81]/40 border border-transparent text-[#EAECEF] font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+              >
+                {copiedCode ? <Check className="w-3.5 h-3.5 text-[#0ECB81]" /> : <Copy className="w-3.5 h-3.5" />}
+                <span className={copiedCode ? 'text-[#0ECB81]' : ''}>{copiedCode ? 'Copied Code!' : 'Copy Code Only'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

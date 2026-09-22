@@ -152,8 +152,9 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     }
 
     let validReferredBy: string | null = null;
-    if (referralCode) {
-      const referrer = db.getUserByReferralCode(referralCode);
+    if (referralCode && typeof referralCode === 'string' && referralCode.trim()) {
+      const cleanRef = referralCode.trim();
+      const referrer = db.getUserByReferralCode(cleanRef);
       if (referrer) {
         validReferredBy = referrer.referralCode;
       }
@@ -161,7 +162,11 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-    const generatedReferralCode = `HERON-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // Generate long unique institutional referral code (e.g. HERON-REF-9A7B3E2F41)
+    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase() + 
+                      Math.random().toString(36).substring(2, 6).toUpperCase();
+    const generatedReferralCode = `HERON-REF-${randomHex}`;
 
     const newUser: User = {
       id: `usr_${uuidv4()}`,

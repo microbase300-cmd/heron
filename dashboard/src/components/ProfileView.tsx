@@ -490,12 +490,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   <span className="text-[#EAECEF] font-semibold">{userUID}</span>
                   <button
                     onClick={() => handleCopy(userUID, 'uid')}
-                    className="p-1 text-[#848E9C] hover:text-[#F0B90B] transition-colors"
+                    className="p-1 text-[#848E9C] hover:text-[#F0B90B] transition-colors cursor-pointer"
                     title="Copy UID"
                   >
                     {copiedKey === 'uid' ? <Check className="w-3 h-3 text-[#0ECB81]" /> : <Copy className="w-3 h-3" />}
                   </button>
                 </div>
+
+                {user?.referralCode && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#F0B90B]/10 border border-[#F0B90B]/30">
+                    <span className="text-[#F0B90B] text-[11px] font-bold">REF:</span>
+                    <span className="text-[#EAECEF] font-bold tracking-wider">{user.referralCode}</span>
+                    <button
+                      onClick={() => handleCopy(user.referralCode, 'ref')}
+                      className="p-0.5 text-[#848E9C] hover:text-[#F0B90B] transition-colors cursor-pointer"
+                      title="Copy Referral Code"
+                    >
+                      {copiedKey === 'ref' ? <Check className="w-3 h-3 text-[#0ECB81]" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-1 text-[#5E6673]">
                   <span>Member Since:</span>

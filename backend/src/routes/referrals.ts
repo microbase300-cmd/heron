@@ -1,4 +1,4 @@
-﻿import { Router, Response } from 'express';
+import { Router, Response } from 'express';
 import { db, PLANS } from '../services/db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 
@@ -28,9 +28,15 @@ router.get('/', requireAuth, (req: AuthRequest, res: Response) => {
     joinedAt: u.createdAt
   }));
 
+  // Resolve client host for accurate referral link (e.g. app.heronassetstrusteess.com or localhost:5173)
+  const host = req.get('x-forwarded-host') || req.get('host') || 'app.heronassetstrusteess.com';
+  const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
+  const baseUrl = host.includes('localhost') ? `${proto}://${host}` : 'https://app.heronassetstrusteess.com';
+  const referralLink = `${baseUrl}/?ref=${user.referralCode}`;
+
   return res.json({
     referralCode: user.referralCode,
-    referralLink: `http://localhost:5173/register?ref=${user.referralCode}`,
+    referralLink,
     totalReferrals: referredUsers.length,
     totalCommissionEarned,
     tierRates,

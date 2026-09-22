@@ -1,25 +1,50 @@
-import React, { useState } from 'react';
-import { Lock, Mail, User as UserIcon, AlertCircle, KeyRound, CheckCircle2, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, Mail, User as UserIcon, AlertCircle, KeyRound, CheckCircle2, ArrowLeft, Sparkles, Check } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
+  initialReferralCode?: string;
   onSuccess: (user: User) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialReferralCode = '', onSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [registerStep, setRegisterStep] = useState<'form' | 'otp'>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [referralCode, setReferralCode] = useState(initialReferralCode);
+  const [isReferralLocked, setIsReferralLocked] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  // Auto-detect referral code from initialReferralCode or URL or sessionStorage
+  useEffect(() => {
+    let codeToUse = initialReferralCode?.trim() || '';
+    if (!codeToUse && typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refUrl = urlParams.get('ref') || urlParams.get('referral');
+        if (refUrl) {
+          codeToUse = refUrl.trim().toUpperCase();
+        } else {
+          const stored = sessionStorage.getItem('heron_pending_referral');
+          if (stored) codeToUse = stored.trim().toUpperCase();
+        }
+      } catch {}
+    }
+
+    if (codeToUse) {
+      setReferralCode(codeToUse);
+      setIsReferralLocked(true);
+      setMode('register'); // Switch to register mode automatically when referred!
+    }
+  }, [initialReferralCode, isOpen]);
 
   if (!isOpen) return null;
 
@@ -243,14 +268,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-white/50 mb-1">Referral Code (Optional)</label>
-              <input
-                type="text"
-                value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value)}
-                placeholder="e.g. HERON-8821"
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs uppercase font-mono"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-mono text-white/50">Referral Code (Optional)</label>
+                {referralCode && (
+                  <span className="text-[10px] font-mono text-[#0ECB81] flex items-center gap-1 font-bold">
+                    <Check className="w-3 h-3" /> Auto-Applied via Invite
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => {
+                    setReferralCode(e.target.value.toUpperCase());
+                    setIsReferralLocked(false);
+                  }}
+                  placeholder="e.g. HERON-REF-9A7B3E2F41"
+                  className={`w-full px-4 py-2.5 rounded-xl glass-input text-xs uppercase font-mono tracking-wider transition-all ${
+                    referralCode
+                      ? 'border-[#0ECB81]/60 bg-[#0ECB81]/5 text-[#0ECB81] font-bold focus:border-[#0ECB81]'
+                      : 'text-white'
+                  }`}
+                />
+                {referralCode && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] font-mono font-bold text-[#0ECB81] bg-[#0ECB81]/15 px-2 py-0.5 rounded-md border border-[#0ECB81]/30">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    <span>Affiliate Partner</span>
+                  </div>
+                )}
+              </div>
+              {referralCode && (
+                <p className="text-[10px] font-mono text-[#0ECB81]/90 mt-1">
+                  ✓ You are registering directly under this partner's institutional network.
+                </p>
+              )}
             </div>
 
             <button

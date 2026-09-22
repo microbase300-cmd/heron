@@ -34,10 +34,29 @@ export const App: React.FC = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [pendingReferralCode, setPendingReferralCode] = useState<string>('');
 
   // Initial load
   useEffect(() => {
     const init = async () => {
+      // Check for incoming referral code in query string (?ref=... or ?referral=...)
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refParam = urlParams.get('ref') || urlParams.get('referral');
+        if (refParam) {
+          const cleanRef = refParam.trim().toUpperCase();
+          sessionStorage.setItem('heron_pending_referral', cleanRef);
+          setPendingReferralCode(cleanRef);
+          // If the URL has a referral param, force the auth modal to open in registration mode
+          setIsAuthOpen(true);
+        } else {
+          const storedRef = sessionStorage.getItem('heron_pending_referral');
+          if (storedRef) {
+            setPendingReferralCode(storedRef);
+          }
+        }
+      } catch {}
+
       try {
         // Load plans & live forex rates
         const [pRes, ratesRes] = await Promise.all([
@@ -345,6 +364,7 @@ export const App: React.FC = () => {
 
       <AuthModal
         isOpen={isAuthOpen}
+        initialReferralCode={pendingReferralCode}
         onSuccess={handleAuthSuccess}
       />
 
