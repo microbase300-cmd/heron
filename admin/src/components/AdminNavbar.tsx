@@ -1,5 +1,4 @@
-import React from 'react';
-import { LogOut, RefreshCw, Sparkles, Headphones } from 'lucide-react';
+import { LogOut, RefreshCw, Sparkles, Headphones, Radio } from 'lucide-react';
 import { AdminUser } from '../types';
 import { AdminTab } from './AdminSidebar';
 
@@ -10,6 +9,7 @@ interface AdminNavbarProps {
   refreshing: boolean;
   onNavigateTab?: (tab: AdminTab) => void;
   waitingSupportCount?: number;
+  onlineVisitorCount?: number;
 }
 
 export const AdminNavbar: React.FC<AdminNavbarProps> = ({
@@ -19,6 +19,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
   refreshing,
   onNavigateTab,
   waitingSupportCount = 0,
+  onlineVisitorCount = 0,
 }) => {
   return (
     <header className="h-16 border-b border-[#2B313A] bg-[#181A20]/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
@@ -65,6 +66,19 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
             ) : (
               <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-pulse"></span>
             )}
+          </button>
+        )}
+
+        {/* Live Visitor Radar Button in Navbar */}
+        {onNavigateTab && (
+          <button
+            onClick={() => onNavigateTab('visitors')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0ECB81]/10 hover:bg-[#0ECB81]/20 border border-[#0ECB81]/30 text-xs font-mono text-[#0ECB81] font-bold transition-all shadow-sm"
+            title="Open Live Visitor Radar"
+          >
+            <Radio className="w-3.5 h-3.5 animate-pulse" />
+            <span className="hidden sm:inline">Radar:</span>
+            <span>{onlineVisitorCount > 0 ? `${onlineVisitorCount} Live` : 'Radar'}</span>
           </button>
         )}
 

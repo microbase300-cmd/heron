@@ -365,6 +365,21 @@ class ApiService {
       body: JSON.stringify({ text, senderName, sender: 'user' })
     });
   }
+
+  // Analytics Telemetry Tracker
+  async trackVisit(data: {
+    path?: string;
+    site?: string;
+    referrer?: string;
+    userName?: string;
+    userEmail?: string;
+    userUid?: string;
+  }): Promise<any> {
+    return this.request('/analytics/track', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
 }
 
 export const api = new ApiService();

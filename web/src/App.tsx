@@ -15,6 +15,40 @@ function ScrollToTop() {
   return null
 }
 
+function VisitorTracker() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    try {
+      const getApiBase = () => {
+        if (typeof window !== 'undefined') {
+          const host = window.location.hostname
+          if (host.includes('heronassetstrusteess.com') || host.includes('heronassetstrustees.com')) {
+            return 'https://api.heronassetstrusteess.com'
+          }
+          if (host.includes('stealthssolutions.com')) {
+            return 'https://api.stealthssolutions.com'
+          }
+        }
+        return ''
+      }
+
+      fetch(`${getApiBase()}/api/analytics/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: pathname,
+          site: 'website',
+          referrer: typeof document !== 'undefined' ? document.referrer || 'Direct' : 'Direct'
+        }),
+        keepalive: true
+      }).catch(() => {})
+    } catch {}
+  }, [pathname])
+
+  return null
+}
+
 const getDashboardUrl = (): string => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
@@ -354,6 +388,7 @@ export default function PublicLayout() {
     <>
       <CustomCursor />
       <ScrollToTop />
+      <VisitorTracker />
       <Navbar />
 
       <main>

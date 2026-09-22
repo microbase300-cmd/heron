@@ -14,6 +14,7 @@ import { DepositWalletsView } from './components/DepositWalletsView';
 import { NotificationsDeskView } from './components/NotificationsDeskView';
 import { KycComplianceDeskView } from './components/KycComplianceDeskView';
 import { LiveSupportDeskView } from './components/LiveSupportDeskView';
+import { LiveVisitorTrackerView } from './components/LiveVisitorTrackerView';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getStoredUser());
@@ -29,6 +30,7 @@ export function App() {
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
   const [pendingKycCount, setPendingKycCount] = useState<number>(0);
   const [waitingSupportCount, setWaitingSupportCount] = useState<number>(0);
+  const [onlineVisitorCount, setOnlineVisitorCount] = useState<number>(0);
 
   const prevWaitingSupportRef = useRef<number>(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -71,6 +73,7 @@ export function App() {
         tickersData,
         kycData,
         supportData,
+        visitorData,
       ] = await Promise.allSettled([
         adminApi.getMetrics(),
         adminApi.getUsers(),
@@ -80,6 +83,7 @@ export function App() {
         adminApi.getMarketTickers(),
         adminApi.getKycSubmissions('pending'),
         adminApi.getSupportChats(),
+        adminApi.getVisitorTelemetry({ limit: 5 }),
       ]);
 
       if (metricsData.status === 'fulfilled') setMetrics(metricsData.value);
@@ -104,6 +108,10 @@ export function App() {
         }
         prevWaitingSupportRef.current = count;
         setWaitingSupportCount(count);
+      }
+
+      if (visitorData.status === 'fulfilled' && visitorData.value?.analytics) {
+        setOnlineVisitorCount(visitorData.value.analytics.onlineCount || 0);
       }
     } catch (err) {
       console.warn('Data sync notice:', err);
@@ -148,6 +156,7 @@ export function App() {
         refreshing={refreshing}
         onNavigateTab={(tab) => setCurrentTab(tab)}
         waitingSupportCount={waitingSupportCount}
+        onlineVisitorCount={onlineVisitorCount}
       />
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -200,6 +209,10 @@ export function App() {
               <KycComplianceDeskView
                 onRefresh={fetchAllData}
               />
+            )}
+
+            {currentTab === 'visitors' && (
+              <LiveVisitorTrackerView />
             )}
 
             {currentTab === 'live_support' && (

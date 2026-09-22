@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, SupportChatSession, SupportMessage, SupportChatStatus } from '../types';
+import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, SupportChatSession, SupportMessage, SupportChatStatus, VisitorLog, VisitorAnalyticsSummary } from '../types';
 import { pushService } from './pushNotificationService';
 
 export const DEFAULT_DEPOSIT_ADDRESSES: Record<string, DepositAddressConfig> = {
@@ -110,6 +110,7 @@ interface DatabaseSchema {
   kycSubmissions: KycSubmission[];
   supportChats: SupportChatSession[];
   supportMessages: SupportMessage[];
+  visitorLogs: VisitorLog[];
 }
 
 const DB_FILE = path.join(__dirname, '../../data/db.json');
@@ -138,6 +139,7 @@ class DatabaseService {
           kycSubmissions: parsed.kycSubmissions || [],
           supportChats: parsed.supportChats || [],
           supportMessages: parsed.supportMessages || [],
+          visitorLogs: parsed.visitorLogs || [],
         };
         this.ensureDefaults(schema);
         return schema;
@@ -213,6 +215,7 @@ class DatabaseService {
 
     // 7. Ensure security audit logs initialized for existing users
     const nowTs = Date.now();
+    if (!schema.visitorLogs) schema.visitorLogs = [];
     schema.users.forEach((u, i) => {
       if (!u.securityLogs || u.securityLogs.length === 0) {
         u.securityLogs = [
@@ -314,7 +317,8 @@ class DatabaseService {
       depositAddresses: DEFAULT_DEPOSIT_ADDRESSES,
       kycSubmissions: [],
       supportChats: [],
-      supportMessages: []
+      supportMessages: [],
+      visitorLogs: []
     };
   }
 
@@ -1199,6 +1203,156 @@ class DatabaseService {
     } else {
       chat.unreadByUser = 0;
     }
+    this.save();
+    return true;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                         REAL-TIME VISITOR TRACKING                         */
+  /* -------------------------------------------------------------------------- */
+
+  recordVisitor(data: Omit<VisitorLog, 'id' | 'visitedAt' | 'lastActiveAt' | 'visitCount'>): VisitorLog {
+    if (!this.data.visitorLogs) {
+      this.data.visitorLogs = [];
+    }
+
+    const now = new Date().toISOString();
+    // Check if same IP visited recently (within last 24h)
+    const existingIndex = this.data.visitorLogs.findIndex(
+      v => v.ip === data.ip && (Date.now() - new Date(v.lastActiveAt).getTime()) < 24 * 3600 * 1000
+    );
+
+    let record: VisitorLog;
+
+    if (existingIndex !== -1) {
+      const existing = this.data.visitorLogs[existingIndex];
+      record = {
+        ...existing,
+        ...data,
+        country: data.country || existing.country,
+        countryCode: data.countryCode || existing.countryCode,
+        city: data.city || existing.city,
+        isp: data.isp || existing.isp,
+        lastActiveAt: now,
+        path: data.path || existing.path,
+        visitCount: existing.visitCount + 1,
+        userName: data.userName || existing.userName,
+        userEmail: data.userEmail || existing.userEmail,
+        userUid: data.userUid || existing.userUid
+      };
+      // Move to top of the list
+      this.data.visitorLogs.splice(existingIndex, 1);
+      this.data.visitorLogs.unshift(record);
+    } else {
+      record = {
+        id: `vis_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        ...data,
+        visitedAt: now,
+        lastActiveAt: now,
+        visitCount: 1
+      };
+      this.data.visitorLogs.unshift(record);
+    }
+
+    // Keep database performant by capping logs at 2,000 entries
+    if (this.data.visitorLogs.length > 2000) {
+      this.data.visitorLogs = this.data.visitorLogs.slice(0, 2000);
+    }
+
+    this.save();
+    return record;
+  }
+
+  getVisitorLogs(limit = 100, search?: string, filter?: string): VisitorLog[] {
+    let list = this.data.visitorLogs || [];
+
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(v =>
+        v.ip.toLowerCase().includes(q) ||
+        v.country.toLowerCase().includes(q) ||
+        v.isp.toLowerCase().includes(q) ||
+        (v.city && v.city.toLowerCase().includes(q)) ||
+        (v.browser && v.browser.toLowerCase().includes(q)) ||
+        (v.os && v.os.toLowerCase().includes(q)) ||
+        (v.userName && v.userName.toLowerCase().includes(q))
+      );
+    }
+
+    const now = Date.now();
+    if (filter === 'online') {
+      list = list.filter(v => (now - new Date(v.lastActiveAt).getTime()) < 3 * 60 * 1000);
+    } else if (filter === 'desktop') {
+      list = list.filter(v => v.device === 'Desktop');
+    } else if (filter === 'mobile') {
+      list = list.filter(v => v.device === 'Mobile' || v.device === 'Tablet');
+    }
+
+    return list.slice(0, limit);
+  }
+
+  getVisitorAnalytics(): VisitorAnalyticsSummary {
+    const list = this.data.visitorLogs || [];
+    const now = Date.now();
+
+    let onlineCount = 0;
+    let totalVisits = 0;
+    const uniqueIps = new Set<string>();
+    const deviceCounts = { desktop: 0, mobile: 0, tablet: 0 };
+    const countryMap = new Map<string, { country: string; countryCode: string; count: number }>();
+    const ispMap = new Map<string, number>();
+
+    for (const v of list) {
+      uniqueIps.add(v.ip);
+      totalVisits += v.visitCount || 1;
+
+      // Online status (active within last 3 minutes)
+      const isOnline = (now - new Date(v.lastActiveAt).getTime()) < 3 * 60 * 1000;
+      if (isOnline) {
+        onlineCount++;
+      }
+
+      // Device stats
+      if (v.device === 'Desktop') deviceCounts.desktop++;
+      else if (v.device === 'Mobile') deviceCounts.mobile++;
+      else if (v.device === 'Tablet') deviceCounts.tablet++;
+
+      // Country stats
+      const cKey = v.countryCode || 'UN';
+      const cName = v.country || 'Unknown Country';
+      const existingCountry = countryMap.get(cKey);
+      if (existingCountry) {
+        existingCountry.count++;
+      } else {
+        countryMap.set(cKey, { country: cName, countryCode: cKey, count: 1 });
+      }
+
+      // ISP stats
+      const ispName = v.isp || 'Standard ISP';
+      ispMap.set(ispName, (ispMap.get(ispName) || 0) + 1);
+    }
+
+    const topCountries = Array.from(countryMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const topIsps = Array.from(ispMap.entries())
+      .map(([isp, count]) => ({ isp, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    return {
+      onlineCount,
+      totalUniqueVisitors: uniqueIps.size,
+      totalVisits,
+      deviceStats: deviceCounts,
+      topCountries,
+      topIsps
+    };
+  }
+
+  clearVisitorLogs(): boolean {
+    this.data.visitorLogs = [];
     this.save();
     return true;
   }

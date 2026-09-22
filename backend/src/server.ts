@@ -12,6 +12,7 @@ import notificationsRoutes from './routes/notifications';
 import kycRoutes from './routes/kyc';
 import assistantRoutes from './routes/assistant';
 import supportRoutes from './routes/support';
+import analyticsRoutes from './routes/analytics';
 import { dbPool } from './db';
 import { startInvestmentEngine } from './services/investmentEngine';
 
@@ -58,6 +59,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/kyc', kycRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 import path from 'path';
 

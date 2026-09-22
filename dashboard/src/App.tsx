@@ -64,6 +64,20 @@ export const App: React.FC = () => {
     init();
   }, []);
 
+  // Real-time visitor tracking beacon
+  useEffect(() => {
+    try {
+      api.trackVisit({
+        path: `/dashboard/${currentTab}`,
+        site: 'dashboard',
+        referrer: typeof document !== 'undefined' ? document.referrer || 'Direct' : 'Direct',
+        userName: user?.name,
+        userEmail: user?.email,
+        userUid: user?.uid
+      }).catch(() => {});
+    } catch {}
+  }, [currentTab, user]);
+
   const userRef = useRef<User | null>(user);
   userRef.current = user;
 

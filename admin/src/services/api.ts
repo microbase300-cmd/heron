@@ -12,6 +12,8 @@ import {
   KycStatus,
   SupportChatSession,
   SupportMessage,
+  VisitorLog,
+  VisitorAnalyticsSummary,
 } from '../types';
 
 const getAdminApiBase = (): string => {
@@ -335,6 +337,20 @@ class AdminApiService {
     return this.request(`/support/admin/chat/${chatId}/read`, {
       method: 'POST'
     });
+  }
+
+  // Live Visitor Telemetry
+  public async getVisitorTelemetry(params?: { limit?: number; search?: string; filter?: string }): Promise<{ success: boolean; analytics: VisitorAnalyticsSummary; visitors: VisitorLog[] }> {
+    const sp = new URLSearchParams();
+    if (params?.limit) sp.append('limit', String(params.limit));
+    if (params?.search) sp.append('search', params.search);
+    if (params?.filter) sp.append('filter', params.filter);
+    const query = sp.toString() ? `?${sp.toString()}` : '';
+    return this.request(`/analytics/visitors${query}`);
+  }
+
+  public async clearVisitorHistory(): Promise<{ success: boolean; message: string }> {
+    return this.request('/analytics/visitors', { method: 'DELETE' });
   }
 }
 

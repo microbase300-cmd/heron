@@ -253,3 +253,42 @@ export interface SupportChatSession {
   updatedAt: string;
 }
 
+export interface VisitorLog {
+  id: string;
+  ip: string;
+  country: string;
+  countryCode: string;
+  city?: string;
+  region?: string;
+  isp: string;
+  org?: string;
+  asn?: string;
+  device: 'Desktop' | 'Mobile' | 'Tablet' | 'Unknown';
+  deviceModel?: string;
+  browser: string;
+  os: string;
+  path: string;
+  site: 'website' | 'dashboard' | 'other';
+  referrer: string;
+  userAgent?: string;
+  visitedAt: string;
+  lastActiveAt: string;
+  visitCount: number;
+  userName?: string;
+  userEmail?: string;
+  userUid?: string;
+}
+
+export interface VisitorAnalyticsSummary {
+  onlineCount: number;
+  totalUniqueVisitors: number;
+  totalVisits: number;
+  deviceStats: {
+    desktop: number;
+    mobile: number;
+    tablet: number;
+  };
+  topCountries: { country: string; countryCode: string; count: number }[];
+  topIsps: { isp: string; count: number }[];
+}
+
