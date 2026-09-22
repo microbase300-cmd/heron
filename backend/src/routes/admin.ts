@@ -1,5 +1,7 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
 import { db } from '../services/db';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { PlanId, Transaction } from '../types';
@@ -624,14 +626,62 @@ router.post('/notifications', (req: AuthRequest, res: Response) => {
   }
 });
 
-// 16. DELETE /api/admin/notifications/:id - Delete Notification
-router.delete('/notifications/:id', (req: AuthRequest, res: Response) => {
+// 17. GET /api/admin/inbox - Read Incoming Support & Desk Mailboxes
+router.get('/inbox', (_req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    db.deleteNotification(id);
-    res.json({ message: 'Notification deleted successfully.', id });
+    const mailboxes = [
+      { name: 'support@heronassetstrusteess.com', dirs: ['/home/support/Maildir/new', '/home/support/Maildir/cur'] },
+      { name: 'desk@heronassetstrusteess.com', dirs: ['/home/desk/Maildir/new', '/home/desk/Maildir/cur'] }
+    ];
+
+    const messages: any[] = [];
+
+    for (const m of mailboxes) {
+      for (const d of m.dirs) {
+        if (!fs.existsSync(d)) continue;
+        const files = fs.readdirSync(d);
+        for (const file of files) {
+          try {
+            const filePath = path.join(d, file);
+            const content = fs.readFileSync(filePath, 'utf-8');
+            
+            // Basic parsing of RFC 822 / 2822 email headers
+            const subjectMatch = content.match(/^Subject:\s*(.*)$/mi);
+            const fromMatch = content.match(/^From:\s*(.*)$/mi);
+            const toMatch = content.match(/^To:\s*(.*)$/mi);
+            const dateMatch = content.match(/^Date:\s*(.*)$/mi);
+            
+            // Extract body (after double newline)
+            const parts = content.split(/\r?\n\r?\n/);
+            const body = parts.slice(1).join('\n\n').trim();
+
+            messages.push({
+              id: file,
+              mailbox: m.name,
+              subject: subjectMatch ? subjectMatch[1].trim() : 'No Subject',
+              from: fromMatch ? fromMatch[1].trim() : 'Unknown',
+              to: toMatch ? toMatch[1].trim() : m.name,
+              date: dateMatch ? dateMatch[1].trim() : new Date().toISOString(),
+              body: body.length > 2000 ? body.substring(0, 2000) + '...' : body,
+              receivedAt: fs.statSync(filePath).mtime
+            });
+          } catch {
+            // skip malformed file
+          }
+        }
+      }
+    }
+
+    // Sort newest first
+    messages.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+
+    res.json({
+      count: messages.length,
+      mailboxes: ['support@heronassetstrusteess.com', 'desk@heronassetstrusteess.com'],
+      messages
+    });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to delete notification.' });
+    res.status(500).json({ error: 'Failed to read server mailboxes.', details: err.message });
   }
 });
 

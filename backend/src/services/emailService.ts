@@ -20,7 +20,17 @@ class EmailService {
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
-    if (host && user && pass) {
+    if (host === '127.0.0.1' || host === 'localhost') {
+      this.transporter = nodemailer.createTransport({
+        host: '127.0.0.1',
+        port: port || 25,
+        secure: false,
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      console.log(`✉️ [Email Service] Local Postfix SMTP Configured (127.0.0.1:${port || 25})`);
+    } else if (host && user && pass) {
       this.transporter = nodemailer.createTransport({
         host,
         port,
@@ -49,7 +59,7 @@ class EmailService {
       ? 'Capital Withdrawal Authorization'
       : 'Security Authorization Code';
 
-    const fromAddress = process.env.SMTP_FROM || 'Heron Assets Trustee <security@heronassetstrusteess.com>';
+    const fromAddress = process.env.SMTP_FROM || 'Heron Assets Trustee <support@heronassetstrusteess.com>';
 
     const htmlContent = `
       <div style="background-color: #0d0f0e; padding: 40px 20px; font-family: 'Helvetica Neue', Arial, sans-serif; color: #EAECEF;">
@@ -77,7 +87,7 @@ class EmailService {
 
           <div style="border-top: 1px solid #2B313A; pt: 20px; padding-top: 20px; text-align: center;">
             <p style="margin: 0; font-size: 12px; color: #848E9C;">
-              If you did not initiate this action, please contact your Security Trustee immediately.
+              If you did not initiate this action, please contact your Security Trustee immediately at support@heronassetstrusteess.com.
             </p>
             <p style="margin: 8px 0 0 0; font-size: 11px; color: #474D57;">
               © 2026 Heron Assets Trustee Platform. All rights reserved.
@@ -96,6 +106,8 @@ class EmailService {
     try {
       await this.transporter.sendMail({
         from: fromAddress,
+        sender: 'support@heronassetstrusteess.com',
+        replyTo: 'support@heronassetstrusteess.com',
         to,
         subject: `[Heron Trustee] ${code} is your ${title}`,
         html: htmlContent,
