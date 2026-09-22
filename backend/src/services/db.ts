@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus } from '../types';
+import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, SupportChatSession, SupportMessage, SupportChatStatus } from '../types';
 import { pushService } from './pushNotificationService';
 
 export const DEFAULT_DEPOSIT_ADDRESSES: Record<string, DepositAddressConfig> = {
@@ -108,6 +108,8 @@ interface DatabaseSchema {
   notifications: NotificationMessage[];
   depositAddresses: Record<string, DepositAddressConfig>;
   kycSubmissions: KycSubmission[];
+  supportChats: SupportChatSession[];
+  supportMessages: SupportMessage[];
 }
 
 const DB_FILE = path.join(__dirname, '../../data/db.json');
@@ -134,6 +136,8 @@ class DatabaseService {
           notifications: parsed.notifications || [],
           depositAddresses: parsed.depositAddresses || DEFAULT_DEPOSIT_ADDRESSES,
           kycSubmissions: parsed.kycSubmissions || [],
+          supportChats: parsed.supportChats || [],
+          supportMessages: parsed.supportMessages || [],
         };
         this.ensureDefaults(schema);
         return schema;
@@ -245,6 +249,14 @@ class DatabaseService {
       schema.kycSubmissions = [];
     }
 
+    // 8. Ensure Support Chats & Messages initialized
+    if (!schema.supportChats) {
+      schema.supportChats = [];
+    }
+    if (!schema.supportMessages) {
+      schema.supportMessages = [];
+    }
+
     this.save(schema);
   }
 
@@ -300,7 +312,9 @@ class DatabaseService {
         }
       ],
       depositAddresses: DEFAULT_DEPOSIT_ADDRESSES,
-      kycSubmissions: []
+      kycSubmissions: [],
+      supportChats: [],
+      supportMessages: []
     };
   }
 
@@ -987,6 +1001,206 @@ class DatabaseService {
 
     this.save();
     return tx;
+  }
+
+  // --- Support Live Chat System ---
+  createOrGetSupportChat(params: {
+    sessionId?: string;
+    userId?: string | null;
+    userName: string;
+    userEmail: string;
+    userUid?: string;
+    userBalance?: number;
+    initialMessage?: string;
+  }): { chat: SupportChatSession; isNew: boolean } {
+    if (!this.data.supportChats) this.data.supportChats = [];
+    if (!this.data.supportMessages) this.data.supportMessages = [];
+
+    let chat: SupportChatSession | undefined;
+    if (params.sessionId) {
+      chat = this.data.supportChats.find(c => c.id === params.sessionId && c.status !== 'closed');
+    }
+    if (!chat && params.userId) {
+      chat = this.data.supportChats.find(c => c.userId === params.userId && c.status !== 'closed' && c.status !== 'resolved');
+    }
+    if (!chat && params.userEmail) {
+      chat = this.data.supportChats.find(c => c.userEmail.toLowerCase() === params.userEmail.toLowerCase() && c.status !== 'closed' && c.status !== 'resolved');
+    }
+
+    const now = new Date().toISOString();
+    let isNew = false;
+
+    if (!chat) {
+      isNew = true;
+      const newChatId = params.sessionId || `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      chat = {
+        id: newChatId,
+        userId: params.userId || null,
+        userName: params.userName || 'Institutional Investor',
+        userEmail: params.userEmail || 'investor@heronassetstrusteess.com',
+        userUid: params.userUid,
+        userBalance: params.userBalance ?? 0,
+        status: 'waiting_agent',
+        assignedAgentName: 'Institutional Support Desk',
+        lastMessageText: params.initialMessage || 'Live representative requested.',
+        lastMessageSender: 'user',
+        lastMessageAt: now,
+        unreadByAdmin: 1,
+        unreadByUser: 0,
+        createdAt: now,
+        updatedAt: now
+      };
+      this.data.supportChats.unshift(chat);
+
+      this.data.supportMessages.push({
+        id: `msg_sys_${Date.now()}`,
+        chatId: chat.id,
+        sender: 'system',
+        senderName: 'System Protocol',
+        text: 'Live session connected. An Institutional Representative has been notified and will join shortly.',
+        timestamp: now,
+        isRead: true
+      });
+
+      if (params.initialMessage) {
+        this.data.supportMessages.push({
+          id: `msg_usr_${Date.now() + 1}`,
+          chatId: chat.id,
+          sender: 'user',
+          senderName: params.userName,
+          text: params.initialMessage,
+          timestamp: now,
+          isRead: false
+        });
+      }
+    } else {
+      if (chat.status === 'resolved') {
+        chat.status = 'waiting_agent';
+      }
+      chat.updatedAt = now;
+      if (params.userName) chat.userName = params.userName;
+      if (params.userBalance !== undefined) chat.userBalance = params.userBalance;
+      if (params.userUid) chat.userUid = params.userUid;
+      if (params.initialMessage) {
+        chat.lastMessageText = params.initialMessage;
+        chat.lastMessageSender = 'user';
+        chat.lastMessageAt = now;
+        chat.unreadByAdmin += 1;
+        this.data.supportMessages.push({
+          id: `msg_usr_${Date.now()}`,
+          chatId: chat.id,
+          sender: 'user',
+          senderName: params.userName,
+          text: params.initialMessage,
+          timestamp: now,
+          isRead: false
+        });
+      }
+    }
+
+    this.save();
+    return { chat, isNew };
+  }
+
+  addSupportMessage(
+    chatId: string,
+    sender: 'user' | 'agent' | 'system',
+    senderName: string,
+    text: string
+  ): SupportMessage | null {
+    if (!this.data.supportChats) this.data.supportChats = [];
+    if (!this.data.supportMessages) this.data.supportMessages = [];
+
+    const chat = this.data.supportChats.find(c => c.id === chatId);
+    if (!chat) return null;
+
+    const now = new Date().toISOString();
+    const message: SupportMessage = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      chatId,
+      sender,
+      senderName,
+      text,
+      timestamp: now,
+      isRead: false
+    };
+
+    this.data.supportMessages.push(message);
+
+    chat.lastMessageText = text;
+    chat.lastMessageSender = sender;
+    chat.lastMessageAt = now;
+    chat.updatedAt = now;
+
+    if (sender === 'user') {
+      chat.unreadByAdmin += 1;
+      if (chat.status === 'resolved') {
+        chat.status = 'waiting_agent';
+      }
+    } else if (sender === 'agent') {
+      chat.unreadByUser += 1;
+      chat.status = 'active';
+      if (senderName) {
+        chat.assignedAgentName = senderName;
+      }
+    }
+
+    this.save();
+    return message;
+  }
+
+  getSupportChat(chatId: string): SupportChatSession | undefined {
+    return (this.data.supportChats || []).find(c => c.id === chatId);
+  }
+
+  getSupportMessages(chatId: string): SupportMessage[] {
+    return (this.data.supportMessages || []).filter(m => m.chatId === chatId);
+  }
+
+  getAllSupportChats(): SupportChatSession[] {
+    return (this.data.supportChats || []).slice().sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  }
+
+  updateSupportChatStatus(
+    chatId: string,
+    status: SupportChatStatus,
+    agentName?: string
+  ): SupportChatSession | null {
+    const chat = (this.data.supportChats || []).find(c => c.id === chatId);
+    if (!chat) return null;
+
+    chat.status = status;
+    chat.updatedAt = new Date().toISOString();
+    if (agentName) chat.assignedAgentName = agentName;
+
+    if (status === 'resolved' || status === 'closed') {
+      chat.unreadByAdmin = 0;
+      this.data.supportMessages.push({
+        id: `msg_sys_${Date.now()}`,
+        chatId: chat.id,
+        sender: 'system',
+        senderName: 'System Protocol',
+        text: `Support session marked as ${status}. Thank you for contacting Heron Assets Trustee.`,
+        timestamp: new Date().toISOString(),
+        isRead: true
+      });
+    }
+
+    this.save();
+    return chat;
+  }
+
+  markChatRead(chatId: string, by: 'admin' | 'user'): boolean {
+    const chat = (this.data.supportChats || []).find(c => c.id === chatId);
+    if (!chat) return false;
+
+    if (by === 'admin') {
+      chat.unreadByAdmin = 0;
+    } else {
+      chat.unreadByUser = 0;
+    }
+    this.save();
+    return true;
   }
 }
 

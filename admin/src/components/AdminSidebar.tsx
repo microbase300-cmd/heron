@@ -9,16 +9,18 @@ import {
   Wallet,
   Bell,
   UserCheck,
-  ShieldCheck
+  ShieldCheck,
+  Headphones
 } from 'lucide-react';
 
-export type AdminTab = 'metrics' | 'investor_portfolios' | 'users' | 'transactions' | 'kyc' | 'wallets' | 'notifications' | 'investments' | 'plans';
+export type AdminTab = 'metrics' | 'investor_portfolios' | 'users' | 'transactions' | 'kyc' | 'live_support' | 'wallets' | 'notifications' | 'investments' | 'plans';
 
 interface AdminSidebarProps {
   currentTab: AdminTab;
   onSelectTab: (tab: AdminTab) => void;
   pendingCount: number;
   pendingKycCount?: number;
+  waitingSupportCount?: number;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -26,8 +28,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onSelectTab,
   pendingCount,
   pendingKycCount = 0,
+  waitingSupportCount = 0,
 }) => {
-  const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number }[] = [
+  const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string }[] = [
     { id: 'metrics', label: 'Platform Executive', icon: LayoutDashboard },
     { id: 'investor_portfolios', label: 'Investor Portfolios', icon: UserCheck },
     { id: 'users', label: 'User Directory', icon: Users },
@@ -42,6 +45,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       label: 'KYC & Compliance Desk',
       icon: ShieldCheck,
       badge: pendingKycCount > 0 ? pendingKycCount : undefined,
+    },
+    {
+      id: 'live_support',
+      label: 'Live Support Desk',
+      icon: Headphones,
+      badge: waitingSupportCount > 0 ? waitingSupportCount : undefined,
+      badgeColor: 'bg-[#F6465D]/20 text-[#F6465D] border-[#F6465D]/40',
     },
     { id: 'wallets', label: 'Deposit Wallets', icon: Wallet },
     { id: 'notifications', label: 'Broadcasts & Messages', icon: Bell },
@@ -73,7 +83,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </div>
 
                 {item.badge !== undefined && (
-                  <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F0B90B]/20 text-[#F0B90B] border border-[#F0B90B]/40">
+                  <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                    item.badgeColor ? `${item.badgeColor} animate-pulse` : 'bg-[#F0B90B]/20 text-[#F0B90B] border-[#F0B90B]/40'
+                  }`}>
                     {item.badge}
                   </span>
                 )}

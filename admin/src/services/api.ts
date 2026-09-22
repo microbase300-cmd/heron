@@ -10,6 +10,8 @@ import {
   NotificationMessage,
   KycSubmission,
   KycStatus,
+  SupportChatSession,
+  SupportMessage,
 } from '../types';
 
 const getAdminApiBase = (): string => {
@@ -303,6 +305,35 @@ class AdminApiService {
   public async releaseTransactionKycHold(txId: string): Promise<{ message: string; transaction: Transaction }> {
     return this.request<{ message: string; transaction: Transaction }>(`/kyc/admin/transactions/${txId}/release-kyc`, {
       method: 'POST',
+    });
+  }
+
+  // Support Live Desk
+  public async getSupportChats(): Promise<{ chats: SupportChatSession[]; metrics: { total: number; waitingCount: number; activeCount: number } }> {
+    return this.request('/support/admin/chats');
+  }
+
+  public async getSupportChatDetails(chatId: string): Promise<{ chat: SupportChatSession; messages: SupportMessage[] }> {
+    return this.request(`/support/chat/${chatId}`);
+  }
+
+  public async sendSupportReply(chatId: string, text: string, agentName?: string): Promise<{ success: boolean; message: SupportMessage; chat: SupportChatSession }> {
+    return this.request(`/support/admin/chat/${chatId}/message`, {
+      method: 'POST',
+      body: JSON.stringify({ text, agentName })
+    });
+  }
+
+  public async updateSupportChatStatus(chatId: string, status: string, agentName?: string): Promise<{ success: boolean; chat: SupportChatSession }> {
+    return this.request(`/support/admin/chat/${chatId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, agentName })
+    });
+  }
+
+  public async markSupportChatRead(chatId: string): Promise<{ success: boolean }> {
+    return this.request(`/support/admin/chat/${chatId}/read`, {
+      method: 'POST'
     });
   }
 }

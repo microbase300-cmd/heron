@@ -119,6 +119,70 @@ class EmailService {
       return false;
     }
   }
+
+  /**
+   * Dispatches instant notification to admin when live chat is initiated
+   */
+  public async sendLiveChatAlertEmail(params: {
+    to?: string;
+    userName: string;
+    userEmail: string;
+    userBalance?: number;
+    initialMessage?: string;
+    chatId: string;
+  }): Promise<boolean> {
+    const adminEmail = params.to || process.env.ADMIN_ALERT_EMAIL || 'support@heronassetstrusteess.com';
+    const fromAddress = process.env.SMTP_FROM || 'Heron Support <support@heronassetstrusteess.com>';
+
+    const htmlContent = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #181A20; padding: 30px; color: #EAECEF;">
+        <div style="max-width: 580px; margin: 0 auto; background-color: #1E2329; border: 1px solid #F0B90B; border-radius: 16px; padding: 32px;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #F0B90B; font-size: 20px; font-weight: 700;">🚨 Live Support Request Alert</h2>
+          </div>
+          <p style="font-size: 14px; line-height: 1.6; color: #EAECEF; margin-bottom: 16px;">
+            An investor has requested an immediate conversation with a live human representative on Heron Assets Trustee.
+          </p>
+
+          <div style="background-color: #181A20; border: 1px solid #2B313A; border-radius: 10px; padding: 16px; margin-bottom: 20px; font-size: 13px;">
+            <div style="margin-bottom: 8px;"><strong>Investor:</strong> ${params.userName}</div>
+            <div style="margin-bottom: 8px;"><strong>Email:</strong> ${params.userEmail}</div>
+            <div style="margin-bottom: 8px;"><strong>Account Balance:</strong> $${(params.userBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</div>
+            <div><strong>Initial Message:</strong> "${params.initialMessage || 'Client is waiting for a live agent...'}"</div>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 20px;">
+            <a href="https://admin.heronassetstrusteess.com" style="background-color: #F0B90B; color: #181A20; padding: 12px 28px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block; font-size: 14px;">
+              Open Admin Support Desk →
+            </a>
+          </div>
+
+          <p style="margin: 0; font-size: 11px; color: #848E9C; text-align: center;">
+            Chat Session ID: ${params.chatId} • Heron Assets Institutional Desk
+          </p>
+        </div>
+      </div>
+    `;
+
+    if (!this.transporter) {
+      console.log(`📧 [Real Email Simulation] Live Chat Alert to ${adminEmail} for ${params.userName} (${params.userEmail})`);
+      return true;
+    }
+
+    try {
+      await this.transporter.sendMail({
+        from: fromAddress,
+        to: adminEmail,
+        subject: `🚨 [URGENT LIVE CHAT] Investor ${params.userName} is waiting for a representative`,
+        html: htmlContent,
+      });
+      console.log(`✅ [Live Chat Alert Sent] Dispatched to ${adminEmail}`);
+      return true;
+    } catch (err: any) {
+      console.error(`❌ [Live Chat Alert Error]`, err.message);
+      return false;
+    }
+  }
 }
 
 export const emailService = new EmailService();

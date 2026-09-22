@@ -337,6 +337,34 @@ class ApiService {
       body: JSON.stringify({ message })
     });
   }
+
+  // Support Live Chat
+  async initiateSupportChat(params: {
+    sessionId?: string;
+    userId?: string | null;
+    userName?: string;
+    userEmail?: string;
+    userUid?: string;
+    userBalance?: number;
+    initialMessage?: string;
+  }): Promise<{ success: boolean; chat: any; messages: any[] }> {
+    return this.request('/support/initiate', {
+      method: 'POST',
+      body: JSON.stringify(params)
+    });
+  }
+
+  async getSupportChat(chatId: string, markRead = false): Promise<{ chat: any; messages: any[] }> {
+    const query = markRead ? '?markRead=user' : '';
+    return this.request(`/support/chat/${chatId}${query}`);
+  }
+
+  async sendSupportMessage(chatId: string, text: string, senderName?: string): Promise<{ success: boolean; message: any; chat: any }> {
+    return this.request(`/support/chat/${chatId}/message`, {
+      method: 'POST',
+      body: JSON.stringify({ text, senderName, sender: 'user' })
+    });
+  }
 }
 
 export const api = new ApiService();

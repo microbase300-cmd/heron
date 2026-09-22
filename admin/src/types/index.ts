@@ -180,3 +180,33 @@ export interface NotificationMessage {
   createdAt: string;
 }
 
+export type SupportChatStatus = 'waiting_agent' | 'active' | 'resolved' | 'closed';
+
+export interface SupportMessage {
+  id: string;
+  chatId: string;
+  sender: 'user' | 'agent' | 'system';
+  senderName: string;
+  text: string;
+  timestamp: string;
+  isRead?: boolean;
+}
+
+export interface SupportChatSession {
+  id: string;
+  userId?: string | null;
+  userName: string;
+  userEmail: string;
+  userUid?: string;
+  userBalance?: number;
+  status: SupportChatStatus;
+  assignedAgentName?: string;
+  lastMessageText: string;
+  lastMessageSender: 'user' | 'agent' | 'system';
+  lastMessageAt: string;
+  unreadByAdmin: number;
+  unreadByUser: number;
+  createdAt: string;
+  updatedAt: string;
+}
+

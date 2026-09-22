@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminUser, AdminMetrics, Transaction, Investment, PlanConfig, MarketTicker } from './types';
 import { adminApi } from './services/api';
 import { AdminLogin } from './components/AdminLogin';
@@ -13,6 +13,7 @@ import { PlanConfigView } from './components/PlanConfigView';
 import { DepositWalletsView } from './components/DepositWalletsView';
 import { NotificationsDeskView } from './components/NotificationsDeskView';
 import { KycComplianceDeskView } from './components/KycComplianceDeskView';
+import { LiveSupportDeskView } from './components/LiveSupportDeskView';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getStoredUser());
@@ -27,8 +28,35 @@ export function App() {
   const [plans, setPlans] = useState<PlanConfig[]>([]);
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
   const [pendingKycCount, setPendingKycCount] = useState<number>(0);
+  const [waitingSupportCount, setWaitingSupportCount] = useState<number>(0);
 
+  const prevWaitingSupportRef = useRef<number>(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // Synthesized Web Audio API Chime for Admin Live Alert
+  const playAlertSound = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.2);
+
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch {}
+  }, []);
 
   const fetchAllData = useCallback(async () => {
     if (!currentUser) return;
@@ -42,6 +70,7 @@ export function App() {
         plansData,
         tickersData,
         kycData,
+        supportData,
       ] = await Promise.allSettled([
         adminApi.getMetrics(),
         adminApi.getUsers(),
@@ -50,6 +79,7 @@ export function App() {
         adminApi.getPlans(),
         adminApi.getMarketTickers(),
         adminApi.getKycSubmissions('pending'),
+        adminApi.getSupportChats(),
       ]);
 
       if (metricsData.status === 'fulfilled') setMetrics(metricsData.value);
@@ -59,12 +89,28 @@ export function App() {
       if (plansData.status === 'fulfilled') setPlans(plansData.value);
       if (tickersData.status === 'fulfilled') setTickers(tickersData.value);
       if (kycData.status === 'fulfilled') setPendingKycCount(kycData.value.pendingCount || kycData.value.submissions?.length || 0);
+
+      if (supportData.status === 'fulfilled') {
+        const count = supportData.value.metrics?.waitingCount ?? 0;
+        // Trigger alert if a new live chat was initiated!
+        if (count > prevWaitingSupportRef.current) {
+          playAlertSound();
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('🚨 New Live Support Request', {
+              body: 'An investor is waiting for a representative on Heron Assets Trustee!',
+              icon: '/heron_logo.jpg'
+            });
+          }
+        }
+        prevWaitingSupportRef.current = count;
+        setWaitingSupportCount(count);
+      }
     } catch (err) {
       console.warn('Data sync notice:', err);
     } finally {
       setRefreshing(false);
     }
-  }, [currentUser]);
+  }, [currentUser, playAlertSound]);
 
   useEffect(() => {
     const handleAuthError = () => {
@@ -77,7 +123,7 @@ export function App() {
   useEffect(() => {
     if (currentUser) {
       fetchAllData();
-      const interval = setInterval(fetchAllData, 15000); // 15s auto-refresh
+      const interval = setInterval(fetchAllData, 10000); // 10s auto-refresh for live alerts
       return () => clearInterval(interval);
     }
   }, [currentUser, fetchAllData]);
@@ -108,6 +154,7 @@ export function App() {
           onSelectTab={setCurrentTab}
           pendingCount={pendingCount}
           pendingKycCount={pendingKycCount}
+          waitingSupportCount={waitingSupportCount}
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8">
@@ -150,6 +197,13 @@ export function App() {
             {currentTab === 'kyc' && (
               <KycComplianceDeskView
                 onRefresh={fetchAllData}
+              />
+            )}
+
+            {currentTab === 'live_support' && (
+              <LiveSupportDeskView
+                onRefreshStats={fetchAllData}
+                playNotificationSound={playAlertSound}
               />
             )}
 
