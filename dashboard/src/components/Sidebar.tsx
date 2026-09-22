@@ -49,6 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'referrals', label: 'Affiliate Network', icon: Users, badge: '30%' },
     { id: 'ledger', label: 'Audit Ledger', icon: ReceiptText },
     { id: 'profile', label: 'Account & Security', icon: ShieldCheck, badge: 'Verified' },
+    { id: 'apps', label: 'App Download', icon: Smartphone, badge: 'Soon' },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -155,22 +156,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer Area */}
       <div className="p-4 border-t border-[#2B313A] space-y-2">
-        <button
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('open-heron-install-guide'));
-            if (onClose) onClose();
-          }}
-          className="w-full flex items-center justify-between p-2 rounded-lg text-xs text-[#848E9C] hover:text-[#d6a84f] hover:bg-[#1E2329] transition-all group cursor-pointer text-left"
-          title="Install Heron App on iOS / Android"
-        >
-          <div className="flex items-center gap-2.5">
-            <Smartphone className="w-3.5 h-3.5 text-[#d6a84f] group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-[#EAECEF] group-hover:text-[#d6a84f]">Install Mobile App</span>
-          </div>
-          <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#d6a84f]/15 text-[#d6a84f] font-semibold">
-            iOS / PWA
-          </span>
-        </button>
 
         <a 
           href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://stealthssolutions.com' : 'https://heronassetstrusteess.com'} 

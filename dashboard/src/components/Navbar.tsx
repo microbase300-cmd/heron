@@ -24,6 +24,7 @@ const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
   referrals: { title: 'Partner Affiliate Network', subtitle: 'Earn up to 30% instant commission on referred client allocations' },
   ledger: { title: 'Cryptographic Audit Ledger', subtitle: 'Immutable transaction records and smart contract proofs' },
   profile: { title: 'Account Intelligence & Security', subtitle: 'Identity verification, multi-factor cryptographic security, and whitelisted destinations' },
+  apps: { title: 'Mobile Terminal Hub', subtitle: 'Native Android APK and instant Apple iOS terminal setup' },
 };
 
 export const Navbar: React.FC<NavbarProps> = ({

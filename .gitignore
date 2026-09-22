@@ -29,3 +29,6 @@ Thumbs.db
 # Native generated folders
 mobile/ios/
 ios/
+*.apk
+*/downloads/*.apk
+downloads/

@@ -28,30 +28,10 @@ export const IosInstallPrompt: React.FC = () => {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      const dismissed = localStorage.getItem('heron_install_dismissed_at');
-      if (!dismissed) {
-        setShowBanner(true);
-      }
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // 4. Check if iOS prompt was dismissed recently
-    const dismissedAt = localStorage.getItem('heron_install_dismissed_at');
-    const now = Date.now();
-    const oneWeek = 7 * 24 * 60 * 60 * 1000;
-    
-    if (isIosDevice && (!dismissedAt || now - Number(dismissedAt) > oneWeek)) {
-      // Show subtle banner after 2.5 seconds
-      const timer = setTimeout(() => {
-        setShowBanner(true);
-      }, 2500);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      };
-    }
-
-    // 5. Global trigger to open guide on demand (e.g. from Sidebar or Navbar)
+    // 4. Global trigger to open guide on demand (e.g. from App Download section)
     const handleOpenGuide = () => {
       setShowModal(true);
     };

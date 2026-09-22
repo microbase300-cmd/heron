@@ -15,6 +15,7 @@ import { WithdrawModal } from './components/WithdrawModal';
 import { AuthModal } from './components/AuthModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
 import { IosInstallPrompt } from './components/IosInstallPrompt';
+import { AppDownloadView } from './components/AppDownloadView';
 import { LayoutDashboard, Timer, TrendingUp, ArrowDownLeft, Menu } from 'lucide-react';
 import { ExchangeRatesData, DEFAULT_EXCHANGE_RATES } from './utils/currency';
 
@@ -250,6 +251,10 @@ export const App: React.FC = () => {
                   }}
                   exchangeRates={exchangeRates}
                 />
+              )}
+
+              {currentTab === 'apps' && (
+                <AppDownloadView />
               )}
             </div>
           </main>
