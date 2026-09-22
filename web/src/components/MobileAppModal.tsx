@@ -63,7 +63,7 @@ export default function MobileAppModal({ isOpen, onClose }: MobileAppModalProps)
             className="btn btn-gold" 
             style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            Download Android APK (Beta)
+            Android APK — Coming Soon
           </a>
           <button
             className="btn btn-outline"

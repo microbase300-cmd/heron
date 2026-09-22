@@ -77,9 +77,11 @@ export default function Contact() {
               </p>
 
               <div style={{ marginTop: '45px' }}>
-                <div className="eyebrow">Direct Desk</div>
+                <div className="eyebrow">Direct Desk & Support</div>
                 <p style={{ fontSize: '18px', lineHeight: '1.7' }}>
-                  desk@heronassetstrustees.com
+                  desk@heronassetstrusteess.com
+                  <br />
+                  support@heronassetstrusteess.com
                   <br />
                   +1 (800) 437-6628
                   <br />

@@ -107,7 +107,7 @@ export const AppDownloadView: React.FC = () => {
               className="w-full py-3 px-4 rounded-xl bg-[#0ECB81] hover:bg-[#0bb573] text-[#060807] font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#0ECB81]/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
             >
               <Download className="w-4 h-4" />
-              <span>{downloadInitiated ? 'Downloading APK...' : 'Download for Android (APK)'}</span>
+              <span>{downloadInitiated ? 'Downloading APK...' : 'Download for Android — Coming Soon'}</span>
             </button>
             <p className="text-[10px] text-center text-[#848E9C] mt-2">
               Available now for authorized client beta testing. Play Store launch pending final audit.
