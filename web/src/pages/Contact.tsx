@@ -83,9 +83,9 @@ export default function Contact() {
                   <br />
                   support@heronassetstrusteess.com
                   <br />
-                  +1 (800) 437-6628
+                  VIP Contact Only
                   <br />
-                  New Zealand • London • Singapore (by appointment)
+                  New Zealand (by appointment)
                 </p>
               </div>
             </div>
