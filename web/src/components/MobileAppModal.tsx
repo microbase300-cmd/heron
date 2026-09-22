@@ -50,12 +50,21 @@ export default function MobileAppModal({ isOpen, onClose }: MobileAppModalProps)
         </p>
 
         <div className="app-dialog-actions">
-          <button className="btn btn-dark" type="button" disabled>
-            App Store — Coming Soon
-          </button>
-          <button className="btn btn-gold" type="button" disabled>
-            Google Play — Coming Soon
-          </button>
+          <a 
+            href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://app.stealthssolutions.com' : 'https://app.heronassetstrusteess.com'} 
+            className="btn btn-dark" 
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            iOS App — Coming Soon
+          </a>
+          <a 
+            href="/downloads/heron-mobile.apk" 
+            download="heron-assets-trustee.apk" 
+            className="btn btn-gold" 
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            Download Android APK (Beta)
+          </a>
           <button
             className="btn btn-outline"
             type="button"
