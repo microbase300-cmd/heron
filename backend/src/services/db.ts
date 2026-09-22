@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, SupportChatSession, SupportMessage, SupportChatStatus, VisitorLog, VisitorAnalyticsSummary } from '../types';
+import { User, Investment, Transaction, ReferralCommission, PlanConfig, PlanId, RefreshToken, AdminMetrics, NotificationMessage, DepositAddressConfig, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, SupportChatSession, SupportMessage, SupportChatStatus, VisitorLog, VisitorAnalyticsSummary, WebmailMessage, WebmailFolder, WebmailFolderStats } from '../types';
 import { pushService } from './pushNotificationService';
 
 export const DEFAULT_DEPOSIT_ADDRESSES: Record<string, DepositAddressConfig> = {
@@ -111,6 +111,7 @@ interface DatabaseSchema {
   supportChats: SupportChatSession[];
   supportMessages: SupportMessage[];
   visitorLogs: VisitorLog[];
+  webmailMessages: WebmailMessage[];
 }
 
 const DB_FILE = path.join(__dirname, '../../data/db.json');
@@ -140,6 +141,7 @@ class DatabaseService {
           supportChats: parsed.supportChats || [],
           supportMessages: parsed.supportMessages || [],
           visitorLogs: parsed.visitorLogs || [],
+          webmailMessages: parsed.webmailMessages || [],
         };
         this.ensureDefaults(schema);
         return schema;
@@ -216,6 +218,7 @@ class DatabaseService {
     // 7. Ensure security audit logs initialized for existing users
     const nowTs = Date.now();
     if (!schema.visitorLogs) schema.visitorLogs = [];
+    if (!schema.webmailMessages) schema.webmailMessages = [];
     schema.users.forEach((u, i) => {
       if (!u.securityLogs || u.securityLogs.length === 0) {
         u.securityLogs = [
@@ -318,7 +321,8 @@ class DatabaseService {
       kycSubmissions: [],
       supportChats: [],
       supportMessages: [],
-      visitorLogs: []
+      visitorLogs: [],
+      webmailMessages: []
     };
   }
 
@@ -1355,6 +1359,110 @@ class DatabaseService {
     this.data.visitorLogs = [];
     this.save();
     return true;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                         INSTITUTIONAL WEBMAIL DESK                         */
+  /* -------------------------------------------------------------------------- */
+
+  saveWebmailMessage(data: Omit<WebmailMessage, 'id' | 'date'> & { id?: string; date?: string }): WebmailMessage {
+    if (!this.data.webmailMessages) {
+      this.data.webmailMessages = [];
+    }
+
+    const msg: WebmailMessage = {
+      ...data,
+      id: data.id || `mail_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      date: data.date || new Date().toISOString(),
+      isRead: data.isRead ?? (data.folder === 'sent' || data.folder === 'drafts')
+    };
+
+    this.data.webmailMessages.unshift(msg);
+
+    // Keep database performant by capping at 5,000 emails
+    if (this.data.webmailMessages.length > 5000) {
+      this.data.webmailMessages = this.data.webmailMessages.slice(0, 5000);
+    }
+
+    this.save();
+    return msg;
+  }
+
+  getWebmailMessages(
+    folder: WebmailFolder = 'inbox',
+    search?: string,
+    limit = 100
+  ): WebmailMessage[] {
+    let list = (this.data.webmailMessages || []).filter(m => m.folder === folder);
+
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(m =>
+        m.subject.toLowerCase().includes(q) ||
+        m.from.toLowerCase().includes(q) ||
+        (m.fromName && m.fromName.toLowerCase().includes(q)) ||
+        m.to.some(t => t.toLowerCase().includes(q)) ||
+        m.bodyText.toLowerCase().includes(q)
+      );
+    }
+
+    return list.slice(0, limit);
+  }
+
+  getWebmailMessageById(id: string): WebmailMessage | undefined {
+    return (this.data.webmailMessages || []).find(m => m.id === id);
+  }
+
+  markWebmailRead(id: string, isRead = true): boolean {
+    const msg = (this.data.webmailMessages || []).find(m => m.id === id);
+    if (!msg) return false;
+    msg.isRead = isRead;
+    this.save();
+    return true;
+  }
+
+  deleteWebmailMessage(id: string, permanent = false): boolean {
+    const idx = (this.data.webmailMessages || []).findIndex(m => m.id === id);
+    if (idx === -1) return false;
+
+    if (permanent || this.data.webmailMessages[idx].folder === 'trash') {
+      this.data.webmailMessages.splice(idx, 1);
+    } else {
+      this.data.webmailMessages[idx].folder = 'trash';
+    }
+
+    this.save();
+    return true;
+  }
+
+  getWebmailStats(): WebmailFolderStats {
+    const list = this.data.webmailMessages || [];
+    let inboxUnread = 0;
+    let inboxTotal = 0;
+    let sentTotal = 0;
+    let draftsTotal = 0;
+    let trashTotal = 0;
+
+    for (const m of list) {
+      if (m.folder === 'inbox') {
+        inboxTotal++;
+        if (!m.isRead) inboxUnread++;
+      } else if (m.folder === 'sent') {
+        sentTotal++;
+      } else if (m.folder === 'drafts') {
+        draftsTotal++;
+      } else if (m.folder === 'trash') {
+        trashTotal++;
+      }
+    }
+
+    return {
+      inboxUnread,
+      inboxTotal,
+      sentTotal,
+      draftsTotal,
+      trashTotal
+    };
   }
 }
 

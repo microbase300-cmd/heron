@@ -183,6 +183,46 @@ class EmailService {
       return false;
     }
   }
+
+  /**
+   * Dispatches a custom outbound email via verified SMTP (Port 587)
+   */
+  public async sendCustomEmail(params: {
+    to: string | string[];
+    subject: string;
+    html?: string;
+    text?: string;
+    fromName?: string;
+    replyTo?: string;
+    attachments?: Array<{ filename: string; content?: any; path?: string; contentType?: string }>;
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const defaultFrom = process.env.SMTP_FROM || 'Heron Assets Trustee <support@heronassetstrusteess.com>';
+    const emailMatch = defaultFrom.match(/<([^>]+)>/);
+    const pureEmail = emailMatch ? emailMatch[1] : 'support@heronassetstrusteess.com';
+    const from = params.fromName ? `"${params.fromName}" <${pureEmail}>` : defaultFrom;
+
+    if (!this.transporter) {
+      console.log(`📧 [Simulated Email] To: ${params.to} | Subject: ${params.subject}`);
+      return { success: true, messageId: `sim_${Date.now()}` };
+    }
+
+    try {
+      const info = await this.transporter.sendMail({
+        from,
+        to: Array.isArray(params.to) ? params.to.join(', ') : params.to,
+        replyTo: params.replyTo,
+        subject: params.subject,
+        text: params.text,
+        html: params.html || (params.text ? `<div style="font-family: Arial, sans-serif; white-space: pre-wrap; color: #111;">${params.text}</div>` : ''),
+        attachments: params.attachments
+      });
+      console.log(`✅ [Custom Email Sent] Dispatched to ${params.to} (ID: ${info.messageId})`);
+      return { success: true, messageId: info.messageId };
+    } catch (err: any) {
+      console.error(`❌ [Custom Email Error]`, err.message);
+      return { success: false, error: err.message };
+    }
+  }
 }
 
 export const emailService = new EmailService();

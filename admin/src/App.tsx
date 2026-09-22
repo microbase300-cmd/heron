@@ -15,6 +15,7 @@ import { NotificationsDeskView } from './components/NotificationsDeskView';
 import { KycComplianceDeskView } from './components/KycComplianceDeskView';
 import { LiveSupportDeskView } from './components/LiveSupportDeskView';
 import { LiveVisitorTrackerView } from './components/LiveVisitorTrackerView';
+import { WebmailDeskView } from './components/WebmailDeskView';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getStoredUser());
@@ -31,6 +32,7 @@ export function App() {
   const [pendingKycCount, setPendingKycCount] = useState<number>(0);
   const [waitingSupportCount, setWaitingSupportCount] = useState<number>(0);
   const [onlineVisitorCount, setOnlineVisitorCount] = useState<number>(0);
+  const [unreadEmailCount, setUnreadEmailCount] = useState<number>(0);
 
   const prevWaitingSupportRef = useRef<number>(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -74,6 +76,7 @@ export function App() {
         kycData,
         supportData,
         visitorData,
+        webmailStatsData,
       ] = await Promise.allSettled([
         adminApi.getMetrics(),
         adminApi.getUsers(),
@@ -84,6 +87,7 @@ export function App() {
         adminApi.getKycSubmissions('pending'),
         adminApi.getSupportChats(),
         adminApi.getVisitorTelemetry({ limit: 5 }),
+        adminApi.getWebmailStats(),
       ]);
 
       if (metricsData.status === 'fulfilled') setMetrics(metricsData.value);
@@ -112,6 +116,10 @@ export function App() {
 
       if (visitorData.status === 'fulfilled' && visitorData.value?.analytics) {
         setOnlineVisitorCount(visitorData.value.analytics.onlineCount || 0);
+      }
+
+      if (webmailStatsData.status === 'fulfilled' && webmailStatsData.value?.stats) {
+        setUnreadEmailCount(webmailStatsData.value.stats.inboxUnread || 0);
       }
     } catch (err) {
       console.warn('Data sync notice:', err);
@@ -157,6 +165,7 @@ export function App() {
         onNavigateTab={(tab) => setCurrentTab(tab)}
         waitingSupportCount={waitingSupportCount}
         onlineVisitorCount={onlineVisitorCount}
+        unreadEmailCount={unreadEmailCount}
       />
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -166,6 +175,8 @@ export function App() {
           pendingCount={pendingCount}
           pendingKycCount={pendingKycCount}
           waitingSupportCount={waitingSupportCount}
+          onlineVisitorCount={onlineVisitorCount}
+          unreadEmailCount={unreadEmailCount}
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8">
@@ -176,6 +187,10 @@ export function App() {
                 tickers={tickers}
                 onNavigateTab={(tab) => setCurrentTab(tab)}
               />
+            )}
+
+            {currentTab === 'webmail' && (
+              <WebmailDeskView onRefreshStats={fetchAllData} />
             )}
 
             {currentTab === 'investor_portfolios' && (

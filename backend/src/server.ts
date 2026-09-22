@@ -13,6 +13,7 @@ import kycRoutes from './routes/kyc';
 import assistantRoutes from './routes/assistant';
 import supportRoutes from './routes/support';
 import analyticsRoutes from './routes/analytics';
+import webmailRoutes from './routes/webmail';
 import { dbPool } from './db';
 import { startInvestmentEngine } from './services/investmentEngine';
 
@@ -60,6 +61,7 @@ app.use('/api/kyc', kycRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/webmail', webmailRoutes);
 
 import path from 'path';
 

@@ -11,10 +11,11 @@ import {
   UserCheck,
   ShieldCheck,
   Headphones,
-  Radio
+  Radio,
+  Mail
 } from 'lucide-react';
 
-export type AdminTab = 'metrics' | 'visitors' | 'live_support' | 'transactions' | 'investor_portfolios' | 'users' | 'kyc' | 'wallets' | 'notifications' | 'investments' | 'plans';
+export type AdminTab = 'metrics' | 'visitors' | 'webmail' | 'live_support' | 'transactions' | 'investor_portfolios' | 'users' | 'kyc' | 'wallets' | 'notifications' | 'investments' | 'plans';
 
 interface AdminSidebarProps {
   currentTab: AdminTab;
@@ -23,6 +24,7 @@ interface AdminSidebarProps {
   pendingKycCount?: number;
   waitingSupportCount?: number;
   onlineVisitorCount?: number;
+  unreadEmailCount?: number;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -32,6 +34,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   pendingKycCount = 0,
   waitingSupportCount = 0,
   onlineVisitorCount = 0,
+  unreadEmailCount = 0,
 }) => {
   const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string; isSpecial?: boolean }[] = [
     { id: 'metrics', label: 'Platform Executive', icon: LayoutDashboard },
@@ -41,6 +44,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       icon: Radio,
       badge: onlineVisitorCount > 0 ? onlineVisitorCount : undefined,
       badgeColor: 'bg-[#0ECB81]/20 text-[#0ECB81] border-[#0ECB81]/40',
+      isSpecial: true,
+    },
+    {
+      id: 'webmail',
+      label: 'Institutional Webmail',
+      icon: Mail,
+      badge: unreadEmailCount > 0 ? unreadEmailCount : undefined,
+      badgeColor: 'bg-[#F0B90B]/20 text-[#F0B90B] border-[#F0B90B]/40',
       isSpecial: true,
     },
     {

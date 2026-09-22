@@ -292,3 +292,39 @@ export interface VisitorAnalyticsSummary {
   topIsps: { isp: string; count: number }[];
 }
 
+export type WebmailFolder = 'inbox' | 'sent' | 'drafts' | 'trash';
+
+export interface WebmailAttachment {
+  filename: string;
+  contentType: string;
+  size: number;
+  url?: string;
+  contentBase64?: string;
+}
+
+export interface WebmailMessage {
+  id: string;
+  folder: WebmailFolder;
+  from: string;
+  fromName?: string;
+  to: string[];
+  replyTo?: string;
+  subject: string;
+  bodyText: string;
+  bodyHtml?: string;
+  isRead: boolean;
+  isStarred?: boolean;
+  hasAttachments?: boolean;
+  attachments?: WebmailAttachment[];
+  date: string; // ISO
+  headers?: Record<string, string>;
+}
+
+export interface WebmailFolderStats {
+  inboxUnread: number;
+  inboxTotal: number;
+  sentTotal: number;
+  draftsTotal: number;
+  trashTotal: number;
+}
+

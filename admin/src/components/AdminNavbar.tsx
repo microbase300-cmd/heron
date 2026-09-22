@@ -1,4 +1,4 @@
-import { LogOut, RefreshCw, Sparkles, Headphones, Radio } from 'lucide-react';
+import { LogOut, RefreshCw, Sparkles, Headphones, Radio, Mail } from 'lucide-react';
 import { AdminUser } from '../types';
 import { AdminTab } from './AdminSidebar';
 
@@ -10,6 +10,7 @@ interface AdminNavbarProps {
   onNavigateTab?: (tab: AdminTab) => void;
   waitingSupportCount?: number;
   onlineVisitorCount?: number;
+  unreadEmailCount?: number;
 }
 
 export const AdminNavbar: React.FC<AdminNavbarProps> = ({
@@ -20,6 +21,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
   onNavigateTab,
   waitingSupportCount = 0,
   onlineVisitorCount = 0,
+  unreadEmailCount = 0,
 }) => {
   return (
     <header className="h-16 border-b border-[#2B313A] bg-[#181A20]/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
@@ -65,6 +67,27 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
               </span>
             ) : (
               <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-pulse"></span>
+            )}
+          </button>
+        )}
+
+        {/* Institutional Webmail Button in Navbar */}
+        {onNavigateTab && (
+          <button
+            onClick={() => onNavigateTab('webmail')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all shadow-sm ${
+              unreadEmailCount > 0
+                ? 'bg-[#F0B90B]/20 text-[#F0B90B] border-[#F0B90B]/60 animate-pulse'
+                : 'bg-[#1E2329] hover:bg-[#2B313A] border-[#2B313A] text-[#848E9C] hover:text-[#EAECEF]'
+            }`}
+            title="Open Institutional Webmail (support@heronassetstrusteess.com)"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Webmail</span>
+            {unreadEmailCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-[#F0B90B] text-[#181A20] text-[10px] font-mono font-black">
+                {unreadEmailCount}
+              </span>
             )}
           </button>
         )}
