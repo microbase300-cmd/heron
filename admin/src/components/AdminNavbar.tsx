@@ -1,12 +1,15 @@
 import React from 'react';
-import { LogOut, RefreshCw, Sparkles } from 'lucide-react';
+import { LogOut, RefreshCw, Sparkles, Headphones } from 'lucide-react';
 import { AdminUser } from '../types';
+import { AdminTab } from './AdminSidebar';
 
 interface AdminNavbarProps {
   user: AdminUser;
   onLogout: () => void;
   onRefresh: () => void;
   refreshing: boolean;
+  onNavigateTab?: (tab: AdminTab) => void;
+  waitingSupportCount?: number;
 }
 
 export const AdminNavbar: React.FC<AdminNavbarProps> = ({
@@ -14,6 +17,8 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
   onLogout,
   onRefresh,
   refreshing,
+  onNavigateTab,
+  waitingSupportCount = 0,
 }) => {
   return (
     <header className="h-16 border-b border-[#2B313A] bg-[#181A20]/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
@@ -39,8 +44,30 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
         </div>
       </div>
 
-      {/* Right Controls: Refresh, Status, Admin Badge, Logout */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      {/* Right Controls: Live Chat Button, Refresh, Status, Admin Badge, Logout */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        {onNavigateTab && (
+          <button
+            onClick={() => onNavigateTab('live_support')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all shadow-sm ${
+              waitingSupportCount > 0
+                ? 'bg-[#F6465D]/20 text-[#F6465D] border-[#F6465D]/60 animate-pulse shadow-[#F6465D]/20'
+                : 'bg-[#F0B90B]/15 text-[#F0B90B] hover:bg-[#F0B90B]/25 border-[#F0B90B]/40 shadow-[#F0B90B]/10'
+            }`}
+            title="Open Live Support Desk & Visitor Chats"
+          >
+            <Headphones className="w-4 h-4" />
+            <span className="font-sans font-bold">Live Support (Chat)</span>
+            {waitingSupportCount > 0 ? (
+              <span className="px-1.5 py-0.2 rounded-full bg-[#F6465D] text-white text-[10px] font-mono">
+                {waitingSupportCount} waiting
+              </span>
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-pulse"></span>
+            )}
+          </button>
+        )}
+
         <button
           onClick={onRefresh}
           disabled={refreshing}
@@ -53,7 +80,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
         {/* Live System Indicator */}
         <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0ECB81]/10 border border-[#0ECB81]/30 text-[11px] font-mono text-[#0ECB81]">
           <span className="w-2 h-2 rounded-full bg-[#0ECB81] animate-pulse"></span>
-          <span>Engine Live • 10s</span>
+          <span>Engine Live</span>
         </div>
 
         {/* Executive Profile Badge */}
@@ -81,4 +108,3 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
     </header>
   );
 };
-

@@ -146,6 +146,8 @@ export function App() {
         onLogout={handleLogout}
         onRefresh={fetchAllData}
         refreshing={refreshing}
+        onNavigateTab={(tab) => setCurrentTab(tab)}
+        waitingSupportCount={waitingSupportCount}
       />
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">

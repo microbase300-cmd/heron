@@ -13,7 +13,7 @@ import {
   Headphones
 } from 'lucide-react';
 
-export type AdminTab = 'metrics' | 'investor_portfolios' | 'users' | 'transactions' | 'kyc' | 'live_support' | 'wallets' | 'notifications' | 'investments' | 'plans';
+export type AdminTab = 'metrics' | 'live_support' | 'transactions' | 'investor_portfolios' | 'users' | 'kyc' | 'wallets' | 'notifications' | 'investments' | 'plans';
 
 interface AdminSidebarProps {
   currentTab: AdminTab;
@@ -30,28 +30,29 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   pendingKycCount = 0,
   waitingSupportCount = 0,
 }) => {
-  const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string }[] = [
+  const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string; isSpecial?: boolean }[] = [
     { id: 'metrics', label: 'Platform Executive', icon: LayoutDashboard },
-    { id: 'investor_portfolios', label: 'Investor Portfolios', icon: UserCheck },
-    { id: 'users', label: 'User Directory', icon: Users },
+    {
+      id: 'live_support',
+      label: 'Live Support Desk (Chat)',
+      icon: Headphones,
+      badge: waitingSupportCount > 0 ? waitingSupportCount : undefined,
+      badgeColor: 'bg-[#F6465D]/20 text-[#F6465D] border-[#F6465D]/40',
+      isSpecial: true,
+    },
     {
       id: 'transactions',
       label: 'Settlement Ledger',
       icon: CreditCard,
       badge: pendingCount > 0 ? pendingCount : undefined,
     },
+    { id: 'investor_portfolios', label: 'Investor Portfolios', icon: UserCheck },
+    { id: 'users', label: 'User Directory', icon: Users },
     {
       id: 'kyc',
       label: 'KYC & Compliance Desk',
       icon: ShieldCheck,
       badge: pendingKycCount > 0 ? pendingKycCount : undefined,
-    },
-    {
-      id: 'live_support',
-      label: 'Live Support Desk',
-      icon: Headphones,
-      badge: waitingSupportCount > 0 ? waitingSupportCount : undefined,
-      badgeColor: 'bg-[#F6465D]/20 text-[#F6465D] border-[#F6465D]/40',
     },
     { id: 'wallets', label: 'Deposit Wallets', icon: Wallet },
     { id: 'notifications', label: 'Broadcasts & Messages', icon: Bell },
@@ -74,21 +75,25 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 className={`w-full flex items-center justify-between px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
                   active
                     ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/40 shadow-sm shadow-[#F0B90B]/10 font-bold'
+                    : item.isSpecial && waitingSupportCount > 0
+                    ? 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/40 animate-pulse font-bold'
                     : 'text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#1E2329]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${active ? 'text-[#F0B90B]' : 'text-[#848E9C]'}`} />
+                  <Icon className={`w-4 h-4 ${active ? 'text-[#F0B90B]' : item.isSpecial ? 'text-[#F0B90B]' : 'text-[#848E9C]'}`} />
                   <span className="whitespace-nowrap">{item.label}</span>
                 </div>
 
-                {item.badge !== undefined && (
+                {item.badge !== undefined ? (
                   <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                     item.badgeColor ? `${item.badgeColor} animate-pulse` : 'bg-[#F0B90B]/20 text-[#F0B90B] border-[#F0B90B]/40'
                   }`}>
                     {item.badge}
                   </span>
-                )}
+                ) : item.isSpecial ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0ECB81] animate-pulse"></span>
+                ) : null}
               </button>
             );
           })}
@@ -98,7 +103,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       {/* Cross-Link to Investor Portal and Marketing Site */}
       <div className="hidden md:block pt-6 border-t border-[#2B313A] space-y-2">
         <a
-          href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://app.stealthssolutions.com' : 'https://app.heronassetstrusteess.com'}
+          href="https://app.heronassetstrusteess.com"
           target="_blank"
           rel="noreferrer"
           className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-xs text-[#848E9C] hover:text-[#EAECEF] transition-all font-mono"
@@ -107,7 +112,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <ExternalLink className="w-3.5 h-3.5 text-[#848E9C]" />
         </a>
         <a
-          href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://stealthssolutions.com' : 'https://heronassetstrusteess.com'}
+          href="https://heronassetstrusteess.com"
           target="_blank"
           rel="noreferrer"
           className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-xs text-[#848E9C] hover:text-[#EAECEF] transition-all font-mono"
@@ -119,4 +124,3 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     </aside>
   );
 };
-
