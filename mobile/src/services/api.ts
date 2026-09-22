@@ -18,12 +18,47 @@ import {
   KycSubmission
 } from '../types';
 
-// Dynamic host determination for Physical Devices, Emulators, and Web
+// Dynamic host determination with production default and local dev fallback
+const PRODUCTION_HOST = 'https://api.stealthssolutions.com/api';
+
+const getDevFallbackHost = (): string | null => {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const ip = hostUri.split(':')[0];
+    return `http://${ip}:5000/api`;
+  }
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:5000/api'; // Standard Android Emulator loopback
+  }
+  return 'http://localhost:5000/api';
+};
+
 const resolveDefaultHost = (): string => {
-  return 'https://api.stealthssolutions.com/api';
+  return PRODUCTION_HOST;
 };
 
 let currentApiHost = resolveDefaultHost();
+
+const DEFAULT_HEADERS: Record<string, string> = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'User-Agent': 'HeronMobile/1.0 (Android; Linux; Mobile)',
+};
+
+const isNetworkError = (err: any): boolean => {
+  const msg = String(err?.message || '');
+  return (
+    msg.includes('Network') ||
+    msg.includes('fetch failed') ||
+    msg.includes('CLEARTEXT') ||
+    msg.includes('ConnectException') ||
+    msg.includes('Socket') ||
+    msg.includes('Failed to connect') ||
+    msg.includes('UnknownServiceException') ||
+    msg.includes('Failed to fetch') ||
+    msg.includes('NetworkError')
+  );
+};
 
 class MobileApiService {
   private token: string | null = null;
@@ -57,17 +92,43 @@ class MobileApiService {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch(`${currentApiHost}/health`, { signal: controller.signal });
+      const res = await fetch(`${currentApiHost}/health`, {
+        headers: DEFAULT_HEADERS,
+        signal: controller.signal,
+      });
       clearTimeout(timeoutId);
-      return { online: res.ok };
+      if (res.ok) return { online: true };
+
+      // Try dev fallback if production health fails during development
+      const devHost = getDevFallbackHost();
+      if (devHost && devHost !== currentApiHost) {
+        try {
+          const devRes = await fetch(`${devHost}/health`, { headers: DEFAULT_HEADERS });
+          if (devRes.ok) {
+            currentApiHost = devHost;
+            return { online: true };
+          }
+        } catch {}
+      }
+      return { online: false };
     } catch {
+      const devHost = getDevFallbackHost();
+      if (devHost && devHost !== currentApiHost) {
+        try {
+          const devRes = await fetch(`${devHost}/health`, { headers: DEFAULT_HEADERS });
+          if (devRes.ok) {
+            currentApiHost = devHost;
+            return { online: true };
+          }
+        } catch {}
+      }
       return { online: false };
     }
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...DEFAULT_HEADERS,
       ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
       ...(options.headers as Record<string, string> || {}),
     };
@@ -91,22 +152,28 @@ class MobileApiService {
       return data;
     } catch (err: any) {
       clearTimeout(timeoutId);
+
+      // Auto-fallback to local development server if production is unreachable
+      const devHost = getDevFallbackHost();
+      if (devHost && currentApiHost !== devHost && (err.name === 'AbortError' || isNetworkError(err))) {
+        try {
+          const fallbackUrl = `${devHost}${endpoint}`;
+          const fallbackRes = await fetch(fallbackUrl, {
+            ...options,
+            headers,
+          });
+          const fallbackData = await fallbackRes.json();
+          if (fallbackRes.ok) {
+            currentApiHost = devHost;
+            return fallbackData;
+          }
+        } catch {}
+      }
+
       if (err.name === 'AbortError') {
         throw new Error(`Connection timed out. Please verify your internet connection.`);
       }
-      const msg = String(err?.message || '');
-      // Catch all Java socket, Cleartext, or DNS/network errors and shield the UI from raw technical traces
-      if (
-        msg.includes('Network') ||
-        msg.includes('fetch failed') ||
-        msg.includes('CLEARTEXT') ||
-        msg.includes('ConnectException') ||
-        msg.includes('Socket') ||
-        msg.includes('Failed to connect') ||
-        msg.includes('UnknownServiceException') ||
-        msg.includes('Failed to fetch') ||
-        msg.includes('NetworkError')
-      ) {
+      if (isNetworkError(err)) {
         throw new Error(`Cannot reach server. The system is currently offline or in maintenance.`);
       }
       throw err;
