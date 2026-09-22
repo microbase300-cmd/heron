@@ -1,16 +1,17 @@
 import React from 'react';
-import { Plus, ArrowDownLeft, Menu, ShieldCheck } from 'lucide-react';
-import { User } from '../types';
+import { Plus, ArrowDownLeft, Menu, ShieldCheck, LogOut, User } from 'lucide-react';
+import { User as UserType } from '../types';
 import { NotificationCenter } from './NotificationCenter';
 import { CURRENCY_SYMBOLS } from '../utils/currency';
 
 interface NavbarProps {
   currentTab: string;
-  user: User | null;
+  user: UserType | null;
   onOpenDeposit: () => void;
   onOpenInvest: () => void;
   onOpenMobileNav?: () => void;
   onOpenProfile?: () => void;
+  onLogout?: () => void;
   onRefreshData?: () => void;
   preferredCurrency?: string;
 }
@@ -34,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenInvest,
   onOpenMobileNav,
   onOpenProfile,
+  onLogout,
   onRefreshData,
   preferredCurrency
 }) => {
@@ -82,19 +84,33 @@ export const Navbar: React.FC<NavbarProps> = ({
         {onOpenProfile && (
           <button
             onClick={onOpenProfile}
-            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border transition-all cursor-pointer ${
               currentTab === 'profile'
                 ? 'bg-[#F0B90B]/20 border-[#F0B90B] text-[#F0B90B]'
                 : 'bg-[#2B313A] border-[#363D47] hover:border-[#F0B90B]/50 text-[#848E9C] hover:text-[#EAECEF]'
             }`}
-            title="Account & Security Center"
+            title="Profile & Security Settings"
           >
-            <ShieldCheck className="w-4 h-4" />
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#F0B90B]" />
+            <span className="hidden sm:inline text-xs font-semibold">Profile</span>
           </button>
         )}
 
         {/* Real-time Notification Center */}
         <NotificationCenter onNotificationRead={onRefreshData} />
+
+        {/* Logout / Sign Out Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-[#2B313A] hover:bg-[#F6465D]/15 border border-[#363D47] hover:border-[#F6465D]/40 text-[#848E9C] hover:text-[#F6465D] text-[11px] sm:text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
+            title="Sign Out of Session"
+            aria-label="Sign Out"
+          >
+            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#F6465D]" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
+        )}
 
         <button
           onClick={onOpenDeposit}

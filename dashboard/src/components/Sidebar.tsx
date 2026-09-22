@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'withdraw', label: 'Withdraw Terminal', icon: ArrowUpRight },
     { id: 'referrals', label: 'Affiliate Network', icon: Users, badge: '30%' },
     { id: 'ledger', label: 'Audit Ledger', icon: ReceiptText },
-    { id: 'profile', label: 'Account & Security', icon: ShieldCheck, badge: 'Verified' },
+    { id: 'profile', label: 'Edit Profile & Security', icon: ShieldCheck, badge: 'Verified' },
     { id: 'apps', label: 'App Download', icon: Smartphone, badge: 'Soon' },
   ];
 
@@ -169,26 +169,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </a>
 
         {user && (
-          <div className="flex items-center justify-between pt-2 border-t border-[#2B313A] px-2">
-            <button
-              onClick={() => handleTabClick('profile')}
-              className="flex-1 text-left overflow-hidden pr-2 group cursor-pointer"
-              title="View Account & Security Profile"
-            >
-              <div className="text-xs font-semibold text-[#EAECEF] group-hover:text-[#F0B90B] transition-colors truncate">
-                {user.name}
-              </div>
-              <div className="text-[10px] text-[#848E9C] font-mono truncate flex items-center gap-1">
-                <span>{user.email}</span>
-                <span className="text-[#0ECB81] text-[9px]">●</span>
-              </div>
-            </button>
+          <div className="pt-3 border-t border-[#2B313A] px-1 space-y-2">
+            <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[#1E2329]/70 border border-[#2B313A]">
+              <button
+                onClick={() => handleTabClick('profile')}
+                className="flex-1 text-left overflow-hidden group cursor-pointer"
+                title="View & Edit Profile"
+              >
+                <div className="text-xs font-semibold text-[#EAECEF] group-hover:text-[#F0B90B] transition-colors truncate">
+                  {user.name || 'Institutional Client'}
+                </div>
+                <div className="text-[10px] text-[#848E9C] font-mono truncate flex items-center gap-1">
+                  <span>{user.email}</span>
+                  <span className="text-[#0ECB81] text-[9px]">●</span>
+                </div>
+              </button>
+              <button
+                onClick={() => handleTabClick('profile')}
+                className="px-2 py-1 rounded bg-[#F0B90B]/10 hover:bg-[#F0B90B]/20 border border-[#F0B90B]/30 text-[#F0B90B] text-[10px] font-bold transition-all shrink-0 cursor-pointer"
+                title="Edit Profile"
+              >
+                Edit
+              </button>
+            </div>
+
             <button 
               onClick={onLogout}
-              title="Sign Out"
-              className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#F6465D] hover:bg-[#2B313A] transition-all shrink-0 cursor-pointer"
+              title="Sign Out of Session"
+              className="w-full py-2 px-3 rounded-lg bg-[#F6465D]/10 hover:bg-[#F6465D]/20 border border-[#F6465D]/30 text-[#F6465D] font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5 text-[#F6465D]" />
+              <span>Sign Out / Log Out</span>
             </button>
           </div>
         )}

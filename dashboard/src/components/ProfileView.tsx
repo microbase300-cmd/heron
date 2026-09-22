@@ -22,17 +22,21 @@ import {
   RefreshCw,
   TrendingUp,
   DollarSign,
-  Scan
+  Scan,
+  Edit3,
+  LogOut,
+  User
 } from 'lucide-react';
-import { User, WhitelistedWallet, SecurityLogItem } from '../types';
+import { User as UserType, WhitelistedWallet, SecurityLogItem } from '../types';
 import { api } from '../services/api';
 import { ClientVerificationPortal } from './ClientVerificationPortal';
 import { ExchangeRatesData, convertCurrency, formatCurrency, CURRENCY_SYMBOLS, CURRENCY_NAMES } from '../utils/currency';
 
 interface ProfileViewProps {
-  user: User | null;
-  onUpdateUser?: (updated: User) => void;
+  user: UserType | null;
+  onUpdateUser?: (updated: UserType) => void;
   onNavigate?: (tab: string) => void;
+  onLogout?: () => void;
   onOpenWithdraw?: (prefilledAddress?: string) => void;
   exchangeRates?: ExchangeRatesData;
 }
@@ -68,6 +72,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   user,
   onUpdateUser,
   onNavigate,
+  onLogout,
   onOpenWithdraw,
   exchangeRates
 }) => {
@@ -80,6 +85,63 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [antiPhishingCode, setAntiPhishingCode] = useState(user?.antiPhishingCode || 'HERON-SEC-2026');
   const [isSavingPhishing, setIsSavingPhishing] = useState(false);
   const [phishingSavedAlert, setPhishingSavedAlert] = useState(false);
+
+  // Full Edit Profile Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editModalName, setEditModalName] = useState(user?.name || '');
+  const [editModalPhishing, setEditModalPhishing] = useState(user?.antiPhishingCode || 'HERON-SEC-2026');
+  const [editModalCurrency, setEditModalCurrency] = useState(user?.preferredCurrency || 'USD');
+  const [editModalSaving, setEditModalSaving] = useState(false);
+  const [editModalMsg, setEditModalMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setNameInput(user.name || '');
+      setEditModalName(user.name || '');
+      setAntiPhishingCode(user.antiPhishingCode || 'HERON-SEC-2026');
+      setEditModalPhishing(user.antiPhishingCode || 'HERON-SEC-2026');
+      setEditModalCurrency(user.preferredCurrency || 'USD');
+    }
+  }, [user]);
+
+  const handleSaveProfileModal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editModalName.trim()) {
+      setEditModalMsg({ type: 'error', text: 'Display Name cannot be empty.' });
+      return;
+    }
+    setEditModalSaving(true);
+    setEditModalMsg(null);
+    try {
+      const res = await api.updateProfile({
+        name: editModalName.trim(),
+        antiPhishingCode: editModalPhishing.trim(),
+        preferredCurrency: editModalCurrency
+      });
+      if (res?.user && onUpdateUser) {
+        onUpdateUser(res.user);
+      } else if (onUpdateUser && user) {
+        onUpdateUser({
+          ...user,
+          name: editModalName.trim(),
+          antiPhishingCode: editModalPhishing.trim(),
+          preferredCurrency: editModalCurrency
+        });
+      }
+      setNameInput(editModalName.trim());
+      setAntiPhishingCode(editModalPhishing.trim());
+      setPreferredCurrency(editModalCurrency);
+      setEditModalMsg({ type: 'success', text: 'Profile updated successfully!' });
+      setTimeout(() => {
+        setIsEditModalOpen(false);
+        setEditModalMsg(null);
+      }, 1200);
+    } catch (err: any) {
+      setEditModalMsg({ type: 'error', text: err.message || 'Failed to update profile.' });
+    } finally {
+      setEditModalSaving(false);
+    }
+  };
 
   // Security Toggles
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.twoFactorEnabled ?? true);
@@ -363,16 +425,23 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <h2 className="text-lg sm:text-2xl font-sans font-bold text-[#EAECEF] tracking-tight truncate">
                       {user?.name || 'Institutional Client'}
                     </h2>
                     <button
-                      onClick={() => setIsEditingName(true)}
-                      className="text-xs text-[#848E9C] hover:text-[#F0B90B] transition-colors"
-                      title="Edit Display Name"
+                      type="button"
+                      onClick={() => {
+                        setEditModalName(user?.name || '');
+                        setEditModalPhishing(user?.antiPhishingCode || 'HERON-SEC-2026');
+                        setEditModalCurrency(user?.preferredCurrency || 'USD');
+                        setIsEditModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#F0B90B]/15 hover:bg-[#F0B90B]/25 text-[#F0B90B] text-xs font-semibold border border-[#F0B90B]/40 transition-all shadow-sm cursor-pointer"
+                      title="Edit Profile"
                     >
-                      ✎
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit Profile</span>
                     </button>
                   </div>
                 )}
@@ -436,20 +505,49 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
 
-          {/* Institutional Tier Highlights Card */}
-          <div className="bg-[#181A20] rounded-xl border border-[#2B313A] p-4 sm:p-5 shrink-0 flex items-center justify-between sm:justify-start gap-6">
-            <div>
-              <div className="text-[10px] uppercase font-mono text-[#848E9C] tracking-wider">Settlement Privilege</div>
-              <div className="text-sm font-sans font-bold text-[#0ECB81] mt-0.5 flex items-center gap-1.5">
-                <span>Direct Cold Vault Custody</span>
+          {/* Institutional Tier Highlights Card & Quick Profile Actions */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <div className="bg-[#181A20] rounded-xl border border-[#2B313A] p-4 sm:p-5 flex items-center justify-between sm:justify-start gap-6">
+              <div>
+                <div className="text-[10px] uppercase font-mono text-[#848E9C] tracking-wider">Settlement Privilege</div>
+                <div className="text-sm font-sans font-bold text-[#0ECB81] mt-0.5 flex items-center gap-1.5">
+                  <span>Direct Cold Vault Custody</span>
+                </div>
+                <div className="text-[11px] text-[#848E9C] font-sans mt-0.5">Zero gas fee institutional treasury waiver</div>
               </div>
-              <div className="text-[11px] text-[#848E9C] font-sans mt-0.5">Zero gas fee institutional treasury waiver</div>
+
+              <div className="border-l border-[#2B313A] pl-5 hidden sm:block">
+                <div className="text-[10px] uppercase font-mono text-[#848E9C] tracking-wider">Daily Disbursement Quota</div>
+                <div className="text-sm font-mono font-bold text-[#EAECEF] mt-0.5">$2,000,000.00 / 24h</div>
+                <div className="text-[11px] text-[#0ECB81] font-mono mt-0.5">100% Available</div>
+              </div>
             </div>
 
-            <div className="border-l border-[#2B313A] pl-5 hidden sm:block">
-              <div className="text-[10px] uppercase font-mono text-[#848E9C] tracking-wider">Daily Disbursement Quota</div>
-              <div className="text-sm font-mono font-bold text-[#EAECEF] mt-0.5">$2,000,000.00 / 24h</div>
-              <div className="text-[11px] text-[#0ECB81] font-mono mt-0.5">100% Available</div>
+            {/* Quick Actions in Profile Header */}
+            <div className="flex sm:flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditModalName(user?.name || '');
+                  setEditModalPhishing(user?.antiPhishingCode || 'HERON-SEC-2026');
+                  setEditModalCurrency(user?.preferredCurrency || 'USD');
+                  setIsEditModalOpen(true);
+                }}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Edit Profile</span>
+              </button>
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#F6465D]/10 hover:bg-[#F6465D]/20 text-[#F6465D] border border-[#F6465D]/30 font-semibold text-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1232,6 +1330,153 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   className="flex-1 py-2.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs shadow-md disabled:opacity-50"
                 >
                   {addWalletLoading ? 'Verifying...' : 'Whitelist Address'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 8. DEDICATED EDIT PROFILE MODAL */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#1E2329] border border-[#2B313A] rounded-2xl w-full max-w-lg p-6 space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-[#2B313A] pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-[#F0B90B]/10 text-[#F0B90B] border border-[#F0B90B]/20">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-sans font-bold text-[#EAECEF]">Edit Investor Profile</h3>
+                  <p className="text-xs text-[#848E9C]">Update account credentials and base valuation currency</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditModalMsg(null);
+                }}
+                className="p-1.5 rounded-lg text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B313A] transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editModalMsg && (
+              <div className={`p-3 rounded-lg text-xs font-mono flex items-center gap-2 ${
+                editModalMsg.type === 'success'
+                  ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                  : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
+              }`}>
+                {editModalMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
+                <span>{editModalMsg.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProfileModal} className="space-y-4">
+              {/* Display Name */}
+              <div>
+                <label className="block text-xs font-mono text-[#848E9C] mb-1.5">
+                  Full Name / Institutional Entity Name
+                </label>
+                <input
+                  type="text"
+                  value={editModalName}
+                  onChange={e => setEditModalName(e.target.value)}
+                  placeholder="e.g. John Doe / Apex Capital LLC"
+                  required
+                  className="w-full px-3.5 py-2.5 bg-[#181A20] border border-[#2B313A] rounded-lg text-sm text-[#EAECEF] focus:outline-none focus:border-[#F0B90B] transition-colors"
+                />
+              </div>
+
+              {/* Verified Email (Read-Only) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-mono text-[#848E9C]">
+                    Registered Institutional Email
+                  </label>
+                  <span className="text-[10px] font-mono text-[#0ECB81] flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Verified Account
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full px-3.5 py-2.5 bg-[#181A20]/60 border border-[#2B313A] rounded-lg text-xs font-mono text-[#848E9C] cursor-not-allowed"
+                  />
+                  <div className="absolute right-3 top-2.5 text-[#5E6673]">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-[#5E6673] font-mono mt-1">To change verified institutional email, contact compliance desk.</p>
+              </div>
+
+              {/* Anti-Phishing Code */}
+              <div>
+                <label className="block text-xs font-mono text-[#848E9C] mb-1.5">
+                  Anti-Phishing Security Code
+                </label>
+                <input
+                  type="text"
+                  value={editModalPhishing}
+                  onChange={e => setEditModalPhishing(e.target.value)}
+                  placeholder="e.g. HERON-SEC-2026"
+                  className="w-full px-3.5 py-2.5 bg-[#181A20] border border-[#2B313A] rounded-lg text-sm font-mono text-[#EAECEF] focus:outline-none focus:border-[#F0B90B] transition-colors"
+                />
+                <p className="text-[10px] text-[#848E9C] font-mono mt-1">
+                  Included on all authentic security alerts and emails from Heron to guarantee origin.
+                </p>
+              </div>
+
+              {/* Preferred Valuation Currency */}
+              <div>
+                <label className="block text-xs font-mono text-[#848E9C] mb-1.5">
+                  Preferred Valuation Currency
+                </label>
+                <select
+                  value={editModalCurrency}
+                  onChange={e => setEditModalCurrency(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#181A20] border border-[#2B313A] rounded-lg text-sm font-sans text-[#EAECEF] focus:outline-none focus:border-[#F0B90B] transition-colors cursor-pointer"
+                >
+                  {Object.entries(CURRENCY_NAMES).map(([code, name]) => (
+                    <option key={code} value={code} className="bg-[#181A20] text-[#EAECEF]">
+                      {code} ({CURRENCY_SYMBOLS[code] || '$'}) - {name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-[#848E9C] font-mono mt-1">
+                  Sets your default base currency across your portfolio, investments, and audit ledger.
+                </p>
+              </div>
+
+              {/* Modal Footer Buttons */}
+              <div className="pt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditModalMsg(null);
+                  }}
+                  className="flex-1 py-2.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] text-[#848E9C] hover:text-[#EAECEF] font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editModalSaving}
+                  className="flex-1 py-2.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-bold text-xs shadow-md disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {editModalSaving ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving Profile...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
                 </button>
               </div>
             </form>

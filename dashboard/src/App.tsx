@@ -169,6 +169,7 @@ export const App: React.FC = () => {
             onOpenInvest={() => setCurrentTab('invest')}
             onOpenProfile={() => setCurrentTab('profile')}
             onOpenMobileNav={() => setIsMobileSidebarOpen(true)}
+            onLogout={handleLogout}
             preferredCurrency={user?.preferredCurrency || 'USD'}
           />
 
@@ -246,6 +247,7 @@ export const App: React.FC = () => {
                   user={user}
                   onUpdateUser={setUser}
                   onNavigate={setCurrentTab}
+                  onLogout={handleLogout}
                   onOpenWithdraw={(_addr) => {
                     setIsWithdrawOpen(true);
                   }}
