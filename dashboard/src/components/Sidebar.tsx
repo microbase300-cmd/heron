@@ -173,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         <a 
-          href="https://stealthssolutions.com" 
+          href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://stealthssolutions.com' : 'https://heronassetstrusteess.com'} 
           className="flex items-center justify-between p-2 rounded-lg text-xs text-[#848E9C] hover:text-[#F0B90B] hover:bg-[#1E2329] transition-all group"
         >
           <div className="flex items-center gap-2.5">

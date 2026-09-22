@@ -18,11 +18,14 @@ function ScrollToTop() {
 const getDashboardUrl = (): string => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
+    if (host.includes('heronassetstrusteess.com') || host.includes('heronassetstrustees.com')) {
+      return 'https://app.heronassetstrusteess.com';
+    }
     if (host === 'stealthssolutions.com' || host === 'www.stealthssolutions.com') {
       return 'https://app.stealthssolutions.com';
     }
-    if (host === '2.59.161.183') {
-      return 'http://app.stealthssolutions.com';
+    if (host === '68.168.211.36' || host === '2.59.161.183') {
+      return 'https://app.heronassetstrusteess.com';
     }
   }
   return 'http://localhost:5173';

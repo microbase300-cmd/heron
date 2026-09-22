@@ -86,7 +86,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       {/* Cross-Link to Investor Portal and Marketing Site */}
       <div className="hidden md:block pt-6 border-t border-[#2B313A] space-y-2">
         <a
-          href="https://app.stealthssolutions.com"
+          href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://app.stealthssolutions.com' : 'https://app.heronassetstrusteess.com'}
           target="_blank"
           rel="noreferrer"
           className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-xs text-[#848E9C] hover:text-[#EAECEF] transition-all font-mono"
@@ -95,7 +95,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <ExternalLink className="w-3.5 h-3.5 text-[#848E9C]" />
         </a>
         <a
-          href="https://stealthssolutions.com"
+          href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://stealthssolutions.com' : 'https://heronassetstrusteess.com'}
           target="_blank"
           rel="noreferrer"
           className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E2329] hover:bg-[#2B313A] border border-[#2B313A] text-xs text-[#848E9C] hover:text-[#EAECEF] transition-all font-mono"

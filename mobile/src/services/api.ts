@@ -19,7 +19,7 @@ import {
 } from '../types';
 
 // Dynamic host determination with production default and local dev fallback
-const PRODUCTION_HOST = 'https://api.stealthssolutions.com/api';
+const PRODUCTION_HOST = 'https://api.heronassetstrusteess.com/api';
 
 const getDevFallbackHost = (): string | null => {
   const hostUri = Constants.expoConfig?.hostUri;

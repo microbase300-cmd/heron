@@ -1,8 +1,24 @@
 import { User, PlanConfig, Investment, WalletSummary, Transaction, ReferralData, NotificationMessage, DepositAddressConfig, DEFAULT_PLANS, WhitelistedWallet, SecurityLogItem, KycSubmission, KycStatus, KycDocumentType } from '../types';
 
-const API_BASE = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-  ? 'https://api.stealthssolutions.com/api'
-  : 'http://localhost:5000/api';
+const getApiBase = (): string => {
+  if (typeof window === 'undefined') return 'http://localhost:5000/api';
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  if (hostname.includes('heronassetstrusteess.com') || hostname.includes('heronassetstrustees.com')) {
+    return 'https://api.heronassetstrusteess.com/api';
+  }
+  if (hostname.includes('stealthssolutions.com')) {
+    return 'https://api.stealthssolutions.com/api';
+  }
+  if (hostname === '68.168.211.36') {
+    return `http://${hostname}:5000/api`;
+  }
+  return '/api';
+};
+
+const API_BASE = getApiBase();
 
 class ApiService {
   private getToken(): string | null {

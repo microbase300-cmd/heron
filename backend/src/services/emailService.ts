@@ -49,7 +49,7 @@ class EmailService {
       ? 'Capital Withdrawal Authorization'
       : 'Security Authorization Code';
 
-    const fromAddress = process.env.SMTP_FROM || 'Heron Assets Trustee <security@stealthssolutions.com>';
+    const fromAddress = process.env.SMTP_FROM || 'Heron Assets Trustee <security@heronassetstrusteess.com>';
 
     const htmlContent = `
       <div style="background-color: #0d0f0e; padding: 40px 20px; font-family: 'Helvetica Neue', Arial, sans-serif; color: #EAECEF;">

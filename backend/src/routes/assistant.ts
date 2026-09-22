@@ -192,7 +192,7 @@ const INTENTS: IntentHandler[] = [
       /accepted (coins|crypto|currencies)/i
     ],
     responses: [
-      "Depositing capital is quick and automated:\n1. Log into your dashboard (https://app.stealthssolutions.com).\n2. Click 'Deposit Capital'.\n3. Choose your asset: USDT (TRC20/ERC20), BTC, ETH, or SOL.\n4. Transfer the amount to the provided wallet address.\n5. Click 'I Have Made Deposit' to initiate instant ledger confirmation.",
+      "Depositing capital is quick and automated:\n1. Log into your dashboard (https://app.heronassetstrusteess.com).\n2. Click 'Deposit Capital'.\n3. Choose your asset: USDT (TRC20/ERC20), BTC, ETH, or SOL.\n4. Transfer the amount to the provided wallet address.\n5. Click 'I Have Made Deposit' to initiate instant ledger confirmation.",
       "To fund your account, navigate to 'Deposit Capital' in your dashboard, copy your designated receiving address (USDT, Bitcoin, Ethereum, or Solana), complete the transaction, and submit the notice. The settlement desk automatically credits verified transfers."
     ],
     followUps: ["Which coins are accepted?", "How long does deposit take?"]
@@ -326,8 +326,8 @@ const INTENTS: IntentHandler[] = [
       /support email/i
     ],
     responses: [
-      "Our human support desk is available 24/7. You can email us directly at support@stealthssolutions.com or click the 'Contact Human Support Desk' button below to open an immediate email draft.",
-      "If you need specialized account assistance, transaction investigations, or private wealth advisory, please reach out to support@stealthssolutions.com. An institutional specialist will respond promptly."
+      "Our human support desk is available 24/7. You can email us directly at support@heronassetstrusteess.com or click the 'Contact Human Support Desk' button below to open an immediate email draft.",
+      "If you need specialized account assistance, transaction investigations, or private wealth advisory, please reach out to support@heronassetstrusteess.com. An institutional specialist will respond promptly."
     ],
     supportRequired: true,
     followUps: ["What plans do you offer?", "How do I deposit?"]
@@ -351,7 +351,7 @@ const INTENTS: IntentHandler[] = [
 
 const FALLBACK_RESPONSES = [
   "I am the Heron AI Concierge. While I am well versed in Heron's 4 investment plans, deposit protocols, 0%-fee withdrawals, and cold-storage security, I didn't quite catch the specifics of your request. Could you rephrase, or would you like to speak to our human support desk?",
-  "I couldn't locate a precise answer in our institutional documentation for that question. For personalized assistance or account-specific inquiries, our human support team is ready to help at support@stealthssolutions.com.",
+  "I couldn't locate a precise answer in our institutional documentation for that question. For personalized assistance or account-specific inquiries, our human support team is ready to help at support@heronassetstrusteess.com.",
   "That appears to be outside my immediate platform knowledge base. If this is regarding a specific account balance or technical question, please click below to contact our support desk directly."
 ];
 

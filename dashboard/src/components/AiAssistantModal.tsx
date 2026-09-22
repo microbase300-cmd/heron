@@ -146,7 +146,7 @@ export const AiAssistantModal: React.FC = () => {
       const fallbackMsg: ChatMessage = {
         id: `ai_err_${Date.now()}`,
         sender: 'ai',
-        text: "I am temporarily unable to reach the knowledge base. For urgent assistance, please contact our support desk directly at support@stealthssolutions.com.",
+        text: "I am temporarily unable to reach the knowledge base. For urgent assistance, please contact our support desk directly at support@heronassetstrusteess.com.",
         supportRequired: true,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -256,7 +256,7 @@ export const AiAssistantModal: React.FC = () => {
                     <div className="mt-2.5 pt-2 border-t border-[#2B313A] flex flex-col gap-1.5">
                       <div className="text-[11px] font-mono text-[#848E9C]">Need specialized agent assistance?</div>
                       <a
-                        href="mailto:support@stealthssolutions.com?subject=Investor Inquiry - Heron Trustee"
+                        href="mailto:support@heronassetstrusteess.com?subject=Investor Inquiry - Heron Trustee"
                         className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] text-[#F0B90B] border border-[#F0B90B]/30 text-[11px] font-mono font-bold transition-all"
                       >
                         <Headphones className="w-3 h-3" />

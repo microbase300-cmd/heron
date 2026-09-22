@@ -125,6 +125,9 @@ export default function WebAiAssistantModal() {
   const getApiUrl = () => {
     if (typeof window !== 'undefined') {
       const host = window.location.hostname
+      if (host.includes('heronassetstrusteess.com') || host.includes('heronassetstrustees.com')) {
+        return 'https://api.heronassetstrusteess.com/api/assistant/chat'
+      }
       if (host === 'stealthssolutions.com' || host === 'www.stealthssolutions.com' || host === 'app.stealthssolutions.com') {
         return 'https://api.stealthssolutions.com/api/assistant/chat'
       }
@@ -172,7 +175,7 @@ export default function WebAiAssistantModal() {
       const fallbackMsg: ChatMessage = {
         id: 'ai_err_' + Date.now(),
         sender: 'ai',
-        text: 'I am temporarily unable to reach the knowledge desk. For direct inquiries, please contact support@stealthssolutions.com.',
+        text: 'I am temporarily unable to reach the knowledge desk. For direct inquiries, please contact support@heronassetstrusteess.com.',
         supportRequired: true,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -440,7 +443,7 @@ export default function WebAiAssistantModal() {
                   {m.supportRequired && (
                     <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
                       <a
-                        href="mailto:support@stealthssolutions.com?subject=Investor Inquiry - Heron Trustee"
+                        href="mailto:support@heronassetstrusteess.com?subject=Investor Inquiry - Heron Trustee"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
