@@ -88,10 +88,11 @@ router.post('/submit', authenticateToken, (req: AuthRequest, res: Response) => {
       accountName: user.name
     });
 
-    // Real-time Movement & Liveness Verification Check (>=90% Human Motion Threshold)
+    // Automated OCR confidence calculation
     const motionConfidence = livenessDetails?.confidenceScore || ocrResult.confidenceScore || 0;
-    const isAutoApproved = Boolean(livenessVerified) && motionConfidence >= 90;
-    const initialStatus = isAutoApproved ? 'verified' : 'pending';
+    
+    // Always place into 'pending' queue so Admin has full oversight and can inspect OCR documents
+    const initialStatus = 'pending';
 
     const submission: KycSubmission = {
       id: `kyc_${uuidv4().substring(0, 10)}`,
@@ -108,52 +109,37 @@ router.post('/submit', authenticateToken, (req: AuthRequest, res: Response) => {
       frontDocumentUrl,
       backDocumentUrl: backDocumentUrl || undefined,
       selfieUrl: selfieUrl || undefined,
-      // Institutional Privacy Guarantee: Purge video immediately upon approval, or retain max 24 hours
-      biometricVideoUrl: isAutoApproved ? undefined : (biometricVideoUrl || (livenessDetails && livenessDetails.videoUrl) || undefined),
+      biometricVideoUrl: biometricVideoUrl || (livenessDetails && livenessDetails.videoUrl) || undefined,
       status: initialStatus,
       ocrResult,
       livenessVerified: Boolean(livenessVerified),
       livenessDetails: livenessDetails ? {
         ...livenessDetails,
-        videoUrl: isAutoApproved ? undefined : livenessDetails.videoUrl
+        videoUrl: biometricVideoUrl || livenessDetails.videoUrl
       } : undefined,
       submittedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      reviewedBy: isAutoApproved ? 'Automated Motion AI Engine' : undefined,
-      reviewedAt: isAutoApproved ? new Date().toISOString() : undefined,
-      adminNotes: isAutoApproved ? `Instant Auto-Clearance: Real human motion detected (${motionConfidence.toFixed(1)}% >= 90% threshold). Ephemeral video purged per 24h compliance retention protocol.` : undefined
+      adminNotes: `Automated OCR & Liveness extraction passed (${motionConfidence.toFixed(1)}% score). Awaiting administrative approval.`
     };
 
     db.createKycSubmission(submission);
 
-    if (isAutoApproved) {
-      db.updateKycSubmissionStatus(
-        submission.id,
-        'verified',
-        undefined,
-        `Instant Auto-Clearance: Real human motion detected (${motionConfidence.toFixed(1)}% >= 90% threshold). Ephemeral video purged per 24h compliance retention protocol.`,
-        'Automated Motion AI Engine'
-      );
-    } else {
-      // Notify user of pending review
-      db.createNotification({
-        id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        userId: user.id,
-        targetEmail: user.email,
-        title: 'Verification Documents Received',
-        message: `Your ${documentType.toUpperCase()} has been received and processed by our Automated OCR Engine (Score: ${ocrResult.confidenceScore}%). Final review is underway.`,
-        type: 'info',
-        sender: 'Automated Compliance Engine',
-        readBy: [],
-        createdAt: new Date().toISOString()
-      });
-    }
+    // Notify user of pending review
+    db.createNotification({
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId: user.id,
+      targetEmail: user.email,
+      title: 'Verification Documents Received',
+      message: `Your ${documentType.toUpperCase()} has been received and processed by our Automated OCR Engine (Score: ${ocrResult.confidenceScore}%). Administrative compliance review is underway.`,
+      type: 'info',
+      sender: 'Automated Compliance Engine',
+      readBy: [],
+      createdAt: new Date().toISOString()
+    });
 
     res.json({
-      message: isAutoApproved
-        ? 'KYC verified and approved instantly via real-time motion AI.'
-        : 'KYC documents received and analyzed successfully.',
-      status: isAutoApproved ? 'verified' : 'pending',
+      message: 'KYC documents received and analyzed successfully. Pending administrative compliance approval.',
+      status: 'pending',
       submission: db.getKycSubmissionById(submission.id) || submission
     });
   } catch (err: any) {
@@ -175,8 +161,13 @@ router.get('/admin/submissions', authenticateToken, requireAdmin, (req: AuthRequ
       submissions = submissions.filter(s => s.status === status);
     }
 
+    const allSubmissions = db.getAllKycSubmissions();
+    const pendingCount = allSubmissions.filter(s => s.status === 'pending').length;
+
     res.json({
       total: submissions.length,
+      count: submissions.length,
+      pendingCount,
       submissions
     });
   } catch (err: any) {
