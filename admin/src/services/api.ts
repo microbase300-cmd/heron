@@ -401,6 +401,10 @@ class AdminApiService {
   public async getWebmailStats(): Promise<{ success: boolean; stats: WebmailFolderStats }> {
     return this.request('/webmail/stats');
   }
+
+  public async syncWebmail(): Promise<{ success: boolean; importedCount: number; stats: WebmailFolderStats }> {
+    return this.request('/webmail/sync', { method: 'POST' });
+  }
 }
 
 export const adminApi = new AdminApiService();

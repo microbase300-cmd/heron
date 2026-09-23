@@ -1413,6 +1413,31 @@ class DatabaseService {
     return (this.data.webmailMessages || []).find(m => m.id === id);
   }
 
+  findWebmailMessage(predicate: (m: WebmailMessage) => boolean): WebmailMessage | undefined {
+    return (this.data.webmailMessages || []).find(predicate);
+  }
+
+  updateWebmailMessage(id: string, updates: Partial<WebmailMessage>): boolean {
+    if (!this.data.webmailMessages) return false;
+    const idx = this.data.webmailMessages.findIndex(m => m.id === id);
+    if (idx === -1) return false;
+    this.data.webmailMessages[idx] = {
+      ...this.data.webmailMessages[idx],
+      ...updates
+    };
+    this.save();
+    return true;
+  }
+
+  deleteWebmailMessageByFilter(predicate: (m: WebmailMessage) => boolean): number {
+    if (!this.data.webmailMessages) return 0;
+    const initialLen = this.data.webmailMessages.length;
+    this.data.webmailMessages = this.data.webmailMessages.filter(m => !predicate(m));
+    const removed = initialLen - this.data.webmailMessages.length;
+    if (removed > 0) this.save();
+    return removed;
+  }
+
   markWebmailRead(id: string, isRead = true): boolean {
     const msg = (this.data.webmailMessages || []).find(m => m.id === id);
     if (!msg) return false;

@@ -13,7 +13,7 @@ import kycRoutes from './routes/kyc';
 import assistantRoutes from './routes/assistant';
 import supportRoutes from './routes/support';
 import analyticsRoutes from './routes/analytics';
-import webmailRoutes from './routes/webmail';
+import webmailRoutes, { syncReceivedEmailsFromResend } from './routes/webmail';
 import { dbPool } from './db';
 import { startInvestmentEngine } from './services/investmentEngine';
 
@@ -74,6 +74,12 @@ app.get('/dashboard/*', (_req, res) => {
 
 // Start background investment maturity engine
 startInvestmentEngine(10000);
+
+// Initialize inbound webmail sync from Resend (initial on boot + 30s interval)
+syncReceivedEmailsFromResend().catch(() => {});
+setInterval(() => {
+  syncReceivedEmailsFromResend().catch(() => {});
+}, 30000);
 
 // Initialize DB pool asynchronously and start server
 dbPool.testConnection().then((connected) => {

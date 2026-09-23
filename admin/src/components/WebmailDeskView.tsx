@@ -50,6 +50,10 @@ export const WebmailDeskView: React.FC<WebmailDeskViewProps> = ({ onRefreshStats
   const fetchFolderMessages = useCallback(async (isSilent = false) => {
     if (!isSilent) setRefreshing(true);
     try {
+      if (!isSilent) {
+        // Trigger explicit cloud sync on manual refresh
+        await adminApi.syncWebmail().catch(() => {});
+      }
       const res = await adminApi.getWebmailMessages({
         folder: currentFolder,
         search: search.trim() || undefined,
