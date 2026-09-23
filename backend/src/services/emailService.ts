@@ -420,6 +420,108 @@ class EmailService {
       return false;
     });
   }
+
+  /**
+   * Dispatches withdrawal approved & disbursed notification to investor
+   */
+  public async sendWithdrawalApprovedEmail(params: {
+    to: string;
+    name: string;
+    amount: number;
+    asset: string;
+    destinationAddress?: string;
+    txHash?: string;
+  }): Promise<boolean> {
+    const formattedAmount = params.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const shortHash = params.txHash && params.txHash.length > 20 
+      ? `${params.txHash.slice(0, 10)}...${params.txHash.slice(-8)}` 
+      : (params.txHash || 'Verified On-Chain');
+    const destDisplay = params.destinationAddress && params.destinationAddress.length > 16
+      ? `${params.destinationAddress.slice(0, 8)}...${params.destinationAddress.slice(-6)}`
+      : (params.destinationAddress || 'Custody Registered Wallet');
+
+    const htmlContent = `
+      <div style="background-color: #0b0e11; padding: 40px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #EAECEF;">
+        <div style="max-width: 560px; margin: 0 auto; background-color: #181A20; border: 1px solid #2B313A; border-radius: 16px; padding: 36px; box-shadow: 0 12px 36px rgba(0,0,0,0.6);">
+          
+          <!-- Header Badge -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; padding: 8px 18px; background: rgba(14, 203, 129, 0.1); border: 1px solid rgba(14, 203, 129, 0.35); border-radius: 30px; color: #0ECB81; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;">
+              HERON ASSETS TRUSTEE • WITHDRAWAL DISBURSED
+            </div>
+          </div>
+
+          <!-- Title -->
+          <h1 style="color: #FFFFFF; font-size: 24px; font-weight: 700; margin: 0 0 12px 0; text-align: center;">
+            Withdrawal Request Approved & Executed
+          </h1>
+          <p style="color: #848E9C; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0; text-align: center;">
+            Dear <strong style="color: #EAECEF;">${params.name}</strong>, your withdrawal authorization has been approved by the Settlement Treasury Desk. Funds have been released and broadcast to your destination address.
+          </p>
+
+          <!-- Transaction Summary Card -->
+          <div style="background-color: #121418; border: 1px solid #2B313A; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Disbursement Asset:</td>
+                <td style="padding: 8px 0; color: #EAECEF; font-weight: 600; text-align: right;">${params.asset}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Disbursed Amount:</td>
+                <td style="padding: 8px 0; color: #F0B90B; font-size: 20px; font-weight: 700; text-align: right;">$${formattedAmount} USD</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Destination Address:</td>
+                <td style="padding: 8px 0; font-family: monospace; color: #EAECEF; text-align: right; font-size: 12px;">${destDisplay}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Settlement Tx Hash:</td>
+                <td style="padding: 8px 0; font-family: monospace; color: #0ECB81; text-align: right; font-size: 12px;">${shortHash}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Settlement Status:</td>
+                <td style="padding: 8px 0; text-align: right;">
+                  <span style="background: rgba(14, 203, 129, 0.15); color: #0ECB81; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    ✓ Approved & Dispatched
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: rgba(240, 185, 11, 0.05); border: 1px dashed rgba(240, 185, 11, 0.3); border-radius: 10px; padding: 14px; margin-bottom: 24px; font-size: 12px; color: #848E9C; line-height: 1.5;">
+            <strong style="color: #F0B90B;">Note:</strong> Depending on network traffic for <span style="color: #EAECEF;">${params.asset}</span>, the transfer may require standard block confirmations before showing in your private wallet balance.
+          </div>
+
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="https://heronassetstrusteess.com/dashboard" style="background-color: #F0B90B; color: #181A20; padding: 13px 32px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px;">
+              View Portfolio & Audit Ledger →
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <div style="border-top: 1px solid #2B313A; padding-top: 20px; text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #848E9C;">
+              Heron Assets Trustee Global Custody & Settlement Treasury
+            </p>
+            <p style="margin: 6px 0 0 0; font-size: 11px; color: #474D57;">
+              © 2026 Heron Assets Trustee Platform. All rights reserved.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    return this.sendCustomEmail({
+      to: params.to,
+      subject: `Withdrawal Approved: $${formattedAmount} ${params.asset} Dispatched`,
+      html: htmlContent
+    }).then(res => res.success).catch(err => {
+      console.error('Failed to send withdrawal approved email:', err);
+      return false;
+    });
+  }
 }
 
 export const emailService = new EmailService();

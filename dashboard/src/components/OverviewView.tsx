@@ -12,7 +12,9 @@ import {
   ChevronRight,
   Sparkles,
   AlertTriangle,
-  ShieldAlert
+  ShieldAlert,
+  ReceiptText,
+  XCircle
 } from 'lucide-react';
 import { WalletSummary, Investment, User, Transaction } from '../types';
 import { PortfolioYieldChart } from './charts/PortfolioYieldChart';
@@ -352,6 +354,106 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Row 3: Recent Inbound & Outbound Transaction Activity */}
+      <div className="rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#2B313A]">
+          <div>
+            <h3 className="font-sans text-base font-bold text-[#EAECEF] tracking-tight flex items-center gap-2">
+              <ReceiptText className="w-4 h-4 text-[#F0B90B]" />
+              Recent Deposits & Withdrawals
+            </h3>
+            <p className="text-xs text-[#848E9C] font-mono mt-0.5">
+              Live cryptographic verification for settlements, disbursements, and on-chain proofs
+            </p>
+          </div>
+
+          <button
+            onClick={() => onNavigate('ledger')}
+            className="text-xs text-[#F0B90B] hover:text-[#FCD535] flex items-center gap-1 font-mono font-bold self-start sm:self-auto transition-colors"
+          >
+            <span>Complete Audit Ledger ({transactions?.length || 0})</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {transactions && transactions.length > 0 ? (
+          <div className="mt-4 divide-y divide-[#2B313A]/60">
+            {transactions.slice(0, 5).map((t) => {
+              const isDeposit = t.type === 'deposit';
+              const isWithdrawal = t.type === 'withdrawal';
+              const isPending = t.status === 'pending';
+              const isCompleted = t.status === 'completed';
+
+              return (
+                <div key={t.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-[#181A20]/50 px-2 rounded-xl transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                      isDeposit 
+                        ? 'bg-[#0ECB81]/10 border-[#0ECB81]/30 text-[#0ECB81]' 
+                        : isWithdrawal
+                        ? 'bg-[#F6465D]/10 border-[#F6465D]/30 text-[#F6465D]'
+                        : 'bg-[#F0B90B]/10 border-[#F0B90B]/30 text-[#F0B90B]'
+                    }`}>
+                      {isDeposit ? <ArrowDownLeft className="w-4 h-4" /> : isWithdrawal ? <ArrowUpRight className="w-4 h-4" /> : <ReceiptText className="w-4 h-4" />}
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-sans font-bold text-xs text-[#EAECEF] capitalize">
+                          {t.type.replace('_', ' ')}
+                        </span>
+                        <span className="text-[11px] font-mono text-[#848E9C]">
+                          • {t.asset}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#848E9C] font-mono truncate max-w-xs sm:max-w-md">
+                        {t.note || (t.txHash ? `Tx: ${t.txHash.slice(0, 10)}...` : 'Institutional Settlement')}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                    <div className="text-right">
+                      <div className={`font-sans font-bold text-sm ${isDeposit ? 'text-[#0ECB81]' : isWithdrawal ? 'text-[#F6465D]' : 'text-[#EAECEF]'}`}>
+                        {isDeposit ? '+' : isWithdrawal ? '-' : ''}${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-[10px] text-[#848E9C] font-mono">
+                        {new Date(t.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase inline-flex items-center gap-1 ${
+                      isPending
+                        ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30'
+                        : isCompleted
+                        ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                        : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
+                    }`}>
+                      {isPending && <Clock className="w-3 h-3 animate-pulse" />}
+                      {isCompleted && <CheckCircle2 className="w-3 h-3" />}
+                      {!isPending && !isCompleted && <XCircle className="w-3 h-3" />}
+                      {t.status}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-8 text-center space-y-2">
+            <p className="text-xs text-[#848E9C] font-mono">No recent transaction history recorded yet.</p>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <button
+                onClick={onOpenDeposit}
+                className="px-3 py-1.5 rounded-lg bg-[#F0B90B] text-[#181A20] font-bold text-xs"
+              >
+                Deposit Funds ↗
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -358,6 +358,7 @@ export const App: React.FC = () => {
         onClose={() => setIsWithdrawOpen(false)}
         availableBalance={user?.balance ?? 0}
         onWithdrawSuccess={refreshData}
+        transactions={transactions}
         preferredCurrency={user?.preferredCurrency || 'USD'}
         rates={exchangeRates.rates}
       />

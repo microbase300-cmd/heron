@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ReceiptText, ArrowDownLeft, ArrowUpRight, TrendingUp, Users, Lock, CheckCircle2, Copy, Check } from 'lucide-react';
+import { ReceiptText, ArrowDownLeft, ArrowUpRight, TrendingUp, Users, Lock, CheckCircle2, Copy, Check, Clock, XCircle } from 'lucide-react';
 import { Transaction } from '../types';
 
 interface LedgerViewProps {
@@ -116,8 +116,16 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ transactions }) => {
                       </td>
 
                       <td className="py-4 px-4 text-center">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30 inline-flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase inline-flex items-center gap-1 ${
+                          t.status === 'pending'
+                            ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30'
+                            : t.status === 'completed'
+                            ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                            : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
+                        }`}>
+                          {t.status === 'pending' && <Clock className="w-3 h-3 animate-pulse" />}
+                          {t.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
+                          {t.status === 'rejected' && <XCircle className="w-3 h-3" />}
                           {t.status}
                         </span>
                       </td>

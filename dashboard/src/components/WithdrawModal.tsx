@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { X, ArrowUpRight, Check, AlertCircle, KeyRound, Clock, ArrowLeft, Send } from 'lucide-react';
+import { X, ArrowUpRight, Check, AlertCircle, KeyRound, Clock, ArrowLeft, Send, CheckCircle2, XCircle, History, PlusCircle, Copy } from 'lucide-react';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
+import { Transaction } from '../types';
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableBalance: number;
   onWithdrawSuccess: () => void;
+  transactions?: Transaction[];
   preferredCurrency?: string;
   rates?: Record<string, number>;
 }
@@ -17,9 +19,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   onClose,
   availableBalance,
   onWithdrawSuccess,
+  transactions = [],
   preferredCurrency = 'USD',
   rates
 }) => {
+  const [activeTab, setActiveTab] = useState<'withdraw' | 'history'>('withdraw');
   const [step, setStep] = useState<'details' | 'otp'>('details');
   const [asset, setAsset] = useState('USDT (TRC-20)');
   const [address, setAddress] = useState('');
@@ -29,6 +33,10 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
+
+  const withdrawTxs = transactions.filter(t => t.type === 'withdrawal');
+  const pendingWithdrawCount = withdrawTxs.filter(t => t.status === 'pending').length;
 
   if (!isOpen) return null;
 
@@ -103,16 +111,53 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-[#F0B90B]/10 border border-[#F0B90B]/30 flex items-center justify-center text-[#F0B90B]">
             <ArrowUpRight className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-sans text-xl font-bold text-[#EAECEF] tracking-tight">Disburse Liquidity</h3>
+            <h3 className="font-sans text-xl font-bold text-[#EAECEF] tracking-tight">Withdrawal Terminal</h3>
             <p className="text-xs text-[#848E9C] font-mono">
-              {step === 'details' ? 'Two-factor authorized cryptographic withdrawal' : 'Step 2: 2FA Security Authorization'}
+              {activeTab === 'history' 
+                ? `Historical disbursement records (${withdrawTxs.length})` 
+                : step === 'details' ? 'Two-factor authorized cryptographic withdrawal' : 'Step 2: 2FA Security Authorization'}
             </p>
           </div>
+        </div>
+
+        {/* Tab Switcher: Request vs History */}
+        <div className="flex rounded-lg bg-[#181A20] p-1 border border-[#2B313A] mb-5">
+          <button
+            type="button"
+            onClick={() => setActiveTab('withdraw')}
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-mono font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              activeTab === 'withdraw'
+                ? 'bg-[#F0B90B] text-[#181A20] font-bold shadow-sm'
+                : 'text-[#848E9C] hover:text-[#EAECEF]'
+            }`}
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>New Request</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-mono font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              activeTab === 'history'
+                ? 'bg-[#F0B90B] text-[#181A20] font-bold shadow-sm'
+                : 'text-[#848E9C] hover:text-[#EAECEF]'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>History</span>
+            {pendingWithdrawCount > 0 && (
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeTab === 'history' ? 'bg-[#181A20] text-[#F0B90B]' : 'bg-[#F0B90B] text-[#181A20]'
+              }`}>
+                {pendingWithdrawCount}
+              </span>
+            )}
+          </button>
         </div>
 
         {error && (
@@ -129,7 +174,90 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           </div>
         )}
 
-        {step === 'details' ? (
+        {activeTab === 'history' ? (
+          /* Withdrawal History Tab */
+          <div className="space-y-3">
+            {withdrawTxs.length > 0 ? (
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1 no-scrollbar">
+                {withdrawTxs.map((t) => {
+                  const isPending = t.status === 'pending';
+                  const isApproved = t.status === 'completed';
+                  const isRejected = t.status === 'rejected';
+
+                  return (
+                    <div
+                      key={t.id}
+                      className="p-3.5 rounded-xl bg-[#181A20] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all space-y-2 text-xs font-mono"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 font-sans font-bold text-sm text-[#EAECEF]">
+                          <span className="text-[#F6465D]">-${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-xs font-mono text-[#848E9C] font-normal">{t.asset}</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase inline-flex items-center gap-1 ${
+                          isPending
+                            ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30'
+                            : isApproved
+                            ? 'bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/30'
+                            : 'bg-[#F6465D]/15 text-[#F6465D] border border-[#F6465D]/30'
+                        }`}>
+                          {isPending && <Clock className="w-3 h-3 animate-pulse" />}
+                          {isApproved && <CheckCircle2 className="w-3 h-3" />}
+                          {isRejected && <XCircle className="w-3 h-3" />}
+                          {t.status}
+                        </span>
+                      </div>
+
+                      {t.note && (
+                        <div className="text-[11px] text-[#848E9C] truncate">
+                          {t.note}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-[11px] text-[#848E9C] pt-1.5 border-t border-[#2B313A]/60">
+                        <span>{new Date(t.createdAt).toLocaleDateString()} {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {t.txHash && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[#EAECEF] font-mono">{t.txHash.slice(0, 8)}...{t.txHash.slice(-6)}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(t.txHash);
+                                setCopiedTxId(t.id);
+                                setTimeout(() => setCopiedTxId(null), 1800);
+                              }}
+                              className="p-1 hover:text-[#F0B90B] text-[#848E9C]"
+                              title="Copy Hash"
+                            >
+                              {copiedTxId === t.id ? <Check className="w-3 h-3 text-[#0ECB81]" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-12 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-[#181A20] border border-[#2B313A] flex items-center justify-center mx-auto text-[#848E9C]">
+                  <History className="w-5 h-5" />
+                </div>
+                <div className="text-xs font-semibold text-[#EAECEF]">No Withdrawal Requests Yet</div>
+                <p className="text-[11px] text-[#848E9C] max-w-xs mx-auto">
+                  When you request a payout, your authorization status and on-chain dispatch proof will appear here.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('withdraw')}
+                  className="mt-2 px-3 py-1.5 rounded-lg bg-[#F0B90B] text-[#181A20] font-bold text-xs"
+                >
+                  Submit First Withdrawal ↗
+                </button>
+              </div>
+            )}
+          </div>
+        ) : step === 'details' ? (
           <form onSubmit={handleRequestOtp} className="space-y-4">
             <div>
               <div className="flex justify-between text-xs font-mono text-[#848E9C] mb-1.5">

@@ -215,6 +215,27 @@ router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
           readBy: [],
           createdAt: new Date().toISOString()
         });
+
+        // Parse destination address from note if available
+        let destinationAddress = (tx as any).destinationAddress;
+        if (!destinationAddress && tx.note) {
+          const match = tx.note.match(/to\s+([A-Za-z0-9.]+)/i);
+          if (match) destinationAddress = match[1];
+        }
+
+        // Dispatch institutional withdrawal approved email (non-blocking)
+        if (user.email) {
+          emailService.sendWithdrawalApprovedEmail({
+            to: user.email,
+            name: user.name || 'Investor',
+            amount: tx.amount,
+            asset: tx.asset,
+            destinationAddress: destinationAddress,
+            txHash: tx.txHash
+          }).catch(err => {
+            console.warn('⚠️ [Withdrawal Approval Email Error]:', err?.message || err);
+          });
+        }
       }
     }
 
