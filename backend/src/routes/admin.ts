@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { db } from '../services/db';
+import { emailService } from '../services/emailService';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { PlanId, Transaction } from '../types';
 
@@ -170,21 +171,36 @@ router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
 
     // If it was a pending deposit, credit the user's balance and notify user
     if (tx.type === 'deposit') {
-      const user = db.getUserById(tx.userId);
-      if (user) {
-        db.updateUserBalance(user.id, user.balance + tx.amount);
-        db.createNotification({
-          id: `notif_${uuidv4()}`,
-          userId: user.id,
-          targetEmail: user.email,
-          title: `Inbound Deposit Confirmed: $${tx.amount.toLocaleString()} ${tx.asset}`,
-          message: `Your deposit of $${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${tx.asset} has been confirmed and credited to your available balance.`,
-          type: 'success',
-          sender: 'Settlement Treasury Desk',
-          readBy: [],
-          createdAt: new Date().toISOString()
-        });
-      }
+       const user = db.getUserById(tx.userId);
+       if (user) {
+         const newBalance = user.balance + tx.amount;
+         db.updateUserBalance(user.id, newBalance);
+         db.createNotification({
+           id: `notif_${uuidv4()}`,
+           userId: user.id,
+           targetEmail: user.email,
+           title: `Inbound Deposit Confirmed: $${tx.amount.toLocaleString()} ${tx.asset}`,
+           message: `Your deposit of $${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${tx.asset} has been confirmed and credited to your available balance.`,
+           type: 'success',
+           sender: 'Settlement Treasury Desk',
+           readBy: [],
+           createdAt: new Date().toISOString()
+         });
+
+         // Dispatch institutional deposit confirmed email (non-blocking)
+         if (user.email) {
+           emailService.sendDepositConfirmedEmail({
+             to: user.email,
+             name: user.name || 'Investor',
+             amount: tx.amount,
+             asset: tx.asset,
+             newBalance,
+             txHash: tx.txHash
+           }).catch(err => {
+             console.warn('⚠️ [Deposit Approval Email Error]:', err?.message || err);
+           });
+         }
+       }
     } else if (tx.type === 'withdrawal') {
       const user = db.getUserById(tx.userId);
       if (user) {

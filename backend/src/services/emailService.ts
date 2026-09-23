@@ -223,6 +223,201 @@ class EmailService {
       return { success: false, error: err.message };
     }
   }
+
+  /**
+   * Dispatches deposit initiation notification to investor
+   */
+  public async sendDepositInitiatedEmail(params: {
+    to: string;
+    name: string;
+    amount: number;
+    asset: string;
+    txHash: string;
+  }): Promise<boolean> {
+    const fromAddress = process.env.SMTP_FROM || 'Heron Assets Trustee <support@heronassetstrusteess.com>';
+    const formattedAmount = params.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const shortHash = params.txHash.length > 20 ? `${params.txHash.slice(0, 10)}...${params.txHash.slice(-8)}` : params.txHash;
+
+    const htmlContent = `
+      <div style="background-color: #0b0e11; padding: 40px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #EAECEF;">
+        <div style="max-width: 560px; margin: 0 auto; background-color: #181A20; border: 1px solid #2B313A; border-radius: 16px; padding: 36px; box-shadow: 0 12px 36px rgba(0,0,0,0.6);">
+          
+          <!-- Header Badge -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; padding: 8px 18px; background: rgba(240, 185, 11, 0.1); border: 1px solid rgba(240, 185, 11, 0.35); border-radius: 30px; color: #F0B90B; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;">
+              HERON ASSETS TRUSTEE • INBOUND SETTLEMENT
+            </div>
+          </div>
+
+          <h2 style="margin: 0 0 12px 0; font-size: 22px; color: #FFFFFF; text-align: center; font-weight: 700;">
+            Deposit Request Awaiting Confirmation
+          </h2>
+
+          <p style="margin: 0 0 24px 0; font-size: 14px; color: #848E9C; line-height: 1.6; text-align: center;">
+            Dear <strong style="color: #FFFFFF;">${params.name || 'Investor'}</strong>, your inbound capital deposit has been submitted to the institutional settlement desk and is currently under blockchain verification.
+          </p>
+
+          <!-- Transaction Summary Card -->
+          <div style="background-color: #1E2329; border: 1px solid #2B313A; border-radius: 12px; padding: 22px; margin-bottom: 24px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Deposit Asset:</td>
+                <td style="padding: 8px 0; color: #FFFFFF; font-weight: 600; text-align: right;">${params.asset}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Amount:</td>
+                <td style="padding: 8px 0; color: #F0B90B; font-size: 18px; font-weight: 700; text-align: right;">$${formattedAmount} USD</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Verification Hash:</td>
+                <td style="padding: 8px 0; font-family: monospace; color: #EAECEF; text-align: right; font-size: 12px;">${shortHash}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Status:</td>
+                <td style="padding: 8px 0; text-align: right;">
+                  <span style="background: rgba(240, 185, 11, 0.15); color: #F0B90B; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    ⏳ Pending Blockchain Nodes
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: rgba(255,255,255,0.02); border-left: 3px solid #F0B90B; padding: 14px 16px; border-radius: 4px; margin-bottom: 24px;">
+            <p style="margin: 0; font-size: 13px; color: #B7BDC6; line-height: 1.5;">
+              <strong>Settlement Note:</strong> Once the requisite institutional confirmations are registered, your portfolio balance will immediately reflect this deposit and you will receive a secondary clearance notification.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="https://heronassetstrusteess.com/dashboard" style="background-color: #F0B90B; color: #181A20; padding: 13px 32px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px;">
+              View Dashboard Portfolio →
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <div style="border-top: 1px solid #2B313A; padding-top: 20px; text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #848E9C;">
+              Security & Settlement Operations • Heron Assets Trustee Platform
+            </p>
+            <p style="margin: 6px 0 0 0; font-size: 11px; color: #474D57;">
+              If you did not initiate this deposit, contact our defense desk immediately at support@heronassetstrusteess.com
+            </p>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    return this.sendCustomEmail({
+      to: params.to,
+      subject: `Deposit Initiated: $${formattedAmount} ${params.asset} [Pending Confirmation]`,
+      html: htmlContent
+    }).then(res => res.success).catch(err => {
+      console.error('Failed to send deposit initiated email:', err);
+      return false;
+    });
+  }
+
+  /**
+   * Dispatches deposit approved / confirmed notification to investor
+   */
+  public async sendDepositConfirmedEmail(params: {
+    to: string;
+    name: string;
+    amount: number;
+    asset: string;
+    newBalance?: number;
+    txHash?: string;
+  }): Promise<boolean> {
+    const formattedAmount = params.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedBalance = params.newBalance !== undefined 
+      ? params.newBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : null;
+    const shortHash = params.txHash && params.txHash.length > 20 
+      ? `${params.txHash.slice(0, 10)}...${params.txHash.slice(-8)}` 
+      : (params.txHash || 'N/A');
+
+    const htmlContent = `
+      <div style="background-color: #0b0e11; padding: 40px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #EAECEF;">
+        <div style="max-width: 560px; margin: 0 auto; background-color: #181A20; border: 1px solid #0ECB81; border-radius: 16px; padding: 36px; box-shadow: 0 12px 36px rgba(0,0,0,0.6);">
+          
+          <!-- Header Badge -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; padding: 8px 18px; background: rgba(14, 203, 129, 0.1); border: 1px solid rgba(14, 203, 129, 0.35); border-radius: 30px; color: #0ECB81; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;">
+              ✓ SETTLEMENT CONFIRMED • FUNDS CREDITED
+            </div>
+          </div>
+
+          <h2 style="margin: 0 0 12px 0; font-size: 22px; color: #FFFFFF; text-align: center; font-weight: 700;">
+            Deposit Approved & Credited
+          </h2>
+
+          <p style="margin: 0 0 24px 0; font-size: 14px; color: #848E9C; line-height: 1.6; text-align: center;">
+            Dear <strong style="color: #FFFFFF;">${params.name || 'Investor'}</strong>, your deposit has been verified, cleared by the Treasury Settlement Desk, and credited to your active portfolio balance.
+          </p>
+
+          <!-- Transaction Summary Card -->
+          <div style="background-color: #1E2329; border: 1px solid #2B313A; border-radius: 12px; padding: 22px; margin-bottom: 24px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Credited Asset:</td>
+                <td style="padding: 8px 0; color: #FFFFFF; font-weight: 600; text-align: right;">${params.asset}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Amount Credited:</td>
+                <td style="padding: 8px 0; color: #0ECB81; font-size: 20px; font-weight: 700; text-align: right;">+$${formattedAmount} USD</td>
+              </tr>
+              ${formattedBalance ? `
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">New Portfolio Balance:</td>
+                <td style="padding: 8px 0; color: #F0B90B; font-weight: 700; text-align: right;">$${formattedBalance} USD</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Reference Hash:</td>
+                <td style="padding: 8px 0; font-family: monospace; color: #EAECEF; text-align: right; font-size: 12px;">${shortHash}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #848E9C;">Status:</td>
+                <td style="padding: 8px 0; text-align: right;">
+                  <span style="background: rgba(14, 203, 129, 0.15); color: #0ECB81; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    ✓ Completed & Available
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="https://heronassetstrusteess.com/dashboard" style="background-color: #0ECB81; color: #181A20; padding: 13px 32px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px;">
+              Access Dashboard & Allocation →
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <div style="border-top: 1px solid #2B313A; padding-top: 20px; text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #848E9C;">
+              Heron Assets Trustee Global Custody & Settlement
+            </p>
+            <p style="margin: 6px 0 0 0; font-size: 11px; color: #474D57;">
+              © 2026 Heron Assets Trustee Platform. All rights reserved.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    return this.sendCustomEmail({
+      to: params.to,
+      subject: `Deposit Confirmed: $${formattedAmount} ${params.asset} Credited to Your Account`,
+      html: htmlContent
+    }).then(res => res.success).catch(err => {
+      console.error('Failed to send deposit confirmed email:', err);
+      return false;
+    });
+  }
 }
 
 export const emailService = new EmailService();

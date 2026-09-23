@@ -90,6 +90,19 @@ router.post('/deposit', requireAuth, (req: AuthRequest, res: Response): void => 
       createdAt: new Date().toISOString()
     });
 
+    // Dispatch institutional deposit initiated email (non-blocking)
+    if (user.email) {
+      emailService.sendDepositInitiatedEmail({
+        to: user.email,
+        name: user.name || 'Investor',
+        amount: numAmount,
+        asset: asset || 'USDT',
+        txHash: generatedHash
+      }).catch(err => {
+        console.warn('⚠️ [Deposit Email Error] Could not dispatch deposit initiated notification:', err?.message || err);
+      });
+    }
+
     res.status(201).json({
       message: 'Deposit submitted successfully. Placed in executive queue for blockchain confirmation.',
       transaction: tx,
