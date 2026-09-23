@@ -15,6 +15,7 @@ import supportRoutes from './routes/support';
 import analyticsRoutes from './routes/analytics';
 import webmailRoutes, { syncReceivedEmailsFromResend } from './routes/webmail';
 import { dbPool } from './db';
+import { db } from './services/db';
 import { startInvestmentEngine } from './services/investmentEngine';
 
 dotenv.config();
@@ -99,4 +100,17 @@ app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🛡️ Admin API: http://localhost:${PORT}/api/admin`);
   console.log(`📈 Market API: http://localhost:${PORT}/api/market/tickers`);
   console.log(`=======================================================`);
+});
+
+// Graceful shutdown protection: flush memory state to atomic disk & backups
+process.on('SIGTERM', () => {
+  console.log('🛡️ [Server] SIGTERM received. Executing emergency database flush...');
+  db.forceBackup();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛡️ [Server] SIGINT received. Executing emergency database flush...');
+  db.forceBackup();
+  process.exit(0);
 });

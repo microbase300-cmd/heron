@@ -115,43 +115,267 @@ interface DatabaseSchema {
 }
 
 const DB_FILE = path.join(__dirname, '../../data/db.json');
+const DATA_DIR = path.dirname(DB_FILE);
+const BACKUPS_DIR = path.join(DATA_DIR, 'backups');
+const LATEST_BACKUP_FILE = path.join(BACKUPS_DIR, 'db.backup.latest.json');
+const USERS_STORE_FILE = path.join(BACKUPS_DIR, 'users_store.json');
+const WEBMAIL_STORE_FILE = path.join(BACKUPS_DIR, 'webmail_store.json');
+const SETTINGS_STORE_FILE = path.join(BACKUPS_DIR, 'settings_store.json');
+const TRANSACTIONS_STORE_FILE = path.join(BACKUPS_DIR, 'transactions_store.json');
+const KYC_STORE_FILE = path.join(BACKUPS_DIR, 'kyc_store.json');
 
 class DatabaseService {
   private data: DatabaseSchema;
+  private lastSnapshotTime = 0;
 
   constructor() {
     this.data = this.load();
   }
 
-  private load(): DatabaseSchema {
+  /**
+   * Write data atomically via a temporary file to prevent corruption on unexpected termination
+   */
+  private atomicWriteJson(filePath: string, data: any): void {
     try {
-      if (fs.existsSync(DB_FILE)) {
-        const raw = fs.readFileSync(DB_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        const schema: DatabaseSchema = {
-          users: parsed.users || [],
-          refreshTokens: parsed.refreshTokens || [],
-          investments: parsed.investments || [],
-          transactions: parsed.transactions || [],
-          referralCommissions: parsed.referralCommissions || [],
-          planConfigs: parsed.planConfigs || PLANS,
-          notifications: parsed.notifications || [],
-          depositAddresses: parsed.depositAddresses || DEFAULT_DEPOSIT_ADDRESSES,
-          kycSubmissions: parsed.kycSubmissions || [],
-          supportChats: parsed.supportChats || [],
-          supportMessages: parsed.supportMessages || [],
-          visitorLogs: parsed.visitorLogs || [],
-          webmailMessages: parsed.webmailMessages || [],
-        };
-        this.ensureDefaults(schema);
-        return schema;
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const tempFile = `${filePath}.tmp.${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const content = JSON.stringify(data, null, 2);
+      fs.writeFileSync(tempFile, content, 'utf-8');
+
+      try {
+        fs.renameSync(tempFile, filePath);
+      } catch (renameErr) {
+        // Fallback for Windows file locks
+        fs.copyFileSync(tempFile, filePath);
+        try { fs.unlinkSync(tempFile); } catch {}
       }
     } catch (err) {
-      console.error('Error reading db.json, reinitializing...', err);
+      console.error(`[Database Storage] Failed to write ${path.basename(filePath)}:`, err);
     }
-    const initial = this.seedInitial();
-    this.save(initial);
-    return initial;
+  }
+
+  /**
+   * Safely read JSON from disk, returning null on error or missing file
+   */
+  private safeReadJson<T>(filePath: string): T | null {
+    try {
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        if (raw && raw.trim().length > 0) {
+          return JSON.parse(raw) as T;
+        }
+      }
+    } catch (err) {
+      console.warn(`[Database Storage] Warning reading ${path.basename(filePath)}:`, err);
+    }
+    return null;
+  }
+
+  /**
+   * Deep reconciliation with domain mirrors (users, webmail, settings, transactions, kyc).
+   * Ensures that even if db.json was replaced, reverted, or newly generated,
+   * ALL existing accounts, messages, and settings are merged and preserved.
+   */
+  private reconcileDomainMirrors(schema: DatabaseSchema): void {
+    try {
+      // A. Reconcile Users
+      const usersStore = this.safeReadJson<User[]>(USERS_STORE_FILE);
+      if (Array.isArray(usersStore) && usersStore.length > 0) {
+        for (const storedUser of usersStore) {
+          const existingIdx = schema.users.findIndex(
+            u => u.id === storedUser.id || u.email.toLowerCase() === storedUser.email.toLowerCase()
+          );
+          if (existingIdx === -1) {
+            schema.users.push(storedUser);
+            console.log(`🛡️ [Database Persistence] Restored user ${storedUser.email} from permanent store.`);
+          }
+        }
+      }
+
+      // B. Reconcile Webmail Messages
+      const webmailStore = this.safeReadJson<WebmailMessage[]>(WEBMAIL_STORE_FILE);
+      if (Array.isArray(webmailStore) && webmailStore.length > 0) {
+        for (const storedMsg of webmailStore) {
+          const exists = schema.webmailMessages.some(m =>
+            m.id === storedMsg.id ||
+            (storedMsg.headers?.['x-resend-id'] && m.headers?.['x-resend-id'] === storedMsg.headers['x-resend-id']) ||
+            (storedMsg.headers?.['message-id'] && m.headers?.['message-id'] === storedMsg.headers['message-id'])
+          );
+          if (!exists) {
+            schema.webmailMessages.unshift(storedMsg);
+            console.log(`🛡️ [Database Persistence] Restored webmail message "${storedMsg.subject}" from permanent store.`);
+          }
+        }
+      }
+
+      // C. Reconcile Settings (planConfigs & depositAddresses)
+      const settingsStore = this.safeReadJson<{
+        planConfigs?: Record<PlanId, PlanConfig>;
+        depositAddresses?: Record<string, DepositAddressConfig>;
+      }>(SETTINGS_STORE_FILE);
+      if (settingsStore) {
+        if (settingsStore.planConfigs && Object.keys(settingsStore.planConfigs).length > 0) {
+          schema.planConfigs = {
+            ...PLANS,
+            ...schema.planConfigs,
+            ...settingsStore.planConfigs
+          };
+        }
+        if (settingsStore.depositAddresses && Object.keys(settingsStore.depositAddresses).length > 0) {
+          schema.depositAddresses = {
+            ...DEFAULT_DEPOSIT_ADDRESSES,
+            ...schema.depositAddresses,
+            ...settingsStore.depositAddresses
+          };
+        }
+      }
+
+      // D. Reconcile Transactions & Investments
+      const txStore = this.safeReadJson<{
+        transactions?: Transaction[];
+        investments?: Investment[];
+        referralCommissions?: ReferralCommission[];
+      }>(TRANSACTIONS_STORE_FILE);
+      if (txStore) {
+        if (Array.isArray(txStore.transactions)) {
+          for (const t of txStore.transactions) {
+            if (!schema.transactions.some(cur => cur.id === t.id)) {
+              schema.transactions.push(t);
+            }
+          }
+        }
+        if (Array.isArray(txStore.investments)) {
+          for (const inv of txStore.investments) {
+            if (!schema.investments.some(cur => cur.id === inv.id)) {
+              schema.investments.push(inv);
+            }
+          }
+        }
+        if (Array.isArray(txStore.referralCommissions)) {
+          for (const rc of txStore.referralCommissions) {
+            if (!schema.referralCommissions.some(cur => cur.id === rc.id)) {
+              schema.referralCommissions.push(rc);
+            }
+          }
+        }
+      }
+
+      // E. Reconcile KYC
+      const kycStore = this.safeReadJson<KycSubmission[]>(KYC_STORE_FILE);
+      if (Array.isArray(kycStore)) {
+        for (const k of kycStore) {
+          if (!schema.kycSubmissions.some(cur => cur.id === k.id || cur.userId === k.userId)) {
+            schema.kycSubmissions.push(k);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Database Engine] Reconcile error:', err);
+    }
+  }
+
+  private load(): DatabaseSchema {
+    let schema: DatabaseSchema | null = null;
+
+    // 1. Try primary db.json
+    const primary = this.safeReadJson<any>(DB_FILE);
+    if (primary && Array.isArray(primary.users) && primary.users.length > 0) {
+      schema = {
+        users: primary.users || [],
+        refreshTokens: primary.refreshTokens || [],
+        investments: primary.investments || [],
+        transactions: primary.transactions || [],
+        referralCommissions: primary.referralCommissions || [],
+        planConfigs: primary.planConfigs || PLANS,
+        notifications: primary.notifications || [],
+        depositAddresses: primary.depositAddresses || DEFAULT_DEPOSIT_ADDRESSES,
+        kycSubmissions: primary.kycSubmissions || [],
+        supportChats: primary.supportChats || [],
+        supportMessages: primary.supportMessages || [],
+        visitorLogs: primary.visitorLogs || [],
+        webmailMessages: primary.webmailMessages || [],
+      };
+      console.log(`🛡️ [Database Engine] Primary db.json loaded (${schema.users.length} users, ${schema.webmailMessages.length} webmail, ${schema.transactions.length} txs).`);
+    } else {
+      console.warn('⚠️ [Database Engine] Primary db.json missing or invalid. Initiating multi-tier recovery protocol...');
+    }
+
+    // 2. Recovery from latest backup if primary was invalid/empty
+    if (!schema) {
+      const backup = this.safeReadJson<any>(LATEST_BACKUP_FILE);
+      if (backup && Array.isArray(backup.users) && backup.users.length > 0) {
+        schema = {
+          users: backup.users || [],
+          refreshTokens: backup.refreshTokens || [],
+          investments: backup.investments || [],
+          transactions: backup.transactions || [],
+          referralCommissions: backup.referralCommissions || [],
+          planConfigs: backup.planConfigs || PLANS,
+          notifications: backup.notifications || [],
+          depositAddresses: backup.depositAddresses || DEFAULT_DEPOSIT_ADDRESSES,
+          kycSubmissions: backup.kycSubmissions || [],
+          supportChats: backup.supportChats || [],
+          supportMessages: backup.supportMessages || [],
+          visitorLogs: backup.visitorLogs || [],
+          webmailMessages: backup.webmailMessages || [],
+        };
+        console.log(`🛡️ [Database Engine] RECOVERED from db.backup.latest.json (${schema.users.length} users, ${schema.webmailMessages.length} webmail)!`);
+      }
+    }
+
+    // 3. Recovery from latest timestamped snapshot if still needed
+    if (!schema && fs.existsSync(BACKUPS_DIR)) {
+      try {
+        const files = fs.readdirSync(BACKUPS_DIR)
+          .filter(f => f.startsWith('db_snapshot_') && f.endsWith('.json'))
+          .sort()
+          .reverse();
+
+        for (const file of files) {
+          const snap = this.safeReadJson<any>(path.join(BACKUPS_DIR, file));
+          if (snap && Array.isArray(snap.users) && snap.users.length > 0) {
+            schema = {
+              users: snap.users || [],
+              refreshTokens: snap.refreshTokens || [],
+              investments: snap.investments || [],
+              transactions: snap.transactions || [],
+              referralCommissions: snap.referralCommissions || [],
+              planConfigs: snap.planConfigs || PLANS,
+              notifications: snap.notifications || [],
+              depositAddresses: snap.depositAddresses || DEFAULT_DEPOSIT_ADDRESSES,
+              kycSubmissions: snap.kycSubmissions || [],
+              supportChats: snap.supportChats || [],
+              supportMessages: snap.supportMessages || [],
+              visitorLogs: snap.visitorLogs || [],
+              webmailMessages: snap.webmailMessages || [],
+            };
+            console.log(`🛡️ [Database Engine] RECOVERED from snapshot ${file} (${schema.users.length} users)!`);
+            break;
+          }
+        }
+      } catch (e) {
+        console.error('[Database Engine] Error searching snapshots:', e);
+      }
+    }
+
+    // 4. If still null, create blank baseline
+    if (!schema) {
+      console.warn('⚠️ [Database Engine] No database file or snapshot found. Initializing new baseline.');
+      schema = this.seedInitial();
+    }
+
+    // 5. Deep reconciliation with domain mirrors
+    this.reconcileDomainMirrors(schema);
+
+    // 6. Ensure system defaults
+    this.ensureDefaults(schema);
+
+    // 7. Flush verified state to all storage files
+    this.save(schema);
+    return schema;
   }
 
   private ensureDefaults(schema: DatabaseSchema): void {
@@ -219,7 +443,7 @@ class DatabaseService {
     const nowTs = Date.now();
     if (!schema.visitorLogs) schema.visitorLogs = [];
     if (!schema.webmailMessages) schema.webmailMessages = [];
-    schema.users.forEach((u, i) => {
+    schema.users.forEach((u) => {
       if (!u.securityLogs || u.securityLogs.length === 0) {
         u.securityLogs = [
           {
@@ -250,33 +474,96 @@ class DatabaseService {
       }
     });
 
-    // 7. Ensure KYC Submissions initialized
+    // 8. Ensure KYC Submissions initialized
     if (!schema.kycSubmissions) {
       schema.kycSubmissions = [];
     }
 
-    // 8. Ensure Support Chats & Messages initialized
+    // 9. Ensure Support Chats & Messages initialized
     if (!schema.supportChats) {
       schema.supportChats = [];
     }
     if (!schema.supportMessages) {
       schema.supportMessages = [];
     }
-
-    this.save(schema);
   }
 
-  private save(dataToSave?: DatabaseSchema) {
+  public save(dataToSave?: DatabaseSchema): void {
     try {
       const d = dataToSave || this.data;
-      const dir = path.dirname(DB_FILE);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+
+      // Anti-truncation protection:
+      // If users array in memory is smaller than permanent USERS_STORE_FILE, merge back missing accounts
+      const usersStore = this.safeReadJson<User[]>(USERS_STORE_FILE);
+      if (Array.isArray(usersStore) && usersStore.length > d.users.length) {
+        console.warn(`⚠️ [Database Protection] Memory has ${d.users.length} users but permanent store has ${usersStore.length}. Auto-merging to prevent data loss!`);
+        for (const u of usersStore) {
+          if (!d.users.some(cur => cur.id === u.id || cur.email.toLowerCase() === u.email.toLowerCase())) {
+            d.users.push(u);
+          }
+        }
       }
-      fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2), 'utf-8');
+
+      // 1. Atomic write to primary DB_FILE
+      this.atomicWriteJson(DB_FILE, d);
+
+      // 2. Atomic write to latest full backup
+      this.atomicWriteJson(LATEST_BACKUP_FILE, d);
+
+      // 3. Atomic writes to per-domain mirror stores
+      this.atomicWriteJson(USERS_STORE_FILE, d.users);
+      this.atomicWriteJson(WEBMAIL_STORE_FILE, d.webmailMessages);
+      this.atomicWriteJson(SETTINGS_STORE_FILE, {
+        planConfigs: d.planConfigs,
+        depositAddresses: d.depositAddresses
+      });
+      this.atomicWriteJson(TRANSACTIONS_STORE_FILE, {
+        transactions: d.transactions,
+        investments: d.investments,
+        referralCommissions: d.referralCommissions
+      });
+      this.atomicWriteJson(KYC_STORE_FILE, d.kycSubmissions);
+
+      // 4. Rolling snapshot (at most every 2 minutes)
+      const now = Date.now();
+      if (now - this.lastSnapshotTime > 120000) {
+        this.lastSnapshotTime = now;
+        this.createRollingSnapshot(d);
+      }
     } catch (err) {
-      console.error('Error saving db.json', err);
+      console.error('[Database Engine] Error saving database:', err);
     }
+  }
+
+  private createRollingSnapshot(d: DatabaseSchema): void {
+    try {
+      if (!fs.existsSync(BACKUPS_DIR)) {
+        fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+      }
+      const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+      const snapFile = path.join(BACKUPS_DIR, `db_snapshot_${dateStr}.json`);
+      this.atomicWriteJson(snapFile, d);
+
+      // Keep up to 15 latest snapshots
+      const files = fs.readdirSync(BACKUPS_DIR)
+        .filter(f => f.startsWith('db_snapshot_') && f.endsWith('.json'))
+        .sort();
+
+      if (files.length > 15) {
+        const toDelete = files.slice(0, files.length - 15);
+        for (const f of toDelete) {
+          try { fs.unlinkSync(path.join(BACKUPS_DIR, f)); } catch {}
+        }
+      }
+    } catch (e) {
+      console.warn('[Database Engine] Snapshot creation warning:', e);
+    }
+  }
+
+  public forceBackup(): void {
+    console.log('🛡️ [Database Engine] Performing emergency flush and snapshot...');
+    this.save();
+    this.createRollingSnapshot(this.data);
   }
 
   private seedInitial(): DatabaseSchema {
