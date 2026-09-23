@@ -207,7 +207,7 @@ export interface OtpRecord {
   id: string;
   email: string;
   code: string;
-  purpose: 'registration' | 'withdrawal' | 'login';
+  purpose: 'registration' | 'withdrawal' | 'login' | 'reset_password' | 'security';
   expiresAt: number; // timestamp ms
   createdAt: number;
 }

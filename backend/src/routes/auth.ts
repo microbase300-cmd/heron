@@ -303,6 +303,91 @@ router.post('/logout', (req: Request, res: Response): void => {
   }
 });
 
+// Forgot Password - Dispatch Security OTP to user email
+router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      res.status(400).json({ error: 'Please enter a valid institutional email address.' });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = db.getUserByEmail(cleanEmail);
+    if (!user) {
+      // Return 200 with standard response to prevent user enumeration attacks
+      res.json({
+        message: `If an account exists for ${cleanEmail}, a 6-digit recovery code has been dispatched.`,
+        expiresAt: Date.now() + 10 * 60 * 1000
+      });
+      return;
+    }
+
+    const otp = otpService.generateOtp(cleanEmail, 'reset_password');
+    await emailService.sendOtpEmail({ to: cleanEmail, code: otp.code, purpose: 'reset_password' });
+
+    res.json({
+      message: `Password reset verification code dispatched to ${cleanEmail}. Valid for 10 minutes.`,
+      expiresAt: otp.expiresAt
+    });
+  } catch (err: any) {
+    console.error('Forgot Password Error:', err);
+    res.status(500).json({ error: 'Failed to process password recovery request.' });
+  }
+});
+
+// Reset Password - Verify OTP and update password
+router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otpCode, newPassword } = req.body;
+
+    if (!email || !otpCode || !newPassword) {
+      res.status(400).json({ error: 'Email, 6-digit code, and new password are required.' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = db.getUserByEmail(cleanEmail);
+    if (!user) {
+      res.status(404).json({ error: 'No account found matching this email address.' });
+      return;
+    }
+
+    const isValid = otpService.verifyOtp(cleanEmail, otpCode, 'reset_password');
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid or expired 6-digit verification code.' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+    db.updateUserPassword(user.id, newPasswordHash);
+
+    // Invalidate old sessions for security
+    db.revokeAllUserRefreshTokens(user.id);
+
+    // Record password change event in audit log
+    db.recordSecurityLog(user.id, {
+      ip: getClientIp(req),
+      device: parseClientDevice(req),
+      location: resolveEdgeLocation(req),
+      status: 'Authorized',
+    });
+
+    res.json({
+      message: 'Password successfully updated. You may now sign in with your new credentials.'
+    });
+  } catch (err: any) {
+    console.error('Reset Password Error:', err);
+    res.status(500).json({ error: 'Failed to reset password.' });
+  }
+});
+
 // Get authenticated user profile
 router.get('/me', authenticateToken, (req: AuthRequest, res: Response): void => {
   if (!req.user) {

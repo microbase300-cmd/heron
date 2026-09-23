@@ -210,9 +210,9 @@ export const ClientVerificationPortal: React.FC<ClientVerificationPortalProps> =
     try {
       // Step 1: Pre-compress all image attachments to ensure lightweight payload
       const [optFront, optBack, optSelfie] = await Promise.all([
-        compressBase64Image(frontDocUrl, 1280, 0.84),
-        backDocUrl ? compressBase64Image(backDocUrl, 1280, 0.84) : Promise.resolve(undefined),
-        selfieUrl ? compressBase64Image(selfieUrl, 800, 0.84) : Promise.resolve(undefined),
+        compressBase64Image(frontDocUrl, 1024, 0.78),
+        backDocUrl ? compressBase64Image(backDocUrl, 1024, 0.78) : Promise.resolve(undefined),
+        selfieUrl ? compressBase64Image(selfieUrl, 640, 0.78) : Promise.resolve(undefined),
       ]);
 
       // Step 2: Simulated OCR animation

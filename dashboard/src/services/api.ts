@@ -95,6 +95,20 @@ class ApiService {
     return data;
   }
 
+  async forgotPassword(email: string): Promise<{ message: string; expiresAt: number }> {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  async resetPassword(email: string, otpCode: string, newPassword: string): Promise<{ message: string }> {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, otpCode, newPassword })
+    });
+  }
+
   async getMe(): Promise<{ user: User }> {
     return this.request<{ user: User }>('/auth/me');
   }

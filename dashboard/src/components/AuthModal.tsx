@@ -10,14 +10,17 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialReferralCode = '', onSuccess }) => {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [registerStep, setRegisterStep] = useState<'form' | 'otp'>('form');
+  const [forgotStep, setForgotStep] = useState<'request' | 'reset'>('request');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [name, setName] = useState('');
   const [referralCode, setReferralCode] = useState(initialReferralCode);
   const [isReferralLocked, setIsReferralLocked] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+  const [resetOtpCode, setResetOtpCode] = useState('');
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +117,58 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialReferralCod
     }
   };
 
+  const handleRequestResetOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setInfoMessage(null);
+
+    if (!email || !email.includes('@')) {
+      setError('Please enter your registered email address.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.forgotPassword(email.trim());
+      setInfoMessage(res.message || 'Security code dispatched to your email.');
+      setForgotStep('reset');
+    } catch (err: any) {
+      setError(err.message || 'Failed to request password reset code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompletePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setInfoMessage(null);
+
+    if (!resetOtpCode || resetOtpCode.trim().length !== 6) {
+      setError('Please enter the 6-digit reset code.');
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.resetPassword(email.trim(), resetOtpCode.trim(), newPassword);
+      setInfoMessage(res.message || 'Password successfully reset! Please sign in.');
+      setPassword(newPassword);
+      setMode('login');
+      setForgotStep('request');
+      setResetOtpCode('');
+      setNewPassword('');
+    } catch (err: any) {
+      setError(err.message || 'Password reset failed. Invalid or expired code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl">
       <div className="relative w-full max-w-md rounded-2xl glass-card-featured border-gold/40 p-8 shadow-2xl shadow-black">
@@ -125,11 +180,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialReferralCod
             className="w-12 h-12 rounded-full object-cover border border-gold/50 mx-auto shadow-lg shadow-gold/25" 
           />
           <h3 className="font-sans text-2xl font-bold text-white tracking-tight">
-            {mode === 'login' ? 'Client Access' : registerStep === 'otp' ? 'Security Verification' : 'Create Investor Account'}
+            {mode === 'login'
+              ? 'Client Access'
+              : mode === 'forgot'
+              ? (forgotStep === 'reset' ? 'Set New Password' : 'Password Recovery')
+              : registerStep === 'otp'
+              ? 'Security Verification'
+              : 'Create Investor Account'}
           </h3>
           <p className="text-xs text-white/50 font-mono">
             {mode === 'login'
               ? 'Authenticate to access portfolio intelligence'
+              : mode === 'forgot'
+              ? (forgotStep === 'reset' ? `Enter the 6-digit recovery code sent to ${email}` : 'Recover access to your institutional account')
               : registerStep === 'otp'
               ? `Enter the 6-digit authorization code sent to ${email}`
               : 'Open a sovereign digital asset investment account'}
@@ -198,7 +261,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialReferralCod
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-white/50 mb-1">Password</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-mono text-white/50">Password</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('forgot');
+                    setForgotStep('request');
+                    setError(null);
+                    setInfoMessage(null);
+                  }}
+                  className="text-[11px] font-mono text-gold hover:underline transition-all"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative flex items-center">
                 <Lock className="w-4 h-4 text-white/30 absolute left-3 pointer-events-none" />
                 <input
@@ -220,6 +297,117 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialReferralCod
               {loading ? 'Authenticating...' : 'Enter Client Dashboard ↗'}
             </button>
           </form>
+        ) : mode === 'forgot' ? (
+          /* Forgot Password Flow */
+          forgotStep === 'request' ? (
+            <form onSubmit={handleRequestResetOtp} className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-gold/5 border border-gold/20 text-[11px] font-mono text-white/70 leading-relaxed">
+                Enter your institutional email address. We will dispatch a 6-digit security code to verify your identity and reset your access password.
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-white/50 mb-1">Institutional Email</label>
+                <div className="relative flex items-center">
+                  <Mail className="w-4 h-4 text-white/30 absolute left-3 pointer-events-none" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    required
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setError(null);
+                    setInfoMessage(null);
+                  }}
+                  className="w-1/3 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white text-xs font-mono transition-all flex items-center justify-center gap-1"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-2/3 py-3 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-gold/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  <span>{loading ? 'Sending Code...' : 'Send Recovery Code ↗'}</span>
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleCompletePasswordReset} className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center space-y-1">
+                <div className="text-[11px] font-mono text-white/50">Recovery Code Dispatched To:</div>
+                <div className="text-xs font-sans font-bold text-gold">{email}</div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] font-mono leading-relaxed space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-amber-400">
+                  <span>📩 Check Inbox & Spam Folder</span>
+                </div>
+                <p>Enter the 6-digit recovery code sent to your email to configure your new credentials.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-white/50 mb-1 text-center">
+                  6-Digit Recovery Code
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={resetOtpCode}
+                  onChange={(e) => setResetOtpCode(e.target.value)}
+                  placeholder="123456"
+                  required
+                  autoFocus
+                  className="w-full text-center text-xl font-mono font-bold tracking-widest py-2.5 rounded-xl glass-input text-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-white/50 mb-1">New Access Password</label>
+                <div className="relative flex items-center">
+                  <Lock className="w-4 h-4 text-white/30 absolute left-3 pointer-events-none" />
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    required
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setForgotStep('request')}
+                  className="w-1/3 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white text-xs font-mono transition-all flex items-center justify-center gap-1"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || resetOtpCode.length !== 6 || newPassword.length < 6}
+                  className="w-2/3 py-3 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:brightness-105 text-[#0b0d0d] font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-gold/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{loading ? 'Updating...' : 'Set New Password ↗'}</span>
+                </button>
+              </div>
+            </form>
+          )
         ) : registerStep === 'form' ? (
           <form onSubmit={handleRequestOtp} className="space-y-4">
             <div>

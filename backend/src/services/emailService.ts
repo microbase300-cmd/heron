@@ -3,7 +3,7 @@ import * as nodemailer from 'nodemailer';
 interface SendOtpEmailParams {
   to: string;
   code: string;
-  purpose: 'registration' | 'withdrawal' | 'security';
+  purpose: 'registration' | 'withdrawal' | 'reset_password' | 'security';
 }
 
 class EmailService {
@@ -57,6 +57,8 @@ class EmailService {
       ? 'Identity Verification Code'
       : purpose === 'withdrawal'
       ? 'Capital Withdrawal Authorization'
+      : purpose === 'reset_password'
+      ? 'Password Reset Security Code'
       : 'Security Authorization Code';
 
     const fromAddress = process.env.SMTP_FROM || 'Heron Assets Trustee <support@heronassetstrusteess.com>';
