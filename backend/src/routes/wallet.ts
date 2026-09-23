@@ -33,6 +33,14 @@ router.get('/summary', requireAuth, (req: AuthRequest, res: Response): void => {
     .filter(t => t.type === 'withdrawal' && t.status === 'completed')
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const pendingWithdrawn = transactions
+    .filter(t => t.type === 'withdrawal' && (t.status === 'pending' || t.status === 'pending_kyc'))
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const pendingDeposited = transactions
+    .filter(t => t.type === 'deposit' && t.status === 'pending')
+    .reduce((sum, t) => sum + t.amount, 0);
+
   const totalReferralEarnings = transactions
     .filter(t => t.type === 'referral_bonus' && t.status === 'completed')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -44,6 +52,8 @@ router.get('/summary', requireAuth, (req: AuthRequest, res: Response): void => {
     totalProfitAccrued,
     totalDeposited,
     totalWithdrawn,
+    pendingWithdrawn,
+    pendingDeposited,
     totalReferralEarnings,
     activePlansCount: activeInvestments.length
   });

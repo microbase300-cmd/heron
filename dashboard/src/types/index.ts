@@ -190,6 +190,8 @@ export interface WalletSummary {
   totalProfitAccrued: number;
   totalDeposited: number;
   totalWithdrawn: number;
+  pendingWithdrawn?: number;
+  pendingDeposited?: number;
   totalReferralEarnings: number;
   activePlansCount: number;
 }

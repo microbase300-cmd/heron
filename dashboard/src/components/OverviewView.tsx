@@ -53,6 +53,25 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const yieldDisbursed = summary?.totalProfitAccrued ?? 0;
   const affiliateRevenue = summary?.totalReferralEarnings ?? 0;
 
+  // Calculate Total approved withdrawal, Pending withdrawal, and Pending deposit directly from live transactions with summary fallback
+  const totalWithdrawn = transactions && transactions.length > 0
+    ? transactions
+        .filter(t => t.type === 'withdrawal' && t.status === 'completed')
+        .reduce((sum, t) => sum + t.amount, 0)
+    : (summary?.totalWithdrawn ?? 0);
+
+  const pendingWithdrawal = transactions && transactions.length > 0
+    ? transactions
+        .filter(t => t.type === 'withdrawal' && (t.status === 'pending' || t.status === 'pending_kyc'))
+        .reduce((sum, t) => sum + t.amount, 0)
+    : (summary?.pendingWithdrawn ?? 0);
+
+  const pendingDeposit = transactions && transactions.length > 0
+    ? transactions
+        .filter(t => t.type === 'deposit' && t.status === 'pending')
+        .reduce((sum, t) => sum + t.amount, 0)
+    : (summary?.pendingDeposited ?? 0);
+
   const btcEquivalent = (totalNAV / 68420).toFixed(4);
   const ethEquivalent = (totalNAV / 3540).toFixed(3);
 
@@ -147,8 +166,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       </div>
 
-      {/* 4 Stat Cards */}
+      {/* Portfolio Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        {/* Available Balance */}
         <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all">
           <div className="flex items-center justify-between text-[#848E9C] text-[11px] font-mono mb-1.5">
             <span>Available Balance</span>
@@ -162,30 +182,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all">
-          <div className="flex items-center justify-between text-[#848E9C] text-[11px] font-mono mb-1.5">
-            <span>In Smart Escrow</span>
-            <Lock className="w-3.5 h-3.5 text-[#F0B90B]" />
-          </div>
-          <div className="text-xl sm:text-2xl font-sans font-bold text-[#EAECEF] tracking-tight">
-            {formatCurrency(lockedBalance, activeCurrency, rates)}
-          </div>
-          <div className="text-[10px] text-[#F0B90B] mt-1 font-medium">
-            {activeInvestments.length} active investment{activeInvestments.length === 1 ? '' : 's'} compounding
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#0ECB81]/30 transition-all">
-          <div className="flex items-center justify-between text-[#848E9C] text-[11px] font-mono mb-1.5">
-            <span>Yield Disbursed</span>
-            <TrendingUp className="w-3.5 h-3.5 text-[#0ECB81]" />
-          </div>
-          <div className="text-xl sm:text-2xl font-sans font-bold text-[#0ECB81] tracking-tight">
-            +{formatCurrency(yieldDisbursed, activeCurrency, rates)}
-          </div>
-          <div className="text-[10px] text-[#848E9C] mt-1">Net programmatic profit payout</div>
-        </div>
-
+        {/* Affiliate Revenue */}
         <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all">
           <div className="flex items-center justify-between text-[#848E9C] text-[11px] font-mono mb-1.5">
             <span>Affiliate Revenue</span>
@@ -195,6 +192,86 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             {formatCurrency(affiliateRevenue, activeCurrency, rates)}
           </div>
           <div className="text-[10px] text-[#848E9C] mt-1">Up to 30% instant network tier</div>
+        </div>
+
+        {/* Total Withdrawal (Approved & Disbursed) */}
+        <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F6465D]/30 transition-all">
+          <div className="flex items-center justify-between text-[#848E9C] text-[11px] font-mono mb-1.5">
+            <span>Total withdrawal</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#F6465D]" />
+          </div>
+          <div className="text-xl sm:text-2xl font-sans font-bold text-[#F6465D] tracking-tight">
+            {formatCurrency(totalWithdrawn, activeCurrency, rates)}
+          </div>
+          <div className="text-[10px] text-[#848E9C] mt-1">Total approved & settled payouts</div>
+        </div>
+
+        {/* Pending Withdrawal & Pending Deposit Card */}
+        <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all">
+          <div className="flex items-center justify-between text-[#848E9C] text-[11px] font-mono mb-1.5">
+            <span>Settlement Queue</span>
+            <Clock className="w-3.5 h-3.5 text-[#F0B90B]" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-0.5">
+            <div>
+              <div className="text-[10px] font-mono text-[#848E9C] uppercase">Pending Withdrwal</div>
+              <div className={`text-base sm:text-lg font-sans font-bold tracking-tight ${pendingWithdrawal > 0 ? 'text-[#F0B90B]' : 'text-[#848E9C]'}`}>
+                {formatCurrency(pendingWithdrawal, activeCurrency, rates)}
+              </div>
+            </div>
+            <div className="border-l border-[#2B313A] pl-2">
+              <div className="text-[10px] font-mono text-[#848E9C] uppercase">Pending Deposite</div>
+              <div className={`text-base sm:text-lg font-sans font-bold tracking-tight ${pendingDeposit > 0 ? 'text-[#0ECB81]' : 'text-[#848E9C]'}`}>
+                {formatCurrency(pendingDeposit, activeCurrency, rates)}
+              </div>
+            </div>
+          </div>
+          <div className="text-[10px] text-[#848E9C] mt-1.5 truncate">
+            {pendingWithdrawal > 0 || pendingDeposit > 0 ? 'Returns to zero upon confirmation' : 'Zero items pending clearance'}
+          </div>
+        </div>
+      </div>
+
+      {/* Secondary Row: In Escrow & Yield Accrued */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+        <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#F0B90B]/30 transition-all flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-[#848E9C] text-[11px] font-mono mb-1">
+              <Lock className="w-3.5 h-3.5 text-[#F0B90B]" />
+              <span>In Smart Escrow</span>
+            </div>
+            <div className="text-xl font-sans font-bold text-[#EAECEF] tracking-tight">
+              {formatCurrency(lockedBalance, activeCurrency, rates)}
+            </div>
+            <div className="text-[10px] text-[#F0B90B] mt-0.5 font-medium">
+              {activeInvestments.length} active investment{activeInvestments.length === 1 ? '' : 's'} compounding
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate('mandates')}
+            className="px-3 py-1.5 rounded-lg bg-[#2B313A] hover:bg-[#363D47] text-xs font-mono text-[#EAECEF] transition-all"
+          >
+            Mandates ↗
+          </button>
+        </div>
+
+        <div className="p-4 sm:p-5 rounded-xl bg-[#1E2329] border border-[#2B313A] hover:border-[#0ECB81]/30 transition-all flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-[#848E9C] text-[11px] font-mono mb-1">
+              <TrendingUp className="w-3.5 h-3.5 text-[#0ECB81]" />
+              <span>Yield Disbursed</span>
+            </div>
+            <div className="text-xl font-sans font-bold text-[#0ECB81] tracking-tight">
+              +{formatCurrency(yieldDisbursed, activeCurrency, rates)}
+            </div>
+            <div className="text-[10px] text-[#848E9C] mt-0.5">Net programmatic profit payout</div>
+          </div>
+          <button
+            onClick={() => onNavigate('ledger')}
+            className="px-3 py-1.5 rounded-lg bg-[#0ECB81]/15 hover:bg-[#0ECB81]/25 text-xs font-mono text-[#0ECB81] border border-[#0ECB81]/30 transition-all"
+          >
+            Audit Proof ↗
+          </button>
         </div>
       </div>
 
