@@ -3,6 +3,7 @@ import { Plus, ArrowDownLeft, Menu, ShieldCheck, LogOut, User } from 'lucide-rea
 import { User as UserType } from '../types';
 import { NotificationCenter } from './NotificationCenter';
 import { CURRENCY_SYMBOLS } from '../utils/currency';
+import { LanguageSelector } from './LanguageModal';
 
 interface NavbarProps {
   currentTab: string;
@@ -68,6 +69,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Global Multi-Language Selector */}
+        <LanguageSelector variant="navbar" />
+
         {/* Preferred Base Currency Indicator */}
         {preferredCurrency && (
           <button

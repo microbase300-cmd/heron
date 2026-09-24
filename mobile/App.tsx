@@ -49,6 +49,13 @@ import {
   CURRENCY_SYMBOLS
 } from './src/utils/currency';
 import {
+  ALL_LANGUAGES,
+  POPULAR_LANG_CODES,
+  getLanguageByCode,
+  searchLanguages,
+  LanguageItem
+} from './src/utils/languages';
+import {
   User,
   WalletSummary,
   Transaction,
@@ -385,6 +392,11 @@ function MainAppContent() {
   
   // Live Currency Conversion State
   const [exchangeRates, setExchangeRates] = useState<ExchangeRatesData>(DEFAULT_EXCHANGE_RATES);
+
+  // Sovereign Multi-Language State (100+ Nations)
+  const [preferredLang, setPreferredLang] = useState<string>(currentUser?.preferredLanguage || 'en');
+  const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
+  const [languageSearchQuery, setLanguageSearchQuery] = useState<string>('');
 
   // Operational Data
   const [walletSummary, setWalletSummary] = useState<WalletSummary | null>(null);
@@ -977,6 +989,27 @@ function MainAppContent() {
       setCurrentUser(prev => prev ? { ...prev, preferredCurrency: curr } : null);
     } catch (e: any) {
       console.log('Currency preference update notice:', e?.message || e);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.preferredLanguage) {
+      setPreferredLang(currentUser.preferredLanguage);
+    }
+  }, [currentUser?.preferredLanguage]);
+
+  const handleSelectLanguage = async (code: string) => {
+    setPreferredLang(code);
+    setShowLanguageModal(false);
+    setLanguageSearchQuery('');
+    if (!currentUser) return;
+    try {
+      await mobileApi.updateProfile({ preferredLanguage: code });
+      setCurrentUser(prev => prev ? { ...prev, preferredLanguage: code } : null);
+      const lang = getLanguageByCode(code);
+      showCustomAlert('Language Configured', `Terminal interface language set to ${lang.name} (${lang.nativeName}).`, 'success');
+    } catch (e: any) {
+      console.log('Language update notice:', e?.message || e);
     }
   };
 
@@ -3737,6 +3770,41 @@ function MainAppContent() {
                   </View>
                 </View>
 
+                {/* Terminal Interface Language (100+ Nations) */}
+                <View style={styles.secItemCardColumn}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={styles.secItemTitle}>Terminal Interface Language</Text>
+                    <View style={[styles.kycVerifiedMiniBadge, { backgroundColor: 'rgba(240,185,11,0.15)', borderColor: '#F0B90B' }]}>
+                      <Text style={[styles.kycVerifiedMiniText, { color: '#F0B90B' }]}>100+ NATIONS</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.secItemSub}>Full platform localization across all global jurisdictions</Text>
+                  
+                  <TouchableOpacity
+                    style={[styles.secItemCard, { marginTop: 10, backgroundColor: '#181A20', borderColor: '#2B313A', borderRadius: 12 }]}
+                    onPress={() => setShowLanguageModal(true)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.secItemLeft}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Text style={{ fontSize: 24 }}>{getLanguageByCode(preferredLang).flag}</Text>
+                        <View>
+                          <Text style={[styles.secItemTitle, { color: '#EAECEF' }]}>
+                            {getLanguageByCode(preferredLang).name} ({getLanguageByCode(preferredLang).nativeName})
+                          </Text>
+                          <Text style={[styles.secItemSub, { color: '#848E9C' }]}>
+                            {getLanguageByCode(preferredLang).region}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Text style={{ color: '#F0B90B', fontSize: 13, fontWeight: '700' }}>Change</Text>
+                      <Text style={{ color: '#F0B90B', fontSize: 12 }}>▾</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
                 {/* Yield Compounding */}
                 <View style={styles.secItemCard}>
                   <View style={styles.secItemLeft}>
@@ -3892,6 +3960,116 @@ function MainAppContent() {
                 )}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL: SOVEREIGN MULTI-LANGUAGE SELECTION MODAL (100+ NATIONS) */}
+      {/* ========================================================================= */}
+      <Modal visible={showLanguageModal} transparent animationType="slide">
+        <View style={styles.modalOverlayCenter}>
+          <View style={[styles.pwdModalCard, { maxHeight: height * 0.82, height: height * 0.82, paddingBottom: 16 }]}>
+            <View style={styles.sheetHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Global Terminal Language</Text>
+                <Text style={{ color: '#848E9C', fontSize: 11, marginTop: 2 }}>Select from 100+ countries & sovereign territories</Text>
+              </View>
+              <TouchableOpacity onPress={() => { setShowLanguageModal(false); setLanguageSearchQuery(''); }}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Input */}
+            <View style={{ marginTop: 14, marginBottom: 10 }}>
+              <TextInput
+                style={[styles.textInput, { paddingLeft: 14 }]}
+                placeholder="Search country, language, or ISO code..."
+                placeholderTextColor="#848E9C"
+                value={languageSearchQuery}
+                onChangeText={setLanguageSearchQuery}
+                autoCorrect={false}
+              />
+            </View>
+
+            {/* Quick Popular Pills */}
+            {!languageSearchQuery && (
+              <View style={{ marginBottom: 10 }}>
+                <Text style={{ fontSize: 10, color: '#F0B90B', fontWeight: '700', letterSpacing: 1, marginBottom: 6 }}>
+                  MAJOR GLOBAL ECONOMIES
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                  {POPULAR_LANG_CODES.map(code => {
+                    const l = getLanguageByCode(code);
+                    const isSelected = preferredLang === code;
+                    return (
+                      <TouchableOpacity
+                        key={code}
+                        onPress={() => handleSelectLanguage(code)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 8,
+                          backgroundColor: isSelected ? '#F0B90B' : '#181A20',
+                          borderWidth: 1,
+                          borderColor: isSelected ? '#F0B90B' : '#2B313A',
+                        }}
+                      >
+                        <Text style={{ fontSize: 14 }}>{l.flag}</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#181A20' : '#EAECEF' }}>
+                          {l.name.split(' ')[0]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Scrollable Language List */}
+            <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1, marginTop: 4 }}>
+              {searchLanguages(languageSearchQuery).map(lang => {
+                const isSelected = preferredLang === lang.code;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    onPress={() => handleSelectLanguage(lang.code)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: 10,
+                      paddingHorizontal: 12,
+                      marginBottom: 6,
+                      borderRadius: 10,
+                      backgroundColor: isSelected ? 'rgba(240, 185, 11, 0.12)' : '#181A20',
+                      borderWidth: 1,
+                      borderColor: isSelected ? '#F0B90B' : '#2B313A',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <Text style={{ fontSize: 20 }}>{lang.flag}</Text>
+                      <View>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: isSelected ? '#F0B90B' : '#EAECEF' }}>
+                          {lang.name}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: '#848E9C' }}>
+                          {lang.nativeName} • {lang.region}
+                        </Text>
+                      </View>
+                    </View>
+                    {isSelected && (
+                      <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#F0B90B', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: '#181A20', fontSize: 12, fontWeight: '900' }}>✓</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>

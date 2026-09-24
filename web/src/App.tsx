@@ -4,6 +4,7 @@ import MobileAppModal from './components/MobileAppModal'
 import LegalModal, { type LegalDocType } from './components/LegalModal'
 import CustomCursor from './components/CustomCursor'
 import WebAiAssistantModal from './components/WebAiAssistantModal'
+import { LanguageSelector } from './components/LanguageModal'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -133,6 +134,7 @@ function Navbar() {
           </NavLink>
 
           <div className="nav-mobile-extra">
+            <LanguageSelector variant="mobile" />
             <a
               className="btn btn-outline"
               href={getDashboardUrl()}
@@ -150,7 +152,9 @@ function Navbar() {
           </div>
         </div>
 
-        <div className="navcta">
+        <div className="navcta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <LanguageSelector variant="navbar" />
+
           <a
             className="btn btn-outline"
             href={getDashboardUrl()}
@@ -319,8 +323,9 @@ function Footer({
           </button>
         </div>
 
-        <div className="footer-bottom">
+        <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <span>© 2026 Heron Assets Trustee. All rights reserved.</span>
+          <LanguageSelector variant="footer" />
           <span>
             Digital assets involve market risk. Information is for general institutional purposes.
           </span>

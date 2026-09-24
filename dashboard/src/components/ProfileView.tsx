@@ -31,6 +31,7 @@ import { User as UserType, WhitelistedWallet, SecurityLogItem } from '../types';
 import { api } from '../services/api';
 import { ClientVerificationPortal } from './ClientVerificationPortal';
 import { ExchangeRatesData, convertCurrency, formatCurrency, CURRENCY_SYMBOLS, CURRENCY_NAMES } from '../utils/currency';
+import { LanguageSelector } from './LanguageModal';
 
 interface ProfileViewProps {
   user: UserType | null;
@@ -1101,6 +1102,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   <span className="text-[#848E9C]">Blockchain Gas Subsidy</span>
                   <span className="text-[#F0B90B] font-bold">100% Waived by Treasury</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Terminal Interface Language Card (100+ Nations) */}
+            <div className="rounded-2xl bg-[#1E2329] border border-[#2B313A] p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-sans font-bold text-[#EAECEF] flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#F0B90B]" />
+                  <span>Terminal Interface Language (100+ Nations)</span>
+                </h4>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#F0B90B]/10 text-[#F0B90B] border border-[#F0B90B]/30 text-[10px] font-mono">
+                  Sovereign i18n
+                </div>
+              </div>
+              <p className="text-xs text-[#848E9C]">
+                Select your preferred terminal language. Full platform localization covers over 100 countries across Europe, Americas, Asia, Middle East, Africa, and Oceania with native script rendering.
+              </p>
+              <div className="pt-1">
+                <LanguageSelector variant="profile" />
               </div>
             </div>
           </div>

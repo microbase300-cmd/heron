@@ -135,6 +135,7 @@ export interface User {
   whitelistedWallets?: WhitelistedWallet[];
   securityLogs?: SecurityLogItem[];
   preferredCurrency?: string;
+  preferredLanguage?: string;
   biometricsEnabled?: boolean;
 }
 

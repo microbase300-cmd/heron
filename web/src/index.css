@@ -624,3 +624,51 @@ body.app-dialog-open { overflow: hidden; }
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================================
+   MULTI-LANGUAGE & SOVEREIGN TRANSLATION OVERRIDES
+   ============================================================================ */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* RTL Support for Arabic, Hebrew, Persian, Urdu */
+body.rtl-mode, [dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+body.rtl-mode .navlinks, [dir="rtl"] .navlinks {
+  flex-direction: row-reverse;
+}
+body.rtl-mode .navcta, [dir="rtl"] .navcta {
+  justify-self: start;
+}
+
+@keyframes heronFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
