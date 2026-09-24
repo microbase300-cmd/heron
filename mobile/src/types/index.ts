@@ -147,6 +147,8 @@ export interface WalletSummary {
   totalWithdrawn: number;
   totalReferralEarnings: number;
   activePlansCount: number;
+  pendingWithdrawn?: number;
+  pendingDeposited?: number;
 }
 
 export interface Transaction {

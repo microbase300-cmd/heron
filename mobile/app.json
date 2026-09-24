@@ -3,7 +3,7 @@
     "name": "Heron Assets Trustee",
     "slug": "heron-mobile",
     "scheme": "heron",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#070908",
@@ -19,6 +19,7 @@
     },
     "android": {
       "package": "com.heron.mobile",
+      "versionCode": 2,
       "usesCleartextTraffic": true,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {

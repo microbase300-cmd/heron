@@ -286,6 +286,15 @@ function MainAppContent() {
   const [biometricStatus, setBiometricStatus] = useState<BiometricStatus | null>(null);
   const [biometricLoading, setBiometricLoading] = useState(false);
 
+  // Forgot Password State
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [forgotStep, setForgotStep] = useState<1 | 2>(1);
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   // Custom Alert Modal State
   const [customAlert, setCustomAlert] = useState<CustomAlertState>({
     visible: false,
@@ -432,6 +441,7 @@ function MainAppContent() {
   useEffect(() => {
     if (Platform.OS === 'android') {
       const onBackPress = () => {
+        if (showForgotPasswordModal) { setShowForgotPasswordModal(false); return true; }
         if (showKycModal) { setShowKycModal(false); return true; }
         if (showProfileModal) {
           if (showChangePasswordModal) { setShowChangePasswordModal(false); return true; }
@@ -740,6 +750,54 @@ function MainAppContent() {
     setShowProfileModal(false);
   };
 
+  const handleRequestForgotOtp = async () => {
+    if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
+      showCustomAlert('Invalid Email', 'Please enter a valid account email address.', 'warning');
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const res = await mobileApi.forgotPassword(forgotEmail.trim());
+      setForgotStep(2);
+      showCustomAlert('Recovery Code Dispatched', res.message || `A 6-digit security code has been sent to ${forgotEmail}.`, 'success');
+    } catch (err: any) {
+      showCustomAlert('Recovery Notice', err.message || 'Failed to dispatch recovery code.', 'error');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!forgotOtp.trim() || forgotOtp.trim().length !== 6) {
+      showCustomAlert('Verification Code', 'Please enter the 6-digit verification code.', 'warning');
+      return;
+    }
+    if (!forgotNewPassword.trim() || forgotNewPassword.trim().length < 6) {
+      showCustomAlert('Password Policy', 'New password must be at least 6 characters long.', 'warning');
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      showCustomAlert('Password Mismatch', 'New passwords do not match.', 'warning');
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const res = await mobileApi.resetPassword(forgotEmail.trim(), forgotOtp.trim(), forgotNewPassword.trim());
+      setShowForgotPasswordModal(false);
+      setForgotStep(1);
+      setForgotOtp('');
+      setAuthPassword(forgotNewPassword);
+      setAuthEmail(forgotEmail);
+      setForgotNewPassword('');
+      setForgotConfirmPassword('');
+      showCustomAlert('Password Reset Successful', res.message || 'Your password has been updated. You can now log in.', 'success');
+    } catch (err: any) {
+      showCustomAlert('Reset Failed', err.message || 'Failed to reset password. Please check the code and try again.', 'error');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   // Profile & Security Operations
   const handleToggleBiometrics = async () => {
     if (!currentUser) return;
@@ -934,7 +992,7 @@ function MainAppContent() {
         const result = await ImagePicker.launchCameraAsync({
           mediaTypes: ['images'],
           allowsEditing: true,
-          quality: 0.8,
+          quality: 0.6,
           base64: true,
         });
         if (!result.canceled && result.assets && result.assets[0]) {
@@ -950,7 +1008,7 @@ function MainAppContent() {
         const result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ['images'],
           allowsEditing: true,
-          quality: 0.8,
+          quality: 0.6,
           base64: true,
         });
         if (!result.canceled && result.assets && result.assets[0]) {
@@ -1221,6 +1279,22 @@ function MainAppContent() {
                   onChangeText={setAuthPassword}
                 />
 
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4, marginBottom: 12 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setForgotEmail(authEmail ? authEmail.trim() : '');
+                      setForgotStep(1);
+                      setForgotOtp('');
+                      setForgotNewPassword('');
+                      setForgotConfirmPassword('');
+                      setShowForgotPasswordModal(true);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ color: '#F0B90B', fontSize: 12, fontWeight: '600' }}>Forgot Password?</Text>
+                  </TouchableOpacity>
+                </View>
+
                 <TouchableOpacity
                   style={styles.goldBtn}
                   onPress={handleLogin}
@@ -1354,6 +1428,112 @@ function MainAppContent() {
           </View>
         </ScrollView>
 
+        {/* Forgot Password Modal */}
+        <Modal visible={showForgotPasswordModal} transparent animationType="fade">
+          <View style={styles.modalOverlayCenter}>
+            <View style={[styles.customAlertCard, { maxWidth: 390, width: '92%', padding: 22 }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 14 }}>
+                <Text style={{ color: '#EAECEF', fontSize: 17, fontWeight: 'bold' }}>
+                  {forgotStep === 1 ? 'Reset Master Password' : 'Enter 6-Digit Code'}
+                </Text>
+                <TouchableOpacity onPress={() => setShowForgotPasswordModal(false)} style={{ padding: 6 }}>
+                  <Text style={{ color: '#848E9C', fontSize: 16, fontWeight: 'bold' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {forgotStep === 1 ? (
+                <View style={{ width: '100%' }}>
+                  <Text style={{ color: '#848E9C', fontSize: 12, marginBottom: 14, lineHeight: 18 }}>
+                    Enter your registered email address. We will dispatch a 6-digit cryptographic security code to reset your account password.
+                  </Text>
+                  <Text style={styles.fieldLabel}>Investor Email</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="investor@example.com"
+                    placeholderTextColor="#666"
+                    value={forgotEmail}
+                    onChangeText={setForgotEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    style={[styles.goldBtn, { marginTop: 14 }]}
+                    onPress={handleRequestForgotOtp}
+                    disabled={forgotLoading}
+                    activeOpacity={0.8}
+                  >
+                    {forgotLoading ? (
+                      <ActivityIndicator color="#181A20" />
+                    ) : (
+                      <Text style={styles.goldBtnText}>Send Recovery Code →</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ width: '100%' }}>
+                  <View style={[styles.otpNoticeBox, { width: '100%', marginBottom: 12 }]}>
+                    <Text style={styles.otpNoticeTitle}>✉️ Verification Code Dispatched</Text>
+                    <Text style={styles.otpNoticeSub}>
+                      Enter the 6-digit code dispatched to {forgotEmail}.
+                    </Text>
+                  </View>
+
+                  <Text style={styles.fieldLabel}>6-Digit Security Code</Text>
+                  <TextInput
+                    style={[styles.input, styles.otpInput]}
+                    placeholder="000000"
+                    placeholderTextColor="#666"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    value={forgotOtp}
+                    onChangeText={setForgotOtp}
+                  />
+
+                  <Text style={styles.fieldLabel}>New Master Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Min 6 characters"
+                    placeholderTextColor="#666"
+                    secureTextEntry
+                    value={forgotNewPassword}
+                    onChangeText={setForgotNewPassword}
+                  />
+
+                  <Text style={styles.fieldLabel}>Confirm New Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Repeat new password"
+                    placeholderTextColor="#666"
+                    secureTextEntry
+                    value={forgotConfirmPassword}
+                    onChangeText={setForgotConfirmPassword}
+                  />
+
+                  <TouchableOpacity
+                    style={[styles.goldBtn, { marginTop: 14 }]}
+                    onPress={handleResetPassword}
+                    disabled={forgotLoading}
+                    activeOpacity={0.8}
+                  >
+                    {forgotLoading ? (
+                      <ActivityIndicator color="#181A20" />
+                    ) : (
+                      <Text style={styles.goldBtnText}>Update Password & Confirm</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.backBtn, { marginTop: 8 }]}
+                    onPress={() => setForgotStep(1)}
+                  >
+                    <Text style={styles.backBtnText}>← Change Email</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
+
         {/* Custom Luxury Alert Modal */}
         <CustomAlertModal alert={customAlert} onDismiss={hideCustomAlert} />
       </SafeAreaView>
@@ -1368,6 +1548,27 @@ function MainAppContent() {
   const portfolioNav = walletSummary?.totalPortfolioValue ?? (availableBal + (walletSummary?.lockedInInvestments ?? 0));
   const preferredCurr = currentUser?.preferredCurrency || 'USD';
   const currentRates = exchangeRates.rates || DEFAULT_EXCHANGE_RATES.rates;
+
+  const affiliateRevenue = walletSummary?.totalReferralEarnings ?? (referralData?.totalCommissionEarned ?? 0);
+
+  // Total approved withdrawal, Pending withdrawal, and Pending deposit
+  const totalWithdrawn = transactions && transactions.length > 0
+    ? transactions
+        .filter(t => t.type === 'withdrawal' && t.status === 'completed')
+        .reduce((sum, t) => sum + t.amount, 0)
+    : (walletSummary?.totalWithdrawn ?? 0);
+
+  const pendingWithdrawal = transactions && transactions.length > 0
+    ? transactions
+        .filter(t => t.type === 'withdrawal' && (t.status === 'pending' || t.status === 'pending_kyc'))
+        .reduce((sum, t) => sum + t.amount, 0)
+    : (walletSummary?.pendingWithdrawn ?? 0);
+
+  const pendingDeposit = transactions && transactions.length > 0
+    ? transactions
+        .filter(t => t.type === 'deposit' && t.status === 'pending')
+        .reduce((sum, t) => sum + t.amount, 0)
+    : (walletSummary?.pendingDeposited ?? 0);
 
   return (
     <SafeAreaView style={[
@@ -1503,6 +1704,69 @@ function MainAppContent() {
                 </Text>
               )}
               <Text style={styles.pnlText}>Today's PNL: <Text style={{ color: '#0ECB81' }}>+$124.50 (+1.25%)</Text></Text>
+            </View>
+
+            {/* Portfolio Overview Metrics Grid */}
+            <View style={styles.portfolioMetricsGrid}>
+              {/* Available Balance */}
+              <View style={styles.portfolioMetricCard}>
+                <View style={styles.portfolioMetricHeader}>
+                  <Text style={styles.portfolioMetricTitle}>Available Balance</Text>
+                  <Text style={{ fontSize: 13 }}>💼</Text>
+                </View>
+                <Text style={styles.portfolioMetricVal}>
+                  {formatCurrency(availableBal, preferredCurr, currentRates, false)}
+                </Text>
+                <Text style={styles.portfolioMetricSub}>Instant liquidity</Text>
+              </View>
+
+              {/* Affiliate Revenue */}
+              <View style={styles.portfolioMetricCard}>
+                <View style={styles.portfolioMetricHeader}>
+                  <Text style={styles.portfolioMetricTitle}>Affiliate Revenue</Text>
+                  <Text style={{ fontSize: 13 }}>👥</Text>
+                </View>
+                <Text style={[styles.portfolioMetricVal, { color: '#F0B90B' }]}>
+                  {formatCurrency(affiliateRevenue, preferredCurr, currentRates, false)}
+                </Text>
+                <Text style={styles.portfolioMetricSub}>Partner revenue</Text>
+              </View>
+
+              {/* Total withdrwal (Approved & Disbursed) */}
+              <View style={styles.portfolioMetricCard}>
+                <View style={styles.portfolioMetricHeader}>
+                  <Text style={styles.portfolioMetricTitle}>Total withdrwal</Text>
+                  <Text style={{ fontSize: 13 }}>⬆️</Text>
+                </View>
+                <Text style={[styles.portfolioMetricVal, { color: '#F6465D' }]}>
+                  {formatCurrency(totalWithdrawn, preferredCurr, currentRates, false)}
+                </Text>
+                <Text style={styles.portfolioMetricSub}>Approved payouts</Text>
+              </View>
+
+              {/* Settlement Queue: Pending withdrwal & Pending deposite */}
+              <View style={styles.portfolioMetricCard}>
+                <View style={styles.portfolioMetricHeader}>
+                  <Text style={styles.portfolioMetricTitle}>Settlement Queue</Text>
+                  <Text style={{ fontSize: 13 }}>⏱️</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 4, marginTop: 2 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 8, color: '#848E9C', fontWeight: '600', textTransform: 'uppercase' }}>Pending withdrwal</Text>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: pendingWithdrawal > 0 ? '#F0B90B' : '#848E9C', marginTop: 2 }}>
+                      {formatCurrency(pendingWithdrawal, preferredCurr, currentRates, false)}
+                    </Text>
+                  </View>
+                  <View style={{ width: 1, backgroundColor: '#2B313A', marginHorizontal: 2 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 8, color: '#848E9C', fontWeight: '600', textTransform: 'uppercase' }}>Pending deposite</Text>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: pendingDeposit > 0 ? '#0ECB81' : '#848E9C', marginTop: 2 }}>
+                      {formatCurrency(pendingDeposit, preferredCurr, currentRates, false)}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.portfolioMetricSub}>Clears on confirm</Text>
+              </View>
             </View>
 
             {/* Direct KYC Prompt Banner for Unverified Users */}
@@ -1962,6 +2226,26 @@ function MainAppContent() {
               <Text style={styles.cardEyebrow}>YOUR PARTNER REFERRAL CODE</Text>
               <Text style={styles.referralCodeText}>{referralData?.referralCode || currentUser.referralCode}</Text>
 
+              {/* Full Referral Link Box */}
+              <TouchableOpacity
+                style={styles.referralLinkContainer}
+                onPress={() => {
+                  const link = referralData?.referralLink || `https://heronassetstrusteess.com/register?ref=${referralData?.referralCode || currentUser.referralCode}`;
+                  copyToClipboard(link, 'ref_link');
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text style={styles.referralLinkLabel}>PARTNER INVITATION LINK</Text>
+                  <Text style={{ fontSize: 10, color: '#F0B90B', fontWeight: 'bold' }}>
+                    {copiedKey === 'ref_link' ? '✓ COPIED' : 'TAP TO COPY'}
+                  </Text>
+                </View>
+                <Text style={styles.referralLinkText} numberOfLines={1}>
+                  {referralData?.referralLink || `https://heronassetstrusteess.com/register?ref=${referralData?.referralCode || currentUser.referralCode}`}
+                </Text>
+              </TouchableOpacity>
+
               <View style={styles.refButtonRow}>
                 <TouchableOpacity
                   style={[styles.goldBtn, { flex: 1, marginTop: 4 }]}
@@ -1975,7 +2259,7 @@ function MainAppContent() {
                 <TouchableOpacity
                   style={[styles.secondaryActionBtn, { flex: 1, paddingVertical: 14 }]}
                   onPress={() => {
-                    const link = referralData?.referralLink || `https://heronassetstrustee.com/register?ref=${currentUser.referralCode}`;
+                    const link = referralData?.referralLink || `https://heronassetstrusteess.com/register?ref=${referralData?.referralCode || currentUser.referralCode}`;
                     copyToClipboard(link, 'ref_link');
                   }}
                 >
@@ -4889,6 +5173,68 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 2,
     marginVertical: 6,
+  },
+  referralLinkContainer: {
+    width: '100%',
+    backgroundColor: '#14151A',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  referralLinkLabel: {
+    fontSize: 9,
+    color: '#848E9C',
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  referralLinkText: {
+    fontSize: 12,
+    color: '#F0B90B',
+    fontFamily: Platform.OS === 'android' ? 'monospace' : 'Courier',
+  },
+  portfolioMetricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  portfolioMetricCard: {
+    flex: 1,
+    minWidth: '47%',
+    backgroundColor: '#1E2329',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#2B313A',
+  },
+  portfolioMetricHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  portfolioMetricTitle: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#848E9C',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  portfolioMetricVal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  portfolioMetricSub: {
+    fontSize: 9,
+    color: '#848E9C',
+    marginTop: 4,
   },
   refStatsGrid: {
     flexDirection: 'row',
