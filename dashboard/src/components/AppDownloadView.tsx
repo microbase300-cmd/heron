@@ -8,8 +8,8 @@ export const AppDownloadView: React.FC = () => {
     setDownloadInitiated(true);
     // Trigger download of the Android APK
     const link = document.createElement('a');
-    link.href = '/downloads/heron-mobile.apk';
-    link.setAttribute('download', 'heron-assets-trustee.apk');
+    link.href = '/downloads/heron-assets-v1.0.3.apk';
+    link.setAttribute('download', 'heron-assets-v1.0.3.apk');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
