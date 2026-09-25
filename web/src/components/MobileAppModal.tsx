@@ -58,12 +58,12 @@ export default function MobileAppModal({ isOpen, onClose }: MobileAppModalProps)
             iOS App — Coming Soon
           </a>
           <a 
-            href="/downloads/heron-assets-v1.0.4.apk" 
-            download="heron-assets-v1.0.4.apk" 
+            href="/downloads/heron-trustee.apk" 
+            download="heron-trustee.apk" 
             className="btn btn-gold" 
             style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            Download Android APK (v1.0.4)
+            Download Android APK
           </a>
           <button
             className="btn btn-outline"

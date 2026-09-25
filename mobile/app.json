@@ -18,8 +18,8 @@
       "bundleIdentifier": "com.heron.mobile"
     },
     "android": {
-      "package": "com.heron.mobile",
-      "versionCode": 2,
+      "package": "com.heronassets.trustee",
+      "versionCode": 1,
       "usesCleartextTraffic": true,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
