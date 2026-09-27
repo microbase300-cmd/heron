@@ -109,6 +109,16 @@ export const AppDownloadView: React.FC = () => {
               <Download className="w-4 h-4" />
               <span>{downloadInitiated ? 'Downloading APK...' : 'Download for Android — Coming Soon'}</span>
             </button>
+
+            {/* Play Protect Sideloading Notice */}
+            <div className="mt-3 p-3 rounded-xl bg-[#2B313A]/40 border border-[#2B313A] text-[11px] text-[#848E9C] flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-[#0ECB81] shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-[#EAECEF]">Direct Installation Guide: </span>
+                If Google Play Protect prompts with an unrecognized developer notice, tap <span className="text-[#0ECB81] font-mono font-bold">More details ⌄</span> and select <span className="text-[#0ECB81] font-mono font-bold">Install anyway</span>.
+              </div>
+            </div>
+
             <p className="text-[10px] text-center text-[#848E9C] mt-2">
               Available now for authorized client beta testing. Play Store launch pending final audit.
             </p>
