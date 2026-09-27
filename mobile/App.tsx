@@ -2842,10 +2842,10 @@ function MainAppContent() {
               setShowNotificationModal(false);
             }} 
           />
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { maxHeight: '92%', paddingBottom: Math.max(insets.bottom + 16, 28) }]}>
             {selectedDetailNotif ? (
               /* Inline Subview: Detail Message inside Drawer - eliminates double modal overlay clash */
-              <View style={{ flex: 1 }}>
+              <View style={{ flexShrink: 1, maxHeight: '100%' }}>
                 <View style={styles.sheetHeader}>
                   <TouchableOpacity 
                     style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4 }}
@@ -2866,7 +2866,11 @@ function MainAppContent() {
                   </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.msgBoxBodyScroll} showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                  style={[styles.msgBoxBodyScroll, { maxHeight: height * 0.62 }]} 
+                  contentContainerStyle={{ paddingBottom: 24 }}
+                  showsVerticalScrollIndicator={true}
+                >
                   <View style={styles.msgBoxInnerContent}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                       <View style={[
@@ -2884,8 +2888,8 @@ function MainAppContent() {
                         {new Date(selectedDetailNotif.createdAt).toLocaleString()}
                       </Text>
                     </View>
-                    <Text style={styles.msgDetailHeadline}>{selectedDetailNotif.title}</Text>
-                    <Text style={styles.msgDetailText}>{selectedDetailNotif.message}</Text>
+                    <Text selectable style={styles.msgDetailHeadline}>{selectedDetailNotif.title}</Text>
+                    <Text selectable style={styles.msgDetailText}>{selectedDetailNotif.message}</Text>
                   </View>
 
                   <View style={styles.msgDetailMetaGrid}>
@@ -2905,7 +2909,7 @@ function MainAppContent() {
                 </ScrollView>
 
                 <TouchableOpacity
-                  style={[styles.goldBtnFull, { marginTop: 14 }]}
+                  style={[styles.goldBtnFull, { marginTop: 14, marginBottom: 4 }]}
                   onPress={() => setSelectedDetailNotif(null)}
                 >
                   <Text style={styles.goldBtnText}>Back to Notifications</Text>
@@ -2924,7 +2928,11 @@ function MainAppContent() {
                   </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.sheetBody}>
+                <ScrollView 
+                  style={styles.sheetBody} 
+                  contentContainerStyle={{ paddingBottom: 28 }}
+                  showsVerticalScrollIndicator={true}
+                >
                   {notifications.length === 0 ? (
                     <View style={styles.emptyCard}>
                       <Text style={styles.emptyText}>All caught up! No notifications.</Text>
@@ -2958,7 +2966,7 @@ function MainAppContent() {
                             ]}>{n.type.toUpperCase()}</Text>
                           </View>
                         </View>
-                        <Text style={styles.notifMsg} numberOfLines={2}>{n.message}</Text>
+                        <Text selectable style={styles.notifMsg}>{n.message}</Text>
                         <View style={styles.notifFooterRow}>
                           <Text style={styles.notifMeta}>
                             {n.sender || 'Executive Desk'} • {new Date(n.createdAt).toLocaleDateString()}
@@ -3017,9 +3025,9 @@ function MainAppContent() {
             </View>
 
             <View style={styles.priorityContentBox}>
-              <Text style={styles.priorityHeadline}>{priorityPopUpNotif?.title}</Text>
-              <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
-                <Text style={styles.priorityBody}>{priorityPopUpNotif?.message}</Text>
+              <Text selectable style={styles.priorityHeadline}>{priorityPopUpNotif?.title}</Text>
+              <ScrollView style={{ maxHeight: Math.min(height * 0.45, 320) }} showsVerticalScrollIndicator={true}>
+                <Text selectable style={styles.priorityBody}>{priorityPopUpNotif?.message}</Text>
               </ScrollView>
             </View>
 
@@ -3078,10 +3086,14 @@ function MainAppContent() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.msgBoxBodyScroll} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              style={[styles.msgBoxBodyScroll, { maxHeight: height * 0.6 }]} 
+              contentContainerStyle={{ paddingBottom: 24 }}
+              showsVerticalScrollIndicator={true}
+            >
               <View style={styles.msgBoxInnerContent}>
-                <Text style={styles.msgDetailHeadline}>{selectedDetailNotif?.title}</Text>
-                <Text style={styles.msgDetailText}>{selectedDetailNotif?.message}</Text>
+                <Text selectable style={styles.msgDetailHeadline}>{selectedDetailNotif?.title}</Text>
+                <Text selectable style={styles.msgDetailText}>{selectedDetailNotif?.message}</Text>
               </View>
 
               <View style={styles.msgDetailMetaGrid}>
@@ -5536,7 +5548,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: '85%',
+    maxHeight: '92%',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -5550,7 +5562,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sheetBody: {
-    maxHeight: 450,
+    maxHeight: height * 0.72,
+    flexGrow: 1,
   },
   modalTitle: {
     fontSize: 16,
@@ -5658,10 +5671,10 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   notifMsg: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 15,
-    marginBottom: 6,
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.88)',
+    lineHeight: 18,
+    marginBottom: 8,
   },
   notifMeta: {
     fontSize: 9,
@@ -5880,15 +5893,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   msgDetailHeadline: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 8,
+    lineHeight: 20,
   },
   msgDetailText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
-    lineHeight: 18,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.92)',
+    lineHeight: 20,
   },
   msgDetailMetaGrid: {
     backgroundColor: 'rgba(255,255,255,0.02)',
