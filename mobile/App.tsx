@@ -35,6 +35,13 @@ import {
   BiometricStatus
 } from './src/services/biometrics';
 import {
+  saveBiometricVault,
+  getBiometricVault,
+  clearBiometricVault,
+  getStoredBiometricEmail,
+  hasBiometricVault
+} from './src/services/biometricVault';
+import {
   registerForPushNotificationsAsync,
   scheduleLocalNotification,
   addNotificationReceivedListener,
@@ -649,10 +656,16 @@ function MainAppContent() {
     };
   }, [currentUser]);
 
-  // Hardware Biometric Capability Check (Face ID / Fingerprint / BiometricPrompt)
+  // Hardware Biometric Capability Check (Face ID / Fingerprint / BiometricPrompt) & Vault Check
   useEffect(() => {
     getBiometricStatusAsync().then(status => {
       setBiometricStatus(status);
+    });
+    // Check if biometric vault exists and prefill email if not set
+    getStoredBiometricEmail().then(email => {
+      if (email) {
+        setAuthEmail(prev => prev ? prev : email);
+      }
     });
   }, []);
 
@@ -667,6 +680,12 @@ function MainAppContent() {
       return;
     }
 
+    const vault = await getBiometricVault();
+    if (!vault || !vault.token) {
+      showCustomAlert('Sign In Required', 'Please log in with your credentials once to link biometric access.', 'info');
+      return;
+    }
+
     const authRes = await authenticateWithBiometricsAsync('Authorize access to Heron Assets Trustee');
     if (!authRes.success) {
       if (authRes.error) {
@@ -675,24 +694,51 @@ function MainAppContent() {
       return;
     }
 
-    // Biometric match passed!
-    if (authEmail && authPassword) {
-      handleLogin();
-    } else {
-      setAuthLoading(true);
+    // Biometric match passed! Authenticate session from vault
+    setAuthLoading(true);
+    try {
+      mobileApi.setToken(vault.token);
+      let user: User | null = null;
       try {
         const profileRes = await mobileApi.getProfile();
         if (profileRes?.user) {
-          setCurrentUser(profileRes.user);
-          showCustomAlert('Biometric Access Granted', `Welcome back, ${profileRes.user.name}. Your portfolio is authenticated.`, 'success');
-        } else {
-          showCustomAlert('Credentials Required', 'Please enter your email and password once to connect your biometric vault.', 'info');
+          user = profileRes.user;
         }
-      } catch (err: any) {
-        showCustomAlert('Sign In Required', 'Please log in with your credentials once to link biometric access.', 'info');
-      } finally {
-        setAuthLoading(false);
+      } catch (profileErr: any) {
+        // Access token might be expired (15m window). Attempt refresh token rotation if available
+        if (vault.refreshToken) {
+          try {
+            const refreshRes = await mobileApi.refreshSession(vault.refreshToken);
+            user = refreshRes.user;
+            await saveBiometricVault({
+              email: vault.email,
+              token: refreshRes.token,
+              refreshToken: refreshRes.refreshToken,
+              user: refreshRes.user,
+            });
+          } catch (refreshErr) {
+            console.log('[Biometrics] Session refresh error:', refreshErr);
+          }
+        }
       }
+
+      if (user) {
+        setCurrentUser(user);
+        // Keep vault updated with active session
+        saveBiometricVault({
+          email: vault.email,
+          token: mobileApi.getToken() || vault.token,
+          refreshToken: vault.refreshToken,
+          user,
+        });
+        showCustomAlert('Biometric Access Granted', `Welcome back, ${user.name}. Your institutional portfolio is authenticated.`, 'success');
+      } else {
+        showCustomAlert('Session Expired', 'Your biometric security session has expired. Please enter your password once to re-authorize.', 'warning');
+      }
+    } catch (err: any) {
+      showCustomAlert('Authentication Error', err.message || 'Failed to authenticate biometric session.', 'error');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -705,6 +751,15 @@ function MainAppContent() {
     try {
       const res = await mobileApi.login(authEmail.trim(), authPassword.trim());
       setCurrentUser(res.user);
+
+      // Automatically store session in device biometric vault
+      await saveBiometricVault({
+        email: authEmail.trim(),
+        token: res.token,
+        refreshToken: res.refreshToken,
+        user: res.user,
+      });
+
       showCustomAlert('Login Successful', `Welcome back, ${res.user.name}. Your institutional portfolio is authenticated.`, 'success');
     } catch (err: any) {
       showCustomAlert('Authentication Failed', err.message || 'Invalid email or password. Please verify your credentials.', 'error');
@@ -745,6 +800,15 @@ function MainAppContent() {
         referralCode: authReferral.trim() || undefined
       });
       setCurrentUser(res.user);
+
+      // Save session in device biometric vault upon registration
+      await saveBiometricVault({
+        email: authEmail.trim(),
+        token: res.token,
+        refreshToken: res.refreshToken,
+        user: res.user,
+      });
+
       showCustomAlert('Account Verified', 'Your portfolio has been created with $0.00 initial balance. Deposit liquidity to start earning yield.', 'success');
     } catch (err: any) {
       showCustomAlert('Registration Error', err.message || 'Failed to register account.', 'error');
@@ -760,6 +824,12 @@ function MainAppContent() {
     setInvestments([]);
     setTransactions([]);
     setShowProfileModal(false);
+    // Clear password from state, but keep authEmail prefilled from biometric vault
+    setAuthPassword('');
+    const savedEmail = await getStoredBiometricEmail();
+    if (savedEmail) {
+      setAuthEmail(savedEmail);
+    }
   };
 
   const handleRequestForgotOtp = async () => {
@@ -856,6 +926,15 @@ function MainAppContent() {
     try {
       await mobileApi.updateProfile({ biometricsEnabled: targetState });
       setCurrentUser(prev => prev ? { ...prev, biometricsEnabled: targetState } : null);
+      if (targetState && currentUser && mobileApi.getToken()) {
+        await saveBiometricVault({
+          email: currentUser.email,
+          token: mobileApi.getToken()!,
+          user: currentUser,
+        });
+      } else if (!targetState) {
+        await clearBiometricVault();
+      }
       showCustomAlert(
         'Biometric Security',
         `Biometric Authentication (${biometricStatus?.biometricLabel || 'Face ID / Fingerprint'}) is now ${targetState ? 'ACTIVATED' : 'DEACTIVATED'}.`,

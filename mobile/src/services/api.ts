@@ -194,8 +194,8 @@ class MobileApiService {
     password: string;
     otpCode: string;
     referralCode?: string;
-  }): Promise<{ message: string; token: string; user: User }> {
-    const data = await this.request<{ message: string; token: string; user: User }>('/auth/register', {
+  }): Promise<{ message: string; token: string; user: User; refreshToken?: string }> {
+    const data = await this.request<{ message: string; token: string; user: User; refreshToken?: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
@@ -204,14 +204,25 @@ class MobileApiService {
     return data;
   }
 
-  async login(email: string, password: string): Promise<{ token: string; user: User }> {
-    const data = await this.request<{ token: string; user: User }>('/auth/login', {
+  async login(email: string, password: string): Promise<{ token: string; user: User; refreshToken?: string }> {
+    const data = await this.request<{ token: string; user: User; refreshToken?: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
     this.setToken(data.token);
     this.setUser(data.user);
     return data;
+  }
+
+  async refreshSession(refreshToken: string): Promise<{ token: string; refreshToken: string; user: User }> {
+    const data = await this.request<{ accessToken: string; refreshToken: string; user: User }>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    });
+    const token = data.accessToken;
+    this.setToken(token);
+    this.setUser(data.user);
+    return { token, refreshToken: data.refreshToken, user: data.user };
   }
 
   async logout(): Promise<void> {
