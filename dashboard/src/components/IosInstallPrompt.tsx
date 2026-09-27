@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Share, PlusSquare, CheckCircle2, X, Smartphone, Download, ArrowDown } from 'lucide-react';
 
+// iPhone PWA installation is temporarily deactivated per user instruction
+// Set IOS_PWA_ENABLED to true when ready to reactivate
+export const IOS_PWA_ENABLED = false;
+
 export const IosInstallPrompt: React.FC = () => {
+  if (!IOS_PWA_ENABLED) return null;
+
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showModal, setShowModal] = useState(false);

@@ -372,8 +372,8 @@ export const App: React.FC = () => {
       {/* Floating Lightweight Institutional AI Assistant */}
       <AiAssistantModal user={user} />
 
-      {/* iOS & PWA Native Smart Install Prompt */}
-      <IosInstallPrompt />
+      {/* iOS & PWA Native Smart Install Prompt (Temporarily Deactivated) */}
+      {/* <IosInstallPrompt /> */}
     </div>
   );
 };

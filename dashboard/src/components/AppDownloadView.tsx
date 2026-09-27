@@ -128,9 +128,9 @@ export const AppDownloadView: React.FC = () => {
                 </svg>
               </div>
 
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#d6a84f]/10 text-[#d6a84f] border border-[#d6a84f]/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d6a84f] animate-ping" />
-                Coming Soon
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#F6465D]/10 text-[#F6465D] border border-[#F6465D]/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F6465D]" />
+                Temporarily Deactivated
               </span>
             </div>
 
@@ -139,41 +139,41 @@ export const AppDownloadView: React.FC = () => {
             </h3>
 
             <p className="text-xs text-[#848E9C] mt-2 leading-relaxed">
-              Standalone institutional web-native application designed exclusively for iPhone and iPad. Operates full-screen with no browser address bars, rapid FaceID sync, and seamless navigation.
+              Standalone iOS PWA terminal access is temporarily deactivated for system maintenance. Official Apple App Store release will be activated soon.
             </p>
 
             {/* Feature List */}
             <ul className="mt-5 space-y-2.5 text-xs text-[#EAECEF]/80">
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#d6a84f] shrink-0" />
-                <span>Zero browser address bars — 100% native full-screen view</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#848E9C] shrink-0" />
+                <span className="text-[#848E9C]">iOS Web Terminal PWA: Paused</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#d6a84f] shrink-0" />
-                <span>Instant FaceID & TouchID biometric verification</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#848E9C] shrink-0" />
+                <span className="text-[#848E9C]">Biometric FaceID integration: Maintenance</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#d6a84f] shrink-0" />
-                <span>2-tap direct installation to iPhone Home Screen</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#848E9C] shrink-0" />
+                <span className="text-[#848E9C]">Direct Home Screen setup: Temporarily Offline</span>
               </li>
             </ul>
           </div>
 
           <div className="mt-7 pt-5 border-t border-[#2B313A]/70">
             <div className="flex items-center justify-between text-[11px] font-mono text-[#848E9C] mb-2.5">
-              <span>Compatibility: iOS 14.0+</span>
-              <span>Architecture: Apple WebKit</span>
+              <span>Status: Offline</span>
+              <span>Platform: Apple iOS</span>
             </div>
 
             <button
-              onClick={handleOpenIosGuide}
-              className="w-full py-3 px-4 rounded-xl bg-[#d6a84f] hover:bg-[#c49843] text-[#060807] font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#d6a84f]/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+              disabled
+              className="w-full py-3 px-4 rounded-xl bg-[#2B313A]/40 text-[#848E9C] font-bold text-xs tracking-wider uppercase border border-[#2B313A] flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
             >
-              <Smartphone className="w-4 h-4" />
-              <span>Install for iOS (Setup Guide)</span>
+              <Smartphone className="w-4 h-4 opacity-50" />
+              <span>iOS Terminal Deactivated</span>
             </button>
             <p className="text-[10px] text-center text-[#848E9C] mt-2">
-              App Store review currently underway. 1-click home screen setup available now.
+              Apple iOS mobile app setup is paused. Access your account via standard browser or Android APK.
             </p>
           </div>
         </div>

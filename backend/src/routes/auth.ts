@@ -56,7 +56,7 @@ function parseClientDevice(req: Request): string {
     return browser ? `Android • ${browser}` : 'Android 15 • Mobile App';
   }
   if (isIOS) {
-    return browser ? `iOS • ${browser}` : 'iOS 18 • iPhone App';
+    return browser ? `iOS • ${browser}` : 'iOS • Mobile Safari';
   }
   if (isWindows) {
     return `${isWindows}${browser ? ` • ${browser}` : ' • Chrome'}`;
