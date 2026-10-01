@@ -2,23 +2,6 @@ import React, { useState } from 'react';
 import { Smartphone, Download, ShieldCheck, Zap, ArrowRight, CheckCircle2, Lock, Sparkles, ExternalLink, Clock } from 'lucide-react';
 
 export const AppDownloadView: React.FC = () => {
-  const [downloadInitiated, setDownloadInitiated] = useState(false);
-
-  const handleDownloadAndroid = () => {
-    setDownloadInitiated(true);
-    // Trigger download of the Android APK
-    const link = document.createElement('a');
-    link.href = '/downloads/heron-trustee.apk';
-    link.setAttribute('download', 'heron-trustee.apk');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setTimeout(() => {
-      setDownloadInitiated(false);
-    }, 4000);
-  };
-
   const handleOpenIosGuide = () => {
     window.dispatchEvent(new CustomEvent('open-heron-install-guide'));
   };
@@ -40,12 +23,12 @@ export const AppDownloadView: React.FC = () => {
           </p>
         </div>
 
-        {/* Global Coming Soon Advisory Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2B313A]/60 border border-[#d6a84f]/30 self-start md:self-center shrink-0">
-          <Clock className="w-4 h-4 text-[#d6a84f] animate-pulse" />
+        {/* Global Release Advisory Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0ECB81]/10 border border-[#0ECB81]/30 self-start md:self-center shrink-0">
+          <CheckCircle2 className="w-4 h-4 text-[#0ECB81]" />
           <div className="text-left">
-            <div className="text-[10px] uppercase font-mono text-[#848E9C]">Public Release</div>
-            <div className="text-xs font-bold text-[#d6a84f]">Coming Soon — Final Audit</div>
+            <div className="text-[10px] uppercase font-mono text-[#848E9C]">Android Terminal</div>
+            <div className="text-xs font-bold text-[#0ECB81]">Official Release Active</div>
           </div>
         </div>
       </div>
@@ -65,9 +48,9 @@ export const AppDownloadView: React.FC = () => {
                 </svg>
               </div>
 
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#0ECB81]/10 text-[#0ECB81] border border-[#0ECB81]/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0ECB81] animate-ping" />
-                Coming Soon
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/40 shadow-sm shadow-[#0ECB81]/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0ECB81]" />
+                Available Now
               </span>
             </div>
 
@@ -98,17 +81,18 @@ export const AppDownloadView: React.FC = () => {
 
           <div className="mt-7 pt-5 border-t border-[#2B313A]/70">
             <div className="flex items-center justify-between text-[11px] font-mono text-[#848E9C] mb-2.5">
-              <span>Version: 1.0.0 (Release APK)</span>
-              <span>Size: ~92 MB</span>
+              <span>Version: 1.0.7 (Stable Release)</span>
+              <span>Size: ~46 MB</span>
             </div>
 
-            <button
-              onClick={handleDownloadAndroid}
-              className="w-full py-3 px-4 rounded-xl bg-[#0ECB81] hover:bg-[#0bb573] text-[#060807] font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#0ECB81]/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+            <a
+              href="/downloads/heron-trustee.apk"
+              download="heron-trustee.apk"
+              className="w-full py-3 px-4 rounded-xl bg-[#0ECB81] hover:bg-[#0bb573] text-[#060807] font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#0ECB81]/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer no-underline text-center select-none"
             >
               <Download className="w-4 h-4" />
-              <span>{downloadInitiated ? 'Downloading APK...' : 'Download for Android — Coming Soon'}</span>
-            </button>
+              <span>Download Android APK</span>
+            </a>
 
             {/* Play Protect Sideloading Notice */}
             <div className="mt-3 p-3 rounded-xl bg-[#2B313A]/40 border border-[#2B313A] text-[11px] text-[#848E9C] flex items-start gap-2.5">
@@ -120,7 +104,7 @@ export const AppDownloadView: React.FC = () => {
             </div>
 
             <p className="text-[10px] text-center text-[#848E9C] mt-2">
-              Available now for authorized client beta testing. Play Store launch pending final audit.
+              Verified institutional release package. Cryptographically signed for direct installation.
             </p>
           </div>
         </div>
