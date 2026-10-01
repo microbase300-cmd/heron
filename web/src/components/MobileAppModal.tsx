@@ -57,16 +57,18 @@ export default function MobileAppModal({ isOpen, onClose }: MobileAppModalProps)
             className="btn btn-gold" 
             style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            <span>Go to Download Page</span>
+            <span>Download for Android</span>
             <span aria-hidden="true">↗</span>
           </Link>
-          <a 
-            href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://app.stealthssolutions.com' : 'https://app.heronassetstrusteess.com'} 
+          <Link 
+            to="/download"
+            onClick={onClose}
             className="btn btn-dark" 
-            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            iOS App — Coming Soon
-          </a>
+            <span>Download for iOS</span>
+            <span aria-hidden="true">↗</span>
+          </Link>
           <button
             className="btn btn-outline"
             type="button"
