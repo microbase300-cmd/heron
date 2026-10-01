@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 
 interface MobileAppModalProps {
   isOpen: boolean
@@ -50,20 +51,21 @@ export default function MobileAppModal({ isOpen, onClose }: MobileAppModalProps)
         </p>
 
         <div className="app-dialog-actions">
+          <Link 
+            to="/download"
+            onClick={onClose}
+            className="btn btn-gold" 
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            <span>Go to Download Page</span>
+            <span aria-hidden="true">↗</span>
+          </Link>
           <a 
             href={typeof window !== 'undefined' && window.location.hostname.includes('stealthssolutions.com') ? 'https://app.stealthssolutions.com' : 'https://app.heronassetstrusteess.com'} 
             className="btn btn-dark" 
             style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
           >
             iOS App — Coming Soon
-          </a>
-          <a 
-            href="/downloads/heron-trustee.apk" 
-            download="heron-trustee.apk" 
-            className="btn btn-gold" 
-            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            Download Android APK
           </a>
           <button
             className="btn btn-outline"

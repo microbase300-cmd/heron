@@ -133,8 +133,23 @@ function Navbar() {
             Contact
           </NavLink>
 
+          <NavLink
+            to="/download"
+            className={({ isActive }) => (isActive ? 'active' : '')}
+            onClick={closeMenu}
+          >
+            Download App
+          </NavLink>
+
           <div className="nav-mobile-extra">
             <LanguageSelector variant="mobile" />
+            <Link
+              className="btn btn-gold"
+              to="/download"
+              onClick={closeMenu}
+            >
+              Download App ↗
+            </Link>
             <a
               className="btn btn-outline"
               href={getDashboardUrl()}
@@ -184,10 +199,8 @@ function Navbar() {
 }
 
 function Footer({
-  onOpenMobileApp,
   onOpenLegal,
 }: {
-  onOpenMobileApp: () => void
   onOpenLegal: (type: LegalDocType) => void
 }) {
   return (
@@ -232,6 +245,7 @@ function Footer({
 
           <div>
             <h4>Resources</h4>
+            <Link to="/download">Mobile App (APK)</Link>
             <Link to="/#market">Market Pulse</Link>
             <Link to="/strategies#process">Investment Process</Link>
             <Link to="/pricing#simulator">Yield Simulator</Link>
@@ -314,13 +328,12 @@ function Footer({
         </div>
 
         <div className="footer-mobile-cta">
-          <button
+          <Link
+            to="/download"
             className="btn btn-gold"
-            type="button"
-            onClick={onOpenMobileApp}
           >
             Download our Mobile App <span aria-hidden="true">↗</span>
-          </button>
+          </Link>
         </div>
 
         <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -401,7 +414,6 @@ export default function PublicLayout() {
       </main>
 
       <Footer
-        onOpenMobileApp={() => setMobileModalOpen(true)}
         onOpenLegal={(type) => setLegalModalType(type)}
       />
 

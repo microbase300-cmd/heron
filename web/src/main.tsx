@@ -10,6 +10,7 @@ import Strategies from './pages/Strategies'
 import Pricing from './pages/Pricing'
 import Company from './pages/Company'
 import Contact from './pages/Contact'
+import Download from './pages/Download'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +22,9 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/company" element={<Company />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/download" element={<Download />} />
+          <Route path="/downloads" element={<Download />} />
+          <Route path="/app" element={<Download />} />
           {/* Fallback route */}
           <Route path="*" element={<Home />} />
         </Route>

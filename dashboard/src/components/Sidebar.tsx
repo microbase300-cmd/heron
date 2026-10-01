@@ -49,8 +49,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'referrals', label: 'Affiliate Network', icon: Users, badge: '30%' },
     { id: 'ledger', label: 'Audit Ledger', icon: ReceiptText },
     { id: 'profile', label: 'Edit Profile & Security', icon: ShieldCheck, badge: 'Verified' },
-    { id: 'apps', label: 'App Download', icon: Smartphone, badge: 'Soon' },
+    { id: 'apps', label: 'App Download', icon: Smartphone, badge: 'APK' },
   ];
+
+  const getDownloadPageUrl = () => {
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      if (host.includes('stealthssolutions.com')) {
+        return 'https://stealthssolutions.com/download';
+      }
+      return 'https://heronassetstrusteess.com/download';
+    }
+    return 'https://heronassetstrusteess.com/download';
+  };
 
   const handleTabClick = (tabId: string) => {
     setCurrentTab(tabId);
@@ -125,6 +136,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {navItems.map(item => {
             const Icon = item.icon;
             const active = currentTab === item.id;
+
+            if (item.id === 'apps') {
+              return (
+                <a
+                  key={item.id}
+                  href={getDownloadPageUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    if (onClose) onClose();
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-[#848E9C] hover:text-[#0ECB81] hover:bg-[#1E2329] transition-all no-underline group"
+                  title="Open Dedicated Mobile App Download Page"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 text-[#848E9C] group-hover:text-[#0ECB81] transition-colors" />
+                    <span className="tracking-wide">App Download</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold uppercase bg-[#0ECB81]/15 text-[#0ECB81] border border-[#0ECB81]/40 flex items-center gap-1">
+                    <span>APK</span>
+                    <span className="text-[9px]">↗</span>
+                  </span>
+                </a>
+              );
+            }
+
             return (
               <button
                 key={item.id}
