@@ -225,9 +225,39 @@ class AdminApiService {
     key: string,
     updates: Partial<DepositAddressConfig>
   ): Promise<{ message: string; wallet: DepositAddressConfig }> {
-    return this.request<{ message: string; wallet: DepositAddressConfig }>(`/admin/wallets/${key}`, {
+    return this.request<{ message: string; wallet: DepositAddressConfig }>(`/admin/wallets/${encodeURIComponent(key)}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
+    });
+  }
+
+  public async createWallet(wallet: {
+    key?: string;
+    asset: string;
+    network: string;
+    address: string;
+    memo?: string;
+    isActive?: boolean;
+  }): Promise<{ message: string; wallet: DepositAddressConfig }> {
+    return this.request<{ message: string; wallet: DepositAddressConfig }>('/admin/wallets', {
+      method: 'POST',
+      body: JSON.stringify(wallet),
+    });
+  }
+
+  public async deleteWallet(key: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/admin/wallets/${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  public async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/admin/change-password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
     });
   }
 

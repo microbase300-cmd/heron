@@ -402,7 +402,9 @@ class DatabaseService {
     } else {
       adminUser.role = 'admin';
       adminUser.status = 'active';
-      adminUser.passwordHash = defaultPasswordHash;
+      if (!adminUser.passwordHash) {
+        adminUser.passwordHash = defaultPasswordHash;
+      }
     }
 
     // 2. Ensure all users have roles and statuses
@@ -925,6 +927,34 @@ class DatabaseService {
     this.data.depositAddresses[key] = updated;
     this.save();
     return updated;
+  }
+
+  addDepositAddress(wallet: Omit<DepositAddressConfig, 'updatedAt'>): DepositAddressConfig {
+    if (!this.data.depositAddresses) {
+      this.data.depositAddresses = { ...DEFAULT_DEPOSIT_ADDRESSES };
+    }
+    const cleanKey = wallet.key.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+    const newWallet: DepositAddressConfig = {
+      key: cleanKey,
+      asset: wallet.asset.trim().toUpperCase(),
+      network: wallet.network.trim(),
+      address: wallet.address.trim(),
+      memo: wallet.memo ? wallet.memo.trim() : undefined,
+      isActive: wallet.isActive !== undefined ? wallet.isActive : true,
+      updatedAt: new Date().toISOString(),
+    };
+    this.data.depositAddresses[cleanKey] = newWallet;
+    this.save();
+    return newWallet;
+  }
+
+  deleteDepositAddress(key: string): boolean {
+    if (!this.data.depositAddresses || !this.data.depositAddresses[key]) {
+      return false;
+    }
+    delete this.data.depositAddresses[key];
+    this.save();
+    return true;
   }
 
   // --- Admin Aggregated Metrics ---

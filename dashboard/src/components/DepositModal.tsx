@@ -27,6 +27,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   const [addresses, setAddresses] = useState<Record<string, DepositAddressConfig>>({});
   const [selectedKey, setSelectedKey] = useState('USDT_TRC20');
   const [copied, setCopied] = useState(false);
+  const [memoCopied, setMemoCopied] = useState(false);
   const [amount, setAmount] = useState<string>('2500');
   const [txHash, setTxHash] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +45,38 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     }
   }, [isOpen]);
 
+  // Dynamically compute active available receiving deposit addresses
+  const availableAssets = React.useMemo(() => {
+    const list = Object.entries(addresses)
+      .filter(([_, conf]) => conf && conf.isActive !== false)
+      .map(([key, conf]) => ({
+        key: conf.key || key,
+        asset: conf.asset || key.split('_')[0] || 'USDT',
+        name: `${conf.asset || key.split('_')[0]} (${conf.network})`,
+        network: conf.network,
+        address: conf.address,
+        memo: conf.memo,
+      }));
+
+    if (list.length > 0) return list;
+
+    return DEFAULT_ASSETS.map((a) => ({
+      key: a.key,
+      asset: a.key.split('_')[0],
+      name: a.name,
+      network: a.network,
+      address: a.address,
+      memo: undefined as string | undefined,
+    }));
+  }, [addresses]);
+
+  // Auto-select valid key when list loads
+  useEffect(() => {
+    if (availableAssets.length > 0 && !availableAssets.some((a) => a.key === selectedKey)) {
+      setSelectedKey(availableAssets[0].key);
+    }
+  }, [availableAssets, selectedKey]);
+
   // Find latest active deposit transaction or currently tracked active deposit
   const depositTxs = transactions.filter(t => t.type === 'deposit');
   const activeTrackedTx = activeDepositId
@@ -54,9 +87,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentAddressObj = addresses[selectedKey] || DEFAULT_ASSETS.find((a) => a.key === selectedKey);
+  const currentAddressObj = availableAssets.find((a) => a.key === selectedKey) || availableAssets[0];
   const currentAddress = currentAddressObj?.address || 'TX9d8b7a6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a';
   const currentNetwork = currentAddressObj?.network || 'Tron (TRC-20)';
+  const currentMemo = currentAddressObj?.memo;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(currentAddress);
@@ -76,7 +110,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     setFeedback(null);
 
     try {
-      const assetLabel = selectedKey.split('_')[0];
+      const assetLabel = currentAddressObj?.asset || selectedKey.split('_')[0];
       const res = await api.deposit(num, assetLabel, txHash || undefined);
       if (res.transaction?.id) {
         setActiveDepositId(res.transaction.id);
@@ -295,7 +329,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 Select Asset & Receiving Network
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {DEFAULT_ASSETS.map((a) => (
+                {availableAssets.map((a) => (
                   <button
                     key={a.key}
                     type="button"
@@ -332,6 +366,31 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                   </button>
                 </div>
               </div>
+
+              {currentMemo && (
+                <div className="pt-2 border-t border-[#2B313A]">
+                  <div className="text-[10px] font-mono text-[#F0B90B] uppercase tracking-widest mb-1 flex items-center justify-between">
+                    <span>Routing Tag / Memo (Required)</span>
+                    <span className="text-[9px] bg-[#F0B90B]/20 px-1.5 py-0.5 rounded text-[#F0B90B] font-bold">Do Not Omit</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E2329] border border-[#F0B90B]/30 font-mono text-xs text-[#EAECEF]">
+                    <span className="font-bold select-all tracking-wider">{currentMemo}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(currentMemo);
+                        setMemoCopied(true);
+                        setTimeout(() => setMemoCopied(false), 2000);
+                      }}
+                      className="shrink-0 p-1.5 rounded-md hover:bg-[#2B313A] text-[#F0B90B] hover:text-[#FCD535] transition-all flex items-center gap-1 text-[11px] font-bold"
+                      title="Copy Memo"
+                    >
+                      {memoCopied ? <Check className="w-3.5 h-3.5 text-[#0ECB81]" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{memoCopied ? 'Copied' : 'Copy Memo'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Form to Submit Inbound Deposit Proof */}

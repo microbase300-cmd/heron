@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { db } from '../services/db';
@@ -558,6 +559,61 @@ router.put('/plans/:id', (req: AuthRequest, res: Response) => {
   }
 });
 
+// 11b. PUT /api/admin/change-password - Change Administrator Master Password
+router.put('/change-password', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'Current master password and new password are required.' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: 'New password must be at least 8 characters long.' });
+      return;
+    }
+
+    const adminUserId = req.user?.userId || req.user?.id;
+    if (!adminUserId) {
+      res.status(401).json({ error: 'Unauthorized executive session.' });
+      return;
+    }
+    const adminUser = db.getUserById(adminUserId);
+    if (!adminUser) {
+      res.status(404).json({ error: 'Executive account not found.' });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, adminUser.passwordHash);
+    if (!isMatch) {
+      res.status(400).json({ error: 'Current master password verification failed. Please verify your credentials.' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(newPassword, salt);
+    db.updateUserPassword(adminUser.id, newHash);
+
+    // Record audit notification
+    db.createNotification({
+      id: `notif_${uuidv4()}`,
+      userId: adminUser.id,
+      targetEmail: adminUser.email,
+      title: 'Administrator Master Password Updated',
+      message: 'The master executive credentials for your administrator profile were successfully updated.',
+      type: 'warning',
+      sender: 'System Security Protocol',
+      readBy: [],
+      createdAt: new Date().toISOString()
+    });
+
+    res.json({ message: 'Administrator master password changed successfully. Please store your new credentials securely.' });
+  } catch (err: any) {
+    console.error('Admin change-password error:', err);
+    res.status(500).json({ error: 'Failed to update administrator password.' });
+  }
+});
+
 // 12. GET /api/admin/wallets - Retrieve Deposit Receiving Addresses
 router.get('/wallets', (_req: AuthRequest, res: Response) => {
   try {
@@ -565,6 +621,67 @@ router.get('/wallets', (_req: AuthRequest, res: Response) => {
     res.json(addresses);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch deposit wallet configurations.' });
+  }
+});
+
+// 12b. POST /api/admin/wallets - Add New Receiving Deposit Wallet
+router.post('/wallets', (req: AuthRequest, res: Response) => {
+  try {
+    const { key, asset, network, address, memo, isActive } = req.body;
+
+    if (!asset || !asset.trim()) {
+      res.status(400).json({ error: 'Asset symbol is required (e.g. USDT, USDC, BTC).' });
+      return;
+    }
+    if (!network || !network.trim()) {
+      res.status(400).json({ error: 'Receiving network is required (e.g. Tron (TRC-20), Solana SPL).' });
+      return;
+    }
+    if (!address || address.trim().length < 8) {
+      res.status(400).json({ error: 'A valid receiving wallet address (minimum 8 characters) is required.' });
+      return;
+    }
+
+    const autoKey = key && key.trim()
+      ? key.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_')
+      : `${asset.trim().toUpperCase()}_${network.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_').slice(0, 15)}`;
+
+    const currentWallets = db.getDepositAddresses();
+    if (currentWallets[autoKey]) {
+      res.status(400).json({ error: `A wallet configuration with key "${autoKey}" already exists. Please choose a different identifier or edit the existing wallet.` });
+      return;
+    }
+
+    const newWallet = db.addDepositAddress({
+      key: autoKey,
+      asset: asset.trim().toUpperCase(),
+      network: network.trim(),
+      address: address.trim(),
+      memo: memo && memo.trim() ? memo.trim() : undefined,
+      isActive: typeof isActive === 'boolean' ? isActive : true,
+    });
+
+    res.status(201).json({
+      message: `Receiving address for ${newWallet.asset} (${newWallet.network}) added successfully.`,
+      wallet: newWallet,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to configure new deposit wallet.' });
+  }
+});
+
+// 12c. DELETE /api/admin/wallets/:key - Delete Platform Receiving Wallet Address
+router.delete('/wallets/:key', (req: AuthRequest, res: Response) => {
+  try {
+    const { key } = req.params;
+    const deleted = db.deleteDepositAddress(key);
+    if (!deleted) {
+      res.status(404).json({ error: `Wallet key "${key}" not found.` });
+      return;
+    }
+    res.json({ message: `Deposit wallet configuration "${key}" removed successfully.` });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to remove deposit wallet configuration.' });
   }
 });
 

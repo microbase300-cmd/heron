@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Headphones,
   Radio,
-  Mail
+  Mail,
+  KeyRound
 } from 'lucide-react';
 
 export type AdminTab = 'metrics' | 'visitors' | 'webmail' | 'live_support' | 'transactions' | 'investor_portfolios' | 'users' | 'kyc' | 'wallets' | 'notifications' | 'investments' | 'plans';
@@ -25,6 +26,7 @@ interface AdminSidebarProps {
   waitingSupportCount?: number;
   onlineVisitorCount?: number;
   unreadEmailCount?: number;
+  onOpenPasswordModal?: () => void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -35,6 +37,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   waitingSupportCount = 0,
   onlineVisitorCount = 0,
   unreadEmailCount = 0,
+  onOpenPasswordModal,
 }) => {
   const navItems: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string; isSpecial?: boolean }[] = [
     { id: 'metrics', label: 'Platform Executive', icon: LayoutDashboard },
@@ -124,6 +127,19 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
       {/* Cross-Link to Investor Portal and Marketing Site */}
       <div className="hidden md:block pt-6 border-t border-[#2B313A] space-y-2">
+        {onOpenPasswordModal && (
+          <button
+            onClick={onOpenPasswordModal}
+            className="w-full flex items-center justify-between p-2.5 rounded-lg bg-[#F0B90B]/10 hover:bg-[#F0B90B]/20 border border-[#F0B90B]/30 text-xs text-[#F0B90B] font-semibold transition-all font-mono mb-2"
+            title="Change Administrator Master Password"
+          >
+            <div className="flex items-center gap-2">
+              <KeyRound className="w-3.5 h-3.5 text-[#F0B90B]" />
+              <span>Master Password</span>
+            </div>
+            <span className="text-[10px] bg-[#F0B90B]/20 px-1.5 py-0.5 rounded text-[#F0B90B] font-bold">Edit</span>
+          </button>
+        )}
         <a
           href="https://app.heronassetstrusteess.com"
           target="_blank"

@@ -16,11 +16,13 @@ import { KycComplianceDeskView } from './components/KycComplianceDeskView';
 import { LiveSupportDeskView } from './components/LiveSupportDeskView';
 import { LiveVisitorTrackerView } from './components/LiveVisitorTrackerView';
 import { WebmailDeskView } from './components/WebmailDeskView';
+import { AdminPasswordModal } from './components/AdminPasswordModal';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getStoredUser());
   const [currentTab, setCurrentTab] = useState<AdminTab>('metrics');
   const [selectedInvestorId, setSelectedInvestorId] = useState<string | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
 
   // Platform Operational Data State
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
@@ -163,6 +165,7 @@ export function App() {
         onRefresh={fetchAllData}
         refreshing={refreshing}
         onNavigateTab={(tab) => setCurrentTab(tab)}
+        onOpenPasswordModal={() => setIsPasswordModalOpen(true)}
         waitingSupportCount={waitingSupportCount}
         onlineVisitorCount={onlineVisitorCount}
         unreadEmailCount={unreadEmailCount}
@@ -177,6 +180,7 @@ export function App() {
           waitingSupportCount={waitingSupportCount}
           onlineVisitorCount={onlineVisitorCount}
           unreadEmailCount={unreadEmailCount}
+          onOpenPasswordModal={() => setIsPasswordModalOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8">
@@ -267,6 +271,14 @@ export function App() {
           </div>
         </main>
       </div>
+
+      {currentUser && (
+        <AdminPasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+          user={currentUser}
+        />
+      )}
     </div>
   );
 }

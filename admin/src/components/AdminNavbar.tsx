@@ -1,4 +1,4 @@
-import { LogOut, RefreshCw, Sparkles, Headphones, Radio, Mail } from 'lucide-react';
+import { LogOut, RefreshCw, Sparkles, Headphones, Radio, Mail, KeyRound } from 'lucide-react';
 import { AdminUser } from '../types';
 import { AdminTab } from './AdminSidebar';
 
@@ -8,6 +8,7 @@ interface AdminNavbarProps {
   onRefresh: () => void;
   refreshing: boolean;
   onNavigateTab?: (tab: AdminTab) => void;
+  onOpenPasswordModal?: () => void;
   waitingSupportCount?: number;
   onlineVisitorCount?: number;
   unreadEmailCount?: number;
@@ -19,6 +20,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
   onRefresh,
   refreshing,
   onNavigateTab,
+  onOpenPasswordModal,
   waitingSupportCount = 0,
   onlineVisitorCount = 0,
   unreadEmailCount = 0,
@@ -132,6 +134,17 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
               {user.role.toUpperCase()}
             </div>
           </div>
+
+          {onOpenPasswordModal && (
+            <button
+              onClick={onOpenPasswordModal}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#F0B90B]/10 hover:bg-[#F0B90B]/20 border border-[#F0B90B]/30 text-xs font-mono text-[#F0B90B] font-bold transition-all shadow-sm cursor-pointer ml-1 sm:ml-2"
+              title="Change Executive Master Password"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Change Password</span>
+            </button>
+          )}
 
           <button
             onClick={onLogout}
