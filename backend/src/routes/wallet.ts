@@ -150,7 +150,7 @@ router.post('/request-withdrawal-otp', requireAuth, async (req: AuthRequest, res
 router.post('/withdraw', requireAuth, (req: AuthRequest, res: Response): void => {
   try {
     const userId = req.user!.userId || req.user!.id;
-    const { amount, asset, destinationAddress, otpCode } = req.body;
+    const { amount, asset, destinationAddress, destinationMemo, memo, otpCode } = req.body;
 
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -193,6 +193,8 @@ router.post('/withdraw', requireAuth, (req: AuthRequest, res: Response): void =>
     const generatedHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
     // Create pending withdrawal transaction
+    const finalMemo = (destinationMemo || memo || '').trim();
+    const cleanAddress = destinationAddress.trim();
     const tx = db.createTransaction({
       id: `tx_${uuidv4()}`,
       userId: user.id,
@@ -201,7 +203,9 @@ router.post('/withdraw', requireAuth, (req: AuthRequest, res: Response): void =>
       asset: asset || 'USDT',
       status: 'pending',
       txHash: generatedHash,
-      note: `Pending withdrawal of $${numAmount.toLocaleString()} to ${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)} (${asset || 'USDT'})`,
+      destinationAddress: cleanAddress,
+      destinationMemo: finalMemo || undefined,
+      note: `Pending withdrawal of $${numAmount.toLocaleString()} to ${cleanAddress.slice(0, 8)}...${cleanAddress.slice(-6)} (${asset || 'USDT'})${finalMemo ? ` [Memo: ${finalMemo}]` : ''}`,
       createdAt: new Date().toISOString()
     });
 

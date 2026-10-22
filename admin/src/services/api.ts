@@ -149,9 +149,10 @@ class AdminApiService {
     return this.request<Transaction[]>('/admin/transactions');
   }
 
-  public async approveTransaction(id: string): Promise<{ message: string }> {
-    return this.request<{ message: string }>(`/admin/transactions/${id}/approve`, {
+  public async approveTransaction(id: string, txHash?: string): Promise<{ message: string; txHash?: string }> {
+    return this.request<{ message: string; txHash?: string }>(`/admin/transactions/${id}/approve`, {
       method: 'POST',
+      body: JSON.stringify({ txHash: txHash ? txHash.trim() : undefined }),
     });
   }
 

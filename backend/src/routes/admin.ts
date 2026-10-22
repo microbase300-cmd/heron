@@ -155,6 +155,7 @@ router.get('/transactions', (_req: AuthRequest, res: Response) => {
 router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { txHash: customTxHash } = req.body || {};
     const txs = db.getAllTransactions();
     const tx = txs.find((t) => t.id === id);
 
@@ -168,7 +169,15 @@ router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
       return;
     }
 
-    db.updateTransactionStatus(id, 'completed');
+    // Determine the authoritative transaction hash (custom admin hash or existing/auto-generated)
+    let finalTxHash = tx.txHash;
+    if (customTxHash && typeof customTxHash === 'string' && customTxHash.trim()) {
+      finalTxHash = customTxHash.trim();
+    } else if (!finalTxHash || finalTxHash.length < 8) {
+      finalTxHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    }
+
+    db.updateTransactionStatus(id, 'completed', finalTxHash);
 
     // If it was a pending deposit, credit the user's balance and notify user
     if (tx.type === 'deposit') {
@@ -196,7 +205,7 @@ router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
              amount: tx.amount,
              asset: tx.asset,
              newBalance,
-             txHash: tx.txHash
+             txHash: finalTxHash
            }).catch(err => {
              console.warn('⚠️ [Deposit Approval Email Error]:', err?.message || err);
            });
@@ -210,7 +219,7 @@ router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
           userId: user.id,
           targetEmail: user.email,
           title: `Withdrawal Disbursement Authorized: $${tx.amount.toLocaleString()} ${tx.asset}`,
-          message: `Your withdrawal request of $${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${tx.asset} has been approved and dispatched to your destination wallet.`,
+          message: `Your withdrawal request of $${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${tx.asset} has been approved and dispatched to your destination wallet.\n\nBlockchain TxID: ${finalTxHash}`,
           type: 'success',
           sender: 'Settlement Treasury Desk',
           readBy: [],
@@ -232,7 +241,7 @@ router.post('/transactions/:id/approve', (req: AuthRequest, res: Response) => {
             amount: tx.amount,
             asset: tx.asset,
             destinationAddress: destinationAddress,
-            txHash: tx.txHash
+            txHash: finalTxHash
           }).catch(err => {
             console.warn('⚠️ [Withdrawal Approval Email Error]:', err?.message || err);
           });

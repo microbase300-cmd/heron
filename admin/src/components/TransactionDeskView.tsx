@@ -12,7 +12,10 @@ import {
   Lock,
   Unlock,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Copy,
+  Check,
+  Sparkles
 } from 'lucide-react';
 import { Transaction } from '../types';
 import { adminApi } from '../services/api';
@@ -35,6 +38,12 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
   // KYC Hold modal state
   const [holdingTx, setHoldingTx] = useState<Transaction | null>(null);
   const [holdReason, setHoldReason] = useState('');
+
+  // Withdrawal Approval & Custom TxHash Modal State
+  const [approvingWithdrawalTx, setApprovingWithdrawalTx] = useState<Transaction | null>(null);
+  const [withdrawalTxHash, setWithdrawalTxHash] = useState('');
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [copiedMemo, setCopiedMemo] = useState(false);
 
   const pendingDeposits = transactions.filter(t => t.type === 'deposit' && t.status === 'pending');
   const pendingWithdrawals = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending');
@@ -85,12 +94,42 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
     }
   };
 
-  const handleApproveWithdrawal = async (tx: Transaction) => {
-    if (!window.confirm(`Authorize withdrawal disbursement of $${tx.amount.toLocaleString()} ${tx.asset} to client address?`)) return;
-    setProcessingId(tx.id);
+  const handleOpenApproveWithdrawalModal = (tx: Transaction) => {
+    setApprovingWithdrawalTx(tx);
+    // Pre-populate with existing hash or generate a valid cryptographic hash
+    const isSol = tx.asset.toLowerCase().includes('sol');
+    let generatedHash = '';
+    if (isSol) {
+      const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+      for (let i = 0; i < 88; i++) generatedHash += chars.charAt(Math.floor(Math.random() * chars.length));
+    } else {
+      const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      generatedHash = `0x${hex}`;
+    }
+    setWithdrawalTxHash(tx.txHash && tx.txHash.length > 15 ? tx.txHash : generatedHash);
+  };
+
+  const handleGenerateRandomHash = () => {
+    const isSol = approvingWithdrawalTx?.asset.toLowerCase().includes('sol');
+    let generatedHash = '';
+    if (isSol) {
+      const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+      for (let i = 0; i < 88; i++) generatedHash += chars.charAt(Math.floor(Math.random() * chars.length));
+    } else {
+      const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      generatedHash = `0x${hex}`;
+    }
+    setWithdrawalTxHash(generatedHash);
+  };
+
+  const handleConfirmApproveWithdrawal = async () => {
+    if (!approvingWithdrawalTx) return;
+    setProcessingId(approvingWithdrawalTx.id);
     try {
-      await adminApi.approveTransaction(tx.id);
+      await adminApi.approveTransaction(approvingWithdrawalTx.id, withdrawalTxHash.trim() || undefined);
       onRefreshTransactions();
+      setApprovingWithdrawalTx(null);
+      setWithdrawalTxHash('');
     } catch (err: any) {
       alert(err.message || 'Failed to approve withdrawal.');
     } finally {
@@ -399,9 +438,10 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
                             </button>
                           ) : (
                             <button
-                              onClick={() => handleApproveWithdrawal(tx)}
+                              onClick={() => handleOpenApproveWithdrawalModal(tx)}
                               disabled={processingId === tx.id}
-                              className="px-2.5 py-1.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#F0B90B]/20 disabled:opacity-50 flex items-center gap-1"
+                              className="px-2.5 py-1.5 rounded-lg bg-[#F0B90B] hover:bg-[#FCD535] text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#F0B90B]/20 disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                              title="Review address and set disbursement hash"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Approve
@@ -533,6 +573,158 @@ export const TransactionDeskView: React.FC<TransactionDeskViewProps> = ({
               >
                 <Lock className="w-3.5 h-3.5" />
                 {processingId === holdingTx.id ? 'Placing Hold...' : 'Confirm KYC Hold'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Withdrawal Disbursement & Custom Hash Settlement Modal */}
+      {approvingWithdrawalTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="glass-panel w-full max-w-lg rounded-3xl border border-[#F0B90B]/40 bg-[#181A20] shadow-2xl p-6 sm:p-7 space-y-5">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-[#2B313A] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#F0B90B]/15 border border-[#F0B90B]/40 flex items-center justify-center text-[#F0B90B]">
+                  <ArrowUpRight className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-sans font-bold text-[#EAECEF]">Authorize Withdrawal Disbursement</h3>
+                  <div className="text-xs font-mono text-[#848E9C]">Settlement Order #{approvingWithdrawalTx.id}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setApprovingWithdrawalTx(null)}
+                className="p-1 rounded-lg hover:bg-[#2B313A] text-[#848E9C] hover:text-[#EAECEF] transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Transaction Key Details Summary Card */}
+            <div className="p-4 rounded-2xl bg-[#1E2329] border border-[#2B313A] text-xs font-mono space-y-2.5">
+              <div className="flex justify-between items-center">
+                <span className="text-[#848E9C]">Target Investor:</span>
+                <span className="font-bold text-[#EAECEF]">
+                  {approvingWithdrawalTx.userName || 'Investor'} ({approvingWithdrawalTx.userEmail || approvingWithdrawalTx.userId})
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#848E9C]">Disbursement Amount:</span>
+                <span className="font-bold text-[#F0B90B] font-sans text-base">
+                  ${approvingWithdrawalTx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#848E9C]">Asset & Settlement Rail:</span>
+                <span className="font-bold px-2 py-0.5 rounded bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30">
+                  {approvingWithdrawalTx.asset}
+                </span>
+              </div>
+
+              {/* Destination Address with Copy Button */}
+              {(() => {
+                let dest = approvingWithdrawalTx.destinationAddress;
+                if (!dest && approvingWithdrawalTx.note) {
+                  const match = approvingWithdrawalTx.note.match(/to\s+([A-Za-z0-9.]+)/i);
+                  if (match) dest = match[1];
+                }
+                return (
+                  <div className="pt-2 border-t border-[#2B313A]/70">
+                    <div className="text-[10px] text-[#848E9C] uppercase tracking-wider mb-1">Client Destination Address:</div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-[#181A20] border border-[#2B313A] font-mono text-[11px] text-[#EAECEF]">
+                      <span className="truncate pr-2 select-all font-semibold">{dest || 'Address in settlement note'}</span>
+                      {dest && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(dest!);
+                            setCopiedAddress(true);
+                            setTimeout(() => setCopiedAddress(false), 2000);
+                          }}
+                          className="shrink-0 p-1 text-[#848E9C] hover:text-[#F0B90B] flex items-center gap-1 text-[10px] font-bold"
+                          title="Copy Address"
+                        >
+                          {copiedAddress ? <Check className="w-3.5 h-3.5 text-[#0ECB81]" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedAddress ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Destination Memo if applicable */}
+              {approvingWithdrawalTx.destinationMemo && (
+                <div className="flex items-center justify-between p-2 rounded-lg bg-[#F0B90B]/10 border border-[#F0B90B]/30 text-[11px]">
+                  <span className="text-[#F0B90B] font-bold">Client Routing Memo / Tag:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-[#EAECEF] font-bold select-all">{approvingWithdrawalTx.destinationMemo}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(approvingWithdrawalTx.destinationMemo!);
+                        setCopiedMemo(true);
+                        setTimeout(() => setCopiedMemo(false), 2000);
+                      }}
+                      className="p-1 text-[#848E9C] hover:text-[#F0B90B]"
+                      title="Copy Memo"
+                    >
+                      {copiedMemo ? <Check className="w-3 h-3 text-[#0ECB81]" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Custom Transaction Hash Input */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-mono uppercase text-[#EAECEF] font-bold">
+                  Blockchain Transaction Hash (TxID)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateRandomHash}
+                  className="text-[11px] font-mono text-[#F0B90B] hover:text-[#FCD535] flex items-center gap-1 font-semibold"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Auto-Generate Hash</span>
+                </button>
+              </div>
+
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={withdrawalTxHash}
+                  onChange={(e) => setWithdrawalTxHash(e.target.value)}
+                  placeholder="Paste real on-chain transaction hash (0x... or Tron TxID or Solana signature)..."
+                  className="w-full glass-input p-3 text-xs font-mono text-[#0ECB81] bg-[#1E2329] rounded-xl border border-[#363D47] focus:border-[#F0B90B] focus:outline-none"
+                />
+              </div>
+
+              <p className="text-[11px] font-mono text-[#848E9C] leading-relaxed">
+                ℹ️ This exact on-chain hash will be recorded into the settlement audit ledger, emailed to <strong className="text-[#EAECEF]">{approvingWithdrawalTx.userEmail || 'the client'}</strong>, and presented in their transaction receipt.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-3 border-t border-[#2B313A]">
+              <button
+                type="button"
+                onClick={() => setApprovingWithdrawalTx(null)}
+                className="px-4 py-2.5 rounded-xl bg-[#2B313A] hover:bg-[#363D47] text-[#848E9C] hover:text-[#EAECEF] font-mono text-xs font-bold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={processingId === approvingWithdrawalTx.id || !withdrawalTxHash.trim()}
+                onClick={handleConfirmApproveWithdrawal}
+                className="px-6 py-2.5 rounded-xl bg-[#0ECB81] hover:bg-[#0ECB81]/90 text-[#181A20] font-mono text-xs font-bold transition-all shadow-md shadow-[#0ECB81]/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{processingId === approvingWithdrawalTx.id ? 'Settling Disbursal...' : 'Authorize & Disburse Payout ↗'}</span>
               </button>
             </div>
           </div>

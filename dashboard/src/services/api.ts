@@ -172,11 +172,18 @@ class ApiService {
     amount: number,
     asset: string,
     destinationAddress: string,
-    otpCode: string
+    otpCode: string,
+    destinationMemo?: string
   ): Promise<{ message: string; transaction: Transaction; newBalance: number; status: string }> {
     return this.request('/wallet/withdraw', {
       method: 'POST',
-      body: JSON.stringify({ amount, asset, destinationAddress, otpCode })
+      body: JSON.stringify({
+        amount,
+        asset,
+        destinationAddress,
+        otpCode,
+        destinationMemo: destinationMemo?.trim() || undefined
+      })
     });
   }
 

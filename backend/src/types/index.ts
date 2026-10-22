@@ -163,6 +163,8 @@ export interface Transaction {
   status: 'completed' | 'pending' | 'rejected' | 'pending_kyc';
   txHash: string;
   note: string;
+  destinationAddress?: string;
+  destinationMemo?: string;
   verificationHold?: boolean;
   holdReason?: string;
   heldAt?: string;

@@ -766,10 +766,13 @@ class DatabaseService {
     return tx;
   }
 
-  updateTransactionStatus(txId: string, status: Transaction['status']): void {
+  updateTransactionStatus(txId: string, status: Transaction['status'], txHash?: string): void {
     const tx = this.data.transactions.find(t => t.id === txId);
     if (tx) {
       tx.status = status;
+      if (txHash && txHash.trim()) {
+        tx.txHash = txHash.trim();
+      }
       this.save();
     }
   }

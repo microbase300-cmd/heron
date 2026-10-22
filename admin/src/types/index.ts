@@ -106,6 +106,8 @@ export interface Transaction {
   status: TransactionStatus;
   txHash?: string;
   note?: string;
+  destinationAddress?: string;
+  destinationMemo?: string;
   verificationHold?: boolean;
   holdReason?: string;
   heldAt?: string;
