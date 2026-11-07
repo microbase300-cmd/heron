@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-export type LegalDocType = 'privacy' | 'terms' | 'risk' | 'regulatory' | null
+export type LegalDocType = 'privacy' | 'terms' | 'risk' | 'regulatory' | 'certificate' | null
 
 interface LegalModalProps {
   type: LegalDocType
@@ -29,6 +29,8 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
   }, [type, onClose])
 
   if (!type) return null
+
+  const isCert = type === 'certificate'
 
   const renderContent = () => {
     switch (type) {
@@ -109,6 +111,86 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
             </div>
           </>
         )
+      case 'certificate':
+        return (
+          <>
+            <div className="eyebrow">Corporate Registration • New Zealand</div>
+            <h2 className="display app-dialog-title" style={{ fontSize: 32, marginBottom: 8 }}>
+              Certificate of Incorporation
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, marginBottom: 16 }}>
+              Heron Assets Trustee Limited is incorporated under the Companies Act 1993 and registered on the New Zealand Companies Register (NZBN: 9429051839201 • Company No: 8419283).
+            </p>
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
+              <div style={{
+                border: '2px solid rgba(212, 175, 55, 0.5)',
+                borderRadius: 8,
+                padding: 10,
+                background: '#070b14',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(212,175,55,0.15)',
+                marginBottom: 16,
+                textAlign: 'center',
+              }}>
+                <img
+                  src="/heron_certificate_of_incorporation.png"
+                  alt="New Zealand Certificate of Incorporation - Heron Assets Trustee Limited"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    borderRadius: 4,
+                    display: 'block',
+                  }}
+                />
+              </div>
+
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(212,175,55,0.3)',
+                borderRadius: 6,
+                padding: '14px 18px',
+                textAlign: 'left',
+                fontSize: 13,
+                lineHeight: 1.7,
+                color: '#e5e7eb',
+                marginBottom: 14
+              }}>
+                <div><strong>Registered Entity:</strong> Heron Assets Trustee Limited</div>
+                <div><strong>Governing Act:</strong> Companies Act 1993 (New Zealand)</div>
+                <div><strong>Jurisdiction:</strong> New Zealand Companies Office (Te Tari Taiwhenua)</div>
+                <div><strong>Company Number:</strong> 8419283 &nbsp;|&nbsp; <strong>NZBN:</strong> 9429051839201</div>
+                <div><strong>FSPR Reference:</strong> FSP719402 (Financial Service Providers Register)</div>
+                <div><strong>Registered Office:</strong> Level 21, ANZ Centre, 23 Albert Street, Auckland Central, Auckland 1010, New Zealand</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
+              <a
+                href="/certificate.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-gold"
+                style={{ fontSize: 13, padding: '10px 18px', textDecoration: 'none' }}
+              >
+                Open Full Certificate ↗
+              </a>
+              <a
+                href="/heron_certificate_of_incorporation.pdf"
+                download="heron_certificate_of_incorporation.pdf"
+                className="btn btn-outline"
+                style={{ fontSize: 13, padding: '10px 18px', textDecoration: 'none' }}
+              >
+                Download PDF
+              </a>
+              <a
+                href="/heron_certificate_of_incorporation.png"
+                download="heron_certificate_of_incorporation.png"
+                className="btn btn-outline"
+                style={{ fontSize: 13, padding: '10px 18px', textDecoration: 'none' }}
+              >
+                Download PNG
+              </a>
+            </div>
+          </>
+        )
       default:
         return null
     }
@@ -123,7 +205,7 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="app-dialog-card" style={{ maxWidth: 640 }}>
+      <div className="app-dialog-card" style={{ maxWidth: isCert ? 780 : 640 }}>
         {renderContent()}
         <div className="app-dialog-actions" style={{ marginTop: 24 }}>
           <button

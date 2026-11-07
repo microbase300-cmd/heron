@@ -11,6 +11,7 @@ import Pricing from './pages/Pricing'
 import Company from './pages/Company'
 import Contact from './pages/Contact'
 import Download from './pages/Download'
+import Certificate from './pages/Certificate'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -25,6 +26,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/download" element={<Download />} />
           <Route path="/downloads" element={<Download />} />
           <Route path="/app" element={<Download />} />
+          <Route path="/certificate" element={<Certificate />} />
+          <Route path="/legal/certificate" element={<Certificate />} />
           {/* Fallback route */}
           <Route path="*" element={<Home />} />
         </Route>
